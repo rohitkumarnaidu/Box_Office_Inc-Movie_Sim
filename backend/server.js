@@ -1,8 +1,8 @@
 import app from "./src/app.js";
-
 import env from "./src/config/env.js";
-
 import connectDB from "./src/config/db.js";
+
+import "./src/models/index.js";
 
 const startServer = async () => {
   try {
