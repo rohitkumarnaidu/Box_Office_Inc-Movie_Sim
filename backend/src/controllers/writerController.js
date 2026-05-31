@@ -1,0 +1,320 @@
+import GameState from "../models/GameState.js";
+import Studio from "../models/Studio.js";
+import { generateWriters } from "../services/writer/writerGenerator.js";
+import crypto from "crypto";
+
+export const getMarketWriters = async (req, res) => {
+  const gameState = await GameState.findOne({
+    user: req.user._id,
+  });
+
+  if (!gameState) {
+    return res.status(404).json({
+      message: "Game state not found",
+    });
+  }
+
+  if (!gameState.marketWriters || gameState.marketWriters.length === 0) {
+    gameState.marketWriters = generateWriters(100);
+
+    await gameState.save();
+  }
+
+  res.status(200).json({
+    writers: gameState.marketWriters,
+  });
+};
+
+export const getOwnedWriters = async (req, res) => {
+  const gameState = await GameState.findOne({
+    user: req.user._id,
+  });
+
+  if (!gameState) {
+    return res.status(404).json({
+      message: "Game state not found",
+    });
+  }
+
+  res.status(200).json({
+    writers: gameState.ownedWriters,
+  });
+};
+
+export const hireWriter = async (req, res) => {
+  const { index } = req.params;
+
+  const gameState = await GameState.findOne({
+    user: req.user._id,
+  });
+
+  if (!gameState) {
+    return res.status(404).json({
+      message: "Game state not found",
+    });
+  }
+
+  const writer = gameState.marketWriters[index];
+
+  if (!writer) {
+    return res.status(404).json({
+      message: "Writer not found",
+    });
+  }
+
+  writer.hiredAt = new Date();
+
+  gameState.ownedWriters.push(writer);
+
+  gameState.marketWriters.splice(index, 1);
+
+  await gameState.save();
+
+  res.status(200).json({
+    message: "Writer hired successfully",
+  });
+};
+
+export const fireWriter = async (req, res) => {
+  const { index } = req.params;
+
+  const gameState = await GameState.findOne({
+    user: req.user._id,
+  });
+
+  const studio = await Studio.findOne({
+    owner: req.user._id,
+  });
+
+  if (!gameState) {
+    return res.status(404).json({
+      message: "Game state not found",
+    });
+  }
+
+  if (!studio) {
+    return res.status(404).json({
+      message: "Studio not found",
+    });
+  }
+
+  const writer = gameState.ownedWriters[index];
+
+  if (!writer) {
+    return res.status(404).json({
+      message: "Writer not found",
+    });
+  }
+
+  const activeProject = gameState.activeWritingProjects.find(
+    (project) => project.writerId === writer.id
+  );
+
+  let penalty = 50000;
+  let fanLoss = 0;
+
+  if (activeProject) {
+    const totalDuration =
+      activeProject.completionWeek - activeProject.startWeek;
+
+    const elapsedWeeks = gameState.currentWeek - activeProject.startWeek;
+
+    const progress = Math.min(
+      100,
+      Math.floor((elapsedWeeks / totalDuration) * 100)
+    );
+
+    if (progress >= 75) {
+      penalty = 100000;
+      fanLoss = 100;
+    } else if (progress >= 50) {
+      penalty = 90000;
+      fanLoss = 50;
+    } else if (progress >= 25) {
+      penalty = 75000;
+      fanLoss = 25;
+    } else {
+      penalty = 60000;
+      fanLoss = 10;
+    }
+
+    gameState.activeWritingProjects = gameState.activeWritingProjects.filter(
+      (project) => project.writerId !== writer.id
+    );
+
+    gameState.notifications.push({
+      message: `${writer.name} was fired while writing a script. Project cancelled.`,
+    });
+  }
+
+  studio.money = Math.max(0, studio.money - penalty);
+
+  studio.fans = Math.max(0, studio.fans - fanLoss);
+
+  writer.status = "AVAILABLE";
+  writer.busyUntilWeek = null;
+
+  gameState.marketWriters.push(writer);
+
+  gameState.ownedWriters.splice(index, 1);
+
+  gameState.notifications.push({
+    message: `${
+      writer.name
+    } was fired. Penalty ₹${penalty.toLocaleString()} and ${fanLoss} fans lost.`,
+  });
+
+  await studio.save();
+  await gameState.save();
+
+  res.status(200).json({
+    message: "Writer fired successfully",
+    penalty,
+    fanLoss,
+    remainingMoney: studio.money,
+    remainingFans: studio.fans,
+  });
+};
+
+export const startWritingProject = async (req, res) => {
+  const { writerId, genre, targetAudience } = req.body;
+
+  const gameState = await GameState.findOne({
+    user: req.user._id,
+  });
+
+  const writer = gameState.ownedWriters.find((w) => w.id === writerId);
+
+  if (!writer) {
+    return res.status(404).json({
+      message: "Writer not found",
+    });
+  }
+
+  if (writer.status !== "AVAILABLE") {
+    return res.status(400).json({
+      message: "Writer already busy",
+    });
+  }
+
+  const duration = Math.floor(Math.random() * 4) + 2;
+
+  const project = {
+    id: crypto.randomUUID(),
+
+    writerId: writer.id,
+
+    writerName: writer.name,
+
+    genre,
+
+    targetAudience,
+
+    startWeek: gameState.currentWeek,
+
+    completionWeek: gameState.currentWeek + duration,
+
+    progress: 0,
+
+    status: "WRITING",
+  };
+
+  writer.status = "WRITING";
+
+  writer.busyUntilWeek = project.completionWeek;
+
+  gameState.activeWritingProjects.push(project);
+
+  await gameState.save();
+
+  res.status(201).json({
+    project,
+  });
+};
+
+export const getWritingProjects = async (req, res) => {
+  const gameState = await GameState.findOne({
+    user: req.user._id,
+  });
+
+  res.status(200).json({
+    projects: gameState.activeWritingProjects,
+  });
+};
+
+export const replaceWriter = async (req, res) => {
+  const { oldWriterId, newWriterId } = req.body;
+
+  const gameState = await GameState.findOne({
+    user: req.user._id,
+  });
+
+  if (!gameState) {
+    return res.status(404).json({
+      message: "Game state not found",
+    });
+  }
+
+  const project = gameState.activeWritingProjects.find(
+    (p) => p.writerId === oldWriterId
+  );
+
+  if (!project) {
+    return res.status(404).json({
+      message: "Project not found",
+    });
+  }
+
+  const oldWriter = gameState.ownedWriters.find((w) => w.id === oldWriterId);
+
+  const newWriter = gameState.ownedWriters.find((w) => w.id === newWriterId);
+
+  if (!newWriter) {
+    return res.status(404).json({
+      message: "Replacement writer not found",
+    });
+  }
+
+  if (newWriter.status !== "AVAILABLE") {
+    return res.status(400).json({
+      message: "Writer already busy",
+    });
+  }
+
+  let penalty = 2;
+
+  if (project.progress >= 75) {
+    penalty = 15;
+  } else if (project.progress >= 50) {
+    penalty = 10;
+  } else if (project.progress >= 25) {
+    penalty = 5;
+  }
+
+  project.writerId = newWriter.id;
+
+  project.writerName = newWriter.name;
+
+  project.qualityPenalty += penalty;
+
+  newWriter.status = "WRITING";
+
+  newWriter.busyUntilWeek = project.completionWeek;
+
+  if (oldWriter) {
+    oldWriter.status = "AVAILABLE";
+
+    oldWriter.busyUntilWeek = null;
+  }
+
+  gameState.notifications.push({
+    message: `${oldWriter?.name} left the project. ${newWriter.name} replaced them. Script quality -${penalty}.`,
+  });
+
+  await gameState.save();
+
+  res.status(200).json({
+    message: "Writer replaced successfully",
+    qualityPenalty: project.qualityPenalty,
+  });
+};

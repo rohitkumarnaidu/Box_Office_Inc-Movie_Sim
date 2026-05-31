@@ -1,6 +1,7 @@
 import { generateTitle } from "./titleGenerator.js";
 import { generateGenres } from "./genreGenerator.js";
 import { calculatePrice } from "./priceCalculator.js";
+import { calculateRarity } from "./rarityCalculator.js";
 
 const randomStat = () => Math.floor(Math.random() * 51) + 50;
 
@@ -10,6 +11,13 @@ export const generateScripts = (count = 5) => {
     const originality = randomStat();
     const audienceAppeal = randomStat();
     const franchisePotential = randomStat();
+
+    const rarity = calculateRarity({
+      quality,
+      originality,
+      audienceAppeal,
+      franchisePotential,
+    });
 
     return {
       title: generateTitle(),
@@ -24,7 +32,7 @@ export const generateScripts = (count = 5) => {
 
       franchisePotential,
 
-      rarity: "Common",
+      rarity,
 
       price: calculatePrice({
         quality,

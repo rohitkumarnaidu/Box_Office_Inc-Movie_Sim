@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -10,36 +10,36 @@ const Scripts = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("market");
 
-  const fetchMarketScripts = async () => {
+  const fetchMarketScripts = useCallback(async () => {
     try {
       const res = await api.get("/scripts");
       setScripts(res.data.scripts || []);
     } catch (error) {
       console.error(error);
     }
-  };
+  }, []);
 
-  const fetchOwnedScripts = async () => {
+  const fetchOwnedScripts = useCallback(async () => {
     try {
       const res = await api.get("/scripts/owned");
       setOwnedScripts(res.data.scripts || []);
     } catch (error) {
       console.error(error);
     }
-  };
+  }, []);
 
-  const loadScripts = async () => {
+  const loadScripts = useCallback(async () => {
     try {
       setInitialLoading(true);
       await Promise.all([fetchMarketScripts(), fetchOwnedScripts()]);
     } finally {
       setInitialLoading(false);
     }
-  };
+  }, [fetchMarketScripts, fetchOwnedScripts]);
 
   useEffect(() => {
     loadScripts();
-  }, []);
+  }, [loadScripts]);
 
   const generateScripts = async () => {
     try {
@@ -91,15 +91,49 @@ const Scripts = () => {
       );
     }
 
+    const rarityStyles = {
+      Common: "bg-slate-500/20 text-slate-300 border border-slate-500/30",
+
+      Uncommon:
+        "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
+
+      Rare: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+
+      Epic: "bg-violet-500/20 text-violet-300 border border-violet-500/30",
+
+      Legendary: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+    };
+
+    const cardStyles = {
+      Common: "hover:border-slate-500",
+      Uncommon: "hover:border-emerald-500",
+      Rare: "hover:border-sky-500",
+      Epic: "hover:border-violet-500",
+      Legendary: "hover:border-amber-500",
+    };
+
     return (
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
         {scripts.map((script, index) => (
           <div
             key={`${script.title}-${index}`}
-            className="bg-[#111827] border border-slate-800 rounded-2xl p-5 hover:border-violet-500 transition"
+            className={`group relative overflow-hidden
+                      bg-linear-to-br
+                      from-[#0f172a]
+                      via-[#111827]
+                      to-[#0b1120]
+                      border border-slate-800
+                      rounded-3xl
+                      p-6
+                      transition-all
+                      duration-300
+                      hover:-translate-y-1
+                      ${cardStyles[script.rarity]}`}
           >
             <div className="flex justify-between items-center mb-4">
-              <span className="bg-yellow-500/20 text-yellow-300 px-3 py-1 rounded-full text-xs font-semibold">
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${rarityStyles[script.rarity]}`}
+              >
                 {script.rarity || "Common"}
               </span>
             </div>

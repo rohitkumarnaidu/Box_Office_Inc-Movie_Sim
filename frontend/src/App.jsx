@@ -7,6 +7,8 @@ import Dashboard from "./pages/dashboard/Dashboard";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Scripts from "./pages/scripts/Scripts";
+import Writers from "./pages/writers/Writers";
+import Notifications from "./pages/notifications/Notifications";
 
 function App() {
   return (
@@ -33,6 +35,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/writers"
+          element={
+            <ProtectedRoute>
+              <Writers />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/notifications" element={<Notifications />} />
       </Routes>
     </BrowserRouter>
   );
