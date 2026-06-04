@@ -2,7 +2,7 @@ import { createScriptFromWriter } from "../../writer/scriptCreationEngine.js";
 
 import { addNotification } from "../helpers/notificationHelper.js";
 
-export const processWritingProjects = async (gameState) => {
+export const processWritingProjects = async (gameState, studio) => {
   const completedProjects = [];
 
   for (const project of gameState.activeWritingProjects) {
@@ -50,6 +50,16 @@ export const processWritingProjects = async (gameState) => {
       const previousDiscovery = Number(writer.discovered || 0);
 
       writer.discovered = Math.min(100, previousDiscovery + 15);
+
+      writer.careerHistory = writer.careerHistory || [];
+
+      writer.careerHistory.push({
+        scriptName: script.title,
+        studioName: studio?.name || "Unknown Studio",
+        completionWeek: gameState.currentWeek,
+        genre: project.genre,
+        scriptQuality: script.quality,
+      });
 
       addNotification(gameState, `${writer.name} completed "${script.title}".`);
 

@@ -100,6 +100,8 @@ export const generateWriter = (forcedAge = null) => {
 
     hitScripts: 0,
 
+    careerHistory: [],
+
     discovered: age < 25 ? 10 : age < 40 ? 40 : 80,
   };
 };

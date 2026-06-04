@@ -110,6 +110,16 @@ const gameStateSchema = new mongoose.Schema(
           default: 0,
         },
 
+        careerHistory: [
+          {
+            scriptName: String,
+            studioName: String,
+            completionWeek: Number,
+            genre: String,
+            scriptQuality: Number,
+          },
+        ],
+
         discovered: {
           type: Number,
           default: 0,
@@ -161,6 +171,16 @@ const gameStateSchema = new mongoose.Schema(
           type: Number,
           default: 0,
         },
+
+        careerHistory: [
+          {
+            scriptName: String,
+            studioName: String,
+            completionWeek: Number,
+            genre: String,
+            scriptQuality: Number,
+          },
+        ],
 
         discovered: {
           type: Number,

@@ -6,7 +6,7 @@ import { processWriterAging } from "../helpers/agingHelper.js";
 export const processWeeklyTick = async (gameState, studio) => {
   processWriterPayroll(gameState, studio);
 
-  await processWritingProjects(gameState);
+  await processWritingProjects(gameState, studio);
 
   processWriterAging(gameState);
 
