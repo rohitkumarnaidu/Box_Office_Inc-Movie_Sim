@@ -6,6 +6,7 @@ import {
   refreshSession,
   logout,
   getMe,
+  getAuthDiagnostics,
 } from "../controllers/authController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -19,6 +20,8 @@ router.post("/login", login);
 router.post("/refresh", refreshSession);
 
 router.post("/logout", logout);
+
+router.get("/diagnostics", protect, getAuthDiagnostics);
 
 router.get("/me", protect, getMe);
 

@@ -1,6 +1,10 @@
 import jwt from "jsonwebtoken";
 import env from "../config/env.js";
 import User from "../models/User.js";
+import {
+  AUTH_EVENTS,
+  recordAuthEvent,
+} from "../services/auth/authMonitoringService.js";
 
 export const protect = async (req, res, next) => {
   try {
@@ -14,6 +18,11 @@ export const protect = async (req, res, next) => {
     }
 
     if (!token) {
+      await recordAuthEvent(req, {
+        eventType: AUTH_EVENTS.AUTH_FAILURE,
+        reason: "ACCESS_TOKEN_MISSING",
+      });
+
       return res.status(401).json({
         success: false,
         message: "Not authorized",
@@ -27,6 +36,12 @@ export const protect = async (req, res, next) => {
     );
 
     if (!user) {
+      await recordAuthEvent(req, {
+        user: decoded.userId,
+        eventType: AUTH_EVENTS.AUTH_FAILURE,
+        reason: "ACCESS_USER_NOT_FOUND",
+      });
+
       return res.status(401).json({
         success: false,
         message: "User not found",
@@ -34,6 +49,12 @@ export const protect = async (req, res, next) => {
     }
 
     if (user.isDisabled) {
+      await recordAuthEvent(req, {
+        user: user._id,
+        eventType: AUTH_EVENTS.SESSION_EXPIRED,
+        reason: "ACCOUNT_DISABLED",
+      });
+
       return res.status(403).json({
         success: false,
         code: "ACCOUNT_DISABLED",
@@ -45,6 +66,14 @@ export const protect = async (req, res, next) => {
 
     next();
   } catch (error) {
+    await recordAuthEvent(req, {
+      eventType:
+        error.name === "TokenExpiredError"
+          ? AUTH_EVENTS.SESSION_EXPIRED
+          : AUTH_EVENTS.AUTH_FAILURE,
+      reason: error.name || "ACCESS_TOKEN_INVALID",
+    });
+
     return res.status(401).json({
       success: false,
       message: "Invalid token",

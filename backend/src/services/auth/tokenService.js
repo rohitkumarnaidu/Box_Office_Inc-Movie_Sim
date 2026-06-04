@@ -49,3 +49,5 @@ export const clearRefreshTokenCookie = (res) => {
 
 export const verifyRefreshToken = (refreshToken) =>
   jwt.verify(refreshToken, env.JWT_REFRESH_SECRET);
+
+export const decodeRefreshToken = (refreshToken) => jwt.decode(refreshToken);

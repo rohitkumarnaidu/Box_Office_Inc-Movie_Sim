@@ -7,6 +7,7 @@ import {
   FileBarChart,
   Pen,
   Bell,
+  ShieldCheck,
   Settings,
 } from "lucide-react";
 
@@ -55,6 +56,11 @@ const Sidebar = () => {
       name: "Reports",
       path: "/reports",
       icon: FileBarChart,
+    },
+    {
+      name: "Auth Monitor",
+      path: "/auth-monitoring",
+      icon: ShieldCheck,
     },
     {
       name: "Settings",

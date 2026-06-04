@@ -11,6 +11,7 @@ import Writers from "./pages/writers/Writers";
 import WriterProfile from "./pages/writers/WriterProfile";
 import Notifications from "./pages/notifications/Notifications";
 import Settings from "./pages/settings/Settings";
+import AuthMonitoring from "./pages/auth/AuthMonitoring";
 
 function App() {
   return (
@@ -63,6 +64,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/auth-monitoring"
+          element={
+            <ProtectedRoute>
+              <AuthMonitoring />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/settings"
           element={
