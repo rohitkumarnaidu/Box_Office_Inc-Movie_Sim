@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
+    isDisabled: {
+      type: Boolean,
+      default: false,
+    },
+
     studio: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Studio",

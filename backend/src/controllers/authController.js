@@ -14,6 +14,22 @@ import {
   verifyRefreshToken,
 } from "../services/auth/tokenService.js";
 
+const isJwtRefreshError = (error) =>
+  error.name === "TokenExpiredError" || error.name === "JsonWebTokenError";
+
+const revokeRefreshToken = async (refreshToken) => {
+  if (!refreshToken) {
+    return;
+  }
+
+  const tokenHash = hashRefreshToken(refreshToken);
+
+  await User.updateOne(
+    { "refreshTokens.tokenHash": tokenHash },
+    { $pull: { refreshTokens: { tokenHash } } },
+  );
+};
+
 const sanitizeUser = (user) => {
   const userObject = user.toObject ? user.toObject() : user;
   delete userObject.password;
@@ -113,6 +129,14 @@ export const login = async (req, res) => {
       });
     }
 
+    if (user.isDisabled) {
+      return res.status(403).json({
+        success: false,
+        code: "ACCOUNT_DISABLED",
+        message: "Account disabled",
+      });
+    }
+
     const isMatch = await comparePassword(password, user.password);
 
     if (!isMatch) {
@@ -164,6 +188,17 @@ export const refreshSession = async (req, res) => {
       });
     }
 
+    if (user.isDisabled) {
+      await revokeRefreshToken(refreshToken);
+      clearRefreshTokenCookie(res);
+
+      return res.status(403).json({
+        success: false,
+        code: "ACCOUNT_DISABLED",
+        message: "Account disabled",
+      });
+    }
+
     const now = new Date();
     const matchingSession = user.refreshTokens?.find(
       (session) => session.tokenHash === tokenHash && session.expiresAt > now,
@@ -198,11 +233,19 @@ export const refreshSession = async (req, res) => {
       user: refreshedUser,
     });
   } catch (error) {
-    clearRefreshTokenCookie(res);
+    if (isJwtRefreshError(error)) {
+      clearRefreshTokenCookie(res);
 
-    return res.status(401).json({
+      return res.status(401).json({
+        success: false,
+        code: "REFRESH_TOKEN_INVALID",
+        message: "Invalid refresh token",
+      });
+    }
+
+    return res.status(500).json({
       success: false,
-      message: "Invalid refresh token",
+      message: "Unable to refresh session",
     });
   }
 };
@@ -211,13 +254,7 @@ export const logout = async (req, res) => {
   try {
     const refreshToken = req.cookies?.[REFRESH_COOKIE_NAME];
 
-    if (refreshToken) {
-      const tokenHash = hashRefreshToken(refreshToken);
-      await User.updateOne(
-        { "refreshTokens.tokenHash": tokenHash },
-        { $pull: { refreshTokens: { tokenHash } } },
-      );
-    }
+    await revokeRefreshToken(refreshToken);
 
     clearRefreshTokenCookie(res);
 

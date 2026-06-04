@@ -22,12 +22,22 @@ export const protect = async (req, res, next) => {
 
     const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET);
 
-    const user = await User.findById(decoded.userId).select("-password");
+    const user = await User.findById(decoded.userId).select(
+      "-password -refreshTokens",
+    );
 
     if (!user) {
       return res.status(401).json({
         success: false,
         message: "User not found",
+      });
+    }
+
+    if (user.isDisabled) {
+      return res.status(403).json({
+        success: false,
+        code: "ACCOUNT_DISABLED",
+        message: "Account disabled",
       });
     }
 

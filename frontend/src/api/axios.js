@@ -6,6 +6,7 @@ import { logout, setCredentials } from "../features/auth/authSlice";
 const baseURL = "http://localhost:5000/api";
 const REFRESH_BUFFER_MS = 60 * 1000;
 const MIN_REFRESH_DELAY_MS = 5 * 1000;
+const REFRESH_RETRY_DELAY_MS = 30 * 1000;
 
 const refreshClient = axios.create({
   baseURL,
@@ -25,6 +26,9 @@ const isAuthEndpoint = (url = "") =>
   url.includes("/auth/register") ||
   url.includes("/auth/refresh") ||
   url.includes("/auth/logout");
+
+export const isRefreshSessionRejected = (error) =>
+  error.response?.status === 401 || error.response?.status === 403;
 
 const decodeAccessTokenExpiresAt = (token) => {
   if (!token) {
@@ -60,6 +64,24 @@ export const clearScheduledRefresh = () => {
   }
 };
 
+const scheduleRefreshRetry = () => {
+  clearScheduledRefresh();
+
+  refreshTimer = window.setTimeout(() => {
+    refreshAuthSession().catch((error) => {
+      console.error(error);
+
+      if (isRefreshSessionRejected(error)) {
+        clearScheduledRefresh();
+        store.dispatch(logout());
+        return;
+      }
+
+      scheduleRefreshRetry();
+    });
+  }, REFRESH_RETRY_DELAY_MS);
+};
+
 export const scheduleTokenRefresh = (token, accessTokenExpiresAt) => {
   clearScheduledRefresh();
 
@@ -77,7 +99,14 @@ export const scheduleTokenRefresh = (token, accessTokenExpiresAt) => {
   refreshTimer = window.setTimeout(() => {
     refreshAuthSession().catch((error) => {
       console.error(error);
-      store.dispatch(logout());
+
+      if (isRefreshSessionRejected(error)) {
+        clearScheduledRefresh();
+        store.dispatch(logout());
+        return;
+      }
+
+      scheduleRefreshRetry();
     });
   }, refreshDelay);
 };
@@ -150,8 +179,11 @@ api.interceptors.response.use(
 
         return api(originalRequest);
       } catch (refreshError) {
-        clearScheduledRefresh();
-        store.dispatch(logout());
+        if (isRefreshSessionRejected(refreshError)) {
+          clearScheduledRefresh();
+          store.dispatch(logout());
+        }
+
         return Promise.reject(refreshError);
       }
     }
@@ -159,6 +191,28 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+const refreshIfSessionIsNearExpiry = () => {
+  const token = localStorage.getItem("token");
+  const expiresAt =
+    Number(localStorage.getItem("accessTokenExpiresAt")) ||
+    decodeAccessTokenExpiresAt(token);
+
+  if (!token || !expiresAt) {
+    return;
+  }
+
+  if (expiresAt - Date.now() <= REFRESH_BUFFER_MS) {
+    refreshAuthSession().catch((error) => {
+      console.error(error);
+
+      if (isRefreshSessionRejected(error)) {
+        clearScheduledRefresh();
+        store.dispatch(logout());
+      }
+    });
+  }
+};
 
 const storedToken = localStorage.getItem("token");
 const storedAccessTokenExpiresAt = Number(
@@ -168,5 +222,13 @@ const storedAccessTokenExpiresAt = Number(
 if (storedToken) {
   scheduleTokenRefresh(storedToken, storedAccessTokenExpiresAt || null);
 }
+
+window.addEventListener("focus", refreshIfSessionIsNearExpiry);
+window.addEventListener("online", refreshIfSessionIsNearExpiry);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    refreshIfSessionIsNearExpiry();
+  }
+});
 
 export default api;
