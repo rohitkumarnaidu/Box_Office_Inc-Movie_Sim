@@ -1,13 +1,23 @@
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+
+import api from "../../api/axios";
+import { logout } from "../../features/auth/authSlice";
 import DashboardLayout from "../../layouts/DashboardLayout";
 
 const Settings = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      dispatch(logout());
+      navigate("/login");
+    }
   };
 
   return (

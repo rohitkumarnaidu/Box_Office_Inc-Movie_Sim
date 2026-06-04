@@ -15,7 +15,7 @@ const env = {
 
   JWT_ACCESS_EXPIRE: process.env.JWT_ACCESS_EXPIRE || "15m",
 
-  JWT_REFRESH_EXPIRE: process.env.JWT_REFRESH_EXPIRE || "7d",
+  JWT_REFRESH_EXPIRE: process.env.JWT_REFRESH_EXPIRE || "30d",
 };
 
 export default env;
