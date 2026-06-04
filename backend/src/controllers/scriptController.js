@@ -1,6 +1,7 @@
 import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
 import { generateScripts } from "../services/script/scriptGenerator.js";
+import { calculateFallbackScriptSellPrice } from "../services/script/scriptResalePricing.js";
 
 export const generateMarketScripts = async (req, res) => {
   try {
@@ -119,6 +120,7 @@ export const buyScript = async (req, res) => {
       success: true,
       message: "Script purchased",
       money: studio.money,
+      sellPrice,
     });
   } catch (error) {
     console.error("BUY SCRIPT ERROR:", error);
@@ -169,7 +171,16 @@ export const sellScript = async (req, res) => {
       });
     }
 
-    studio.money += script.sellPrice;
+    const sellPrice = calculateFallbackScriptSellPrice(script);
+
+    if (sellPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Script cannot be sold",
+      });
+    }
+
+    studio.money += sellPrice;
 
     gameState.ownedScripts.splice(index, 1);
 
@@ -180,6 +191,7 @@ export const sellScript = async (req, res) => {
       success: true,
       message: "Script sold",
       money: studio.money,
+      sellPrice,
     });
   } catch (error) {
     res.status(500).json({

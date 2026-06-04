@@ -1,3 +1,4 @@
+import { calculatePlayerWrittenScriptSellPrice } from "../../script/scriptResalePricing.js";
 import { createScriptFromWriter } from "../../writer/scriptCreationEngine.js";
 import { applyWriterAwards } from "../../writer/writerAwardsEngine.js";
 import { applyWriterSalaryProgression } from "../../writer/writerSalaryProgressionEngine.js";
@@ -33,18 +34,6 @@ export const processWritingProjects = async (gameState, studio) => {
         project.genre,
         project.qualityPenalty || 0
       );
-
-      const creationDate = new Date();
-
-      gameState.ownedScripts.push({
-        ...script,
-        writer: writer.name,
-        writerId: writer.id,
-        studio: studio?.name || "Unknown Studio",
-        studioId: studio?._id || null,
-        creationDate,
-        createdAt: creationDate,
-      });
 
       writer.status = "AVAILABLE";
 
@@ -92,6 +81,25 @@ export const processWritingProjects = async (gameState, studio) => {
         wasHit,
         wasFlop,
         awardsWon: awardsWon.length,
+      });
+
+      const creationDate = new Date();
+
+      const sellPrice = calculatePlayerWrittenScriptSellPrice({
+        script,
+        writerReputation: writer.reputation,
+        awards: Number(writer.awards || 0),
+      });
+
+      gameState.ownedScripts.push({
+        ...script,
+        sellPrice,
+        writer: writer.name,
+        writerId: writer.id,
+        studio: studio?.name || "Unknown Studio",
+        studioId: studio?._id || null,
+        creationDate,
+        createdAt: creationDate,
       });
 
       addNotification(gameState, `${writer.name} completed "${script.title}".`);
