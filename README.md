@@ -119,3 +119,34 @@ CineVerse is optimized for deployment on **Vercel** with **MongoDB Atlas**.
 - **Industry Simulation:** Market trends, genre booms, and seasonal events.
 - **Awards Season:** Win prestigious awards for high-quality productions.
 - **Franchise System:** Build sequels and cinematic universes.
+
+## 🌟 ELUSOC 2026 Contribution Guide
+
+CineVerse is proud to be a participating project in ELUSOC 2026! We welcome contributions from developers of all skill levels.
+
+### ⚠️ Important Rules
+- **Target Branch:** All Pull Requests must target the `elusoc` branch. The `main` branch is reserved for stable releases.
+- **Issue Assignment:** You **must** request assignment on an issue and wait for approval before starting any work. Work submitted without assignment will not be merged.
+- **No Duplicates:** Check existing issues before opening a new one.
+
+### 🛠 How to Contribute
+1. Browse [Open Issues](https://github.com/your-repo/cineverse/issues).
+2. Request assignment in the comments.
+3. Once assigned, fork the repo and create a branch from `elusoc`.
+4. Follow the guidelines in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## 🌍 Open Source
+
+CineVerse is an open-source project licensed under the [MIT License](LICENSE). We believe in the power of community-driven development to create the best possible movie studio simulation experience.
+
+## 🤝 Contributions
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+### Labels Explanation
+- `bug`: Something isn't working correctly.
+- `enhancement`: New feature or request.
+- `documentation`: Improvements or additions to documentation.
+- `good first issue`: Ideal for beginners.
+- `help wanted`: Extra attention needed.
+- `elusoc`: Specifically for ELUSOC 2026 participants.
