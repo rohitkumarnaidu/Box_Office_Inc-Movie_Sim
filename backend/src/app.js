@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import env from "./config/env.js";
 
 const app = express();
 
@@ -14,7 +15,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: true,
+    origin: [env.CLIENT_URL, "http://localhost:5173", "http://localhost:3000"],
     credentials: true,
   })
 );
