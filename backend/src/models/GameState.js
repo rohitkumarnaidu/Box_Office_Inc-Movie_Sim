@@ -1002,6 +1002,26 @@ const gameStateSchema = new mongoose.Schema(
         },
       },
     ],
+
+    // Market Trends Engine state. Tracks the active box-office climate.
+    marketTrends: {
+      activeTrends: [
+        {
+          id: String,
+          label: String,
+          genre: String,
+          multiplier: Number,
+          startWeek: Number,
+          endWeek: Number,
+        },
+      ],
+      // genre -> remaining cooldown weeks. Mixed because keys are dynamic
+      // genre names; the engine reads/writes it as a plain object.
+      genreCooldowns: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {},
+      },
+    },
   },
   {
     timestamps: true,

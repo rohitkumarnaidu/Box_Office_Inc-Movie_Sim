@@ -7,7 +7,7 @@ const getVerdict = (roi) => {
   return "LEGENDARY";
 };
 
-export const generateBoxOffice = (movie, leadActor, director) => {
+export const generateBoxOffice = (movie, leadActor, director, marketMultiplier = 1) => {
   const qualityFactor = movie.quality / 100;
   const criticFactor = movie.criticScore / 100;
   const audienceFactor = movie.audienceScore / 100;
@@ -21,8 +21,11 @@ export const generateBoxOffice = (movie, leadActor, director) => {
   const starPower = (leadActor.popularity / 100) * 500000;
   const marketingBoost = (movie.marketingBudget / 2);
 
+  // Market Trends multiplier (defaults to 1 = no active trend for this
+  // movie's genre). Applied at the opening weekend so it propagates through
+  // worldwide gross, profit, ROI, and verdict.
   const openingWeekend = Math.round(
-    (openingBase + starPower + marketingBoost) * (hypeFactor + 0.5) * (0.8 + Math.random() * 0.4)
+    (openingBase + starPower + marketingBoost) * (hypeFactor + 0.5) * (0.8 + Math.random() * 0.4) * marketMultiplier
   );
 
   // Worldwide Gross influenced by Audience Score (legs) and Critic Score (prestige)

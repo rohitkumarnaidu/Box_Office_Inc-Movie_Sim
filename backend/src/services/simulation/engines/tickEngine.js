@@ -4,10 +4,17 @@ import { processDirectingProjects } from "./directingProjectEngine.js";
 import { processProduction } from "./productionEngine.js";
 import { processWriterPayroll } from "./payrollEngine.js";
 import { processWritingProjects } from "./writerEngine.js";
+import { processMarketTrends } from "./trendEngine.js";
 
+import { addNotification } from "../helpers/notificationHelper.js";
 import { processWriterAging } from "../helpers/agingHelper.js";
 
 export const processWeeklyTick = async (gameState, studio) => {
+  // Advance the market climate first so any releases this tick reflect the
+  // current week's active trends.
+  const trendMessages = processMarketTrends(gameState);
+  trendMessages.forEach((msg) => addNotification(gameState, msg));
+
   processWriterPayroll(gameState, studio);
 
   await processWritingProjects(gameState, studio);

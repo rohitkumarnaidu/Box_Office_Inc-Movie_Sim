@@ -3,6 +3,7 @@ import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
 import { generateReviews } from "../services/simulation/engines/reviewEngine.js";
 import { generateBoxOffice } from "../services/simulation/engines/boxOfficeEngine.js";
+import { getGenreMultiplier } from "../services/simulation/engines/trendEngine.js";
 import { processCareerImpact } from "../services/simulation/engines/careerImpactEngine.js";
 import { processStudioGrowth } from "../services/simulation/engines/studioGrowthEngine.js";
 import { addNotification } from "../services/simulation/helpers/notificationHelper.js";
@@ -225,7 +226,11 @@ export const releaseMovie = async (req, res) => {
         movie.audienceLabel = reviews.audienceLabel;
 
         // 2. Generate Box Office
-        const boxOffice = generateBoxOffice(movie, leadActor, director);
+        // Apply the current market climate: if a trend is active for one of
+        // this movie's genres, its multiplier boosts or dampens the gross.
+        const activeTrends = gameState.marketTrends?.activeTrends || [];
+        const marketMultiplier = getGenreMultiplier(activeTrends, script?.genres);
+        const boxOffice = generateBoxOffice(movie, leadActor, director, marketMultiplier);
         Object.assign(movie, boxOffice);
 
         // 3. Update Studio Growth (Money handled here, Fans/Prestige inside)
@@ -272,6 +277,21 @@ export const releaseMovie = async (req, res) => {
         // Notifications
         addNotification(gameState, `"${movie.title}" released! Critic Score: ${movie.criticScore} (${movie.criticLabel})`);
         addNotification(gameState, `"${movie.title}" earned ₹${movie.worldwideGross.toLocaleString()} worldwide. Verdict: ${movie.verdict}`);
+
+        // Surface the market climate's effect when it was material.
+        if (marketMultiplier > 1.01) {
+            const matched = activeTrends.find((t) => (script?.genres || []).includes(t.genre));
+            addNotification(
+                gameState,
+                `Market boost: the "${matched ? matched.label : "current trend"}" lifted "${movie.title}" at the box office.`
+            );
+        } else if (marketMultiplier < 0.99) {
+            const matched = activeTrends.find((t) => (script?.genres || []).includes(t.genre));
+            addNotification(
+                gameState,
+                `Market headwind: "${matched ? matched.label : "current trend"}" dampened "${movie.title}" at the box office.`
+            );
+        }
 
         await movie.save();
         await studio.save();
