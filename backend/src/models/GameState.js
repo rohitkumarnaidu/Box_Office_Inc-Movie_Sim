@@ -14,6 +14,24 @@ const gameStateSchema = new mongoose.Schema(
       default: 1,
     },
 
+    // Global Random Event Engine state. Tracks per-event cooldowns and a
+    // rolling history of fired events. Mixed because event-id keys are
+    // dynamic; the engine reads/writes it as a plain object. Optional with a
+    // sensible default so pre-existing saves load unchanged.
+    randomEvents: {
+      cooldowns: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {},
+      },
+      history: [
+        {
+          id: String,
+          label: String,
+          week: Number,
+        },
+      ],
+    },
+
     ownedScripts: [
       {
         id: String,
