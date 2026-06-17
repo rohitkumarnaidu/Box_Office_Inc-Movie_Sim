@@ -1,3 +1,69 @@
+/**
+ * @fileoverview Studio Growth Engine
+ *
+ * Applies studio-level side-effects after a movie is released. Called once
+ * per release from the movie controller, immediately after the box-office and
+ * career-impact engines have run.
+ *
+ * Responsibilities:
+ *  - Credits movie profit to `studio.money`.
+ *  - Grows or shrinks `studio.fans` based on audience score and verdict.
+ *  - Grows or shrinks `studio.prestige` based on critic score, quality, and verdict.
+ *  - Maintains aggregate stats (hits, flops, total revenue, rolling averages, etc.).
+ *  - Updates highest-grossing, most-profitable, and best-reviewed movie records.
+ *  - Triggers a studio level-up notification when the fan milestone is reached.
+ *
+ * No database save is performed here; the caller persists the mutated studio document.
+ */
+
+/**
+ * Applies post-release growth effects to the studio and returns the fan/prestige gains.
+ *
+ * ## Fan Growth Formula
+ * ```
+ * fanGain = round((worldwideGross / 1000) × audienceScoreFactor × verdictMultiplier)
+ * ```
+ * - `verdictMultiplier`: 2 for successes, 1 for average, 0.5 for failures.
+ * - `studio.fans` is unbounded (it drives level-up thresholds).
+ *
+ * ## Prestige Growth Formula
+ * ```
+ * prestigeGain = round((criticScoreFactor × 10) + (qualityFactor × 5) + verdictBonus)
+ * ```
+ * - `verdictBonus`: +20 for successes, 0 for average, −10 for failures.
+ * - `studio.prestige` is floored at 0.
+ *
+ * ## Studio Level-Up
+ * The studio levels up when `studio.fans >= studioLevel × 100,000`.
+ * Each level-up increments `studio.studioLevel` and fires a notification.
+ *
+ * ## Aggregate Stats Updated
+ * | Field              | Update                                         |
+ * |--------------------|------------------------------------------------|
+ * | moviesReleased     | +1                                             |
+ * | hits/blockbusters… | +1 for matching verdict                       |
+ * | totalRevenue       | + worldwideGross                               |
+ * | totalProfit        | + profit                                       |
+ * | avgCriticScore     | Rolling average (previous avg × count + new)   |
+ * | avgAudienceScore   | Rolling average (previous avg × count + new)   |
+ *
+ * @param {object} gameState            - GameState document; used to queue notifications.
+ * @param {object} studio               - Studio document (mutated in place).
+ * @param {number} [studio.money=0]     - Current cash balance; receives movie profit.
+ * @param {number} [studio.fans=0]      - Current fan count.
+ * @param {number} [studio.prestige=0]  - Current prestige score.
+ * @param {number} [studio.studioLevel=1] - Current studio level.
+ * @param {object} movie                - The released movie document.
+ * @param {string} movie.verdict        - Box-office verdict (e.g. "HIT", "FLOP").
+ * @param {number} movie.worldwideGross - Total worldwide gross in ₹.
+ * @param {number} movie.profit         - Net profit (gross − total budget) in ₹.
+ * @param {number} movie.audienceScore  - Audience score (0–100).
+ * @param {number} movie.criticScore    - Critic score (0–100).
+ * @param {number} movie.quality        - Overall quality (0–100).
+ * @param {string} movie.title          - Movie title (for record tracking).
+ * @param {string|object} movie._id     - MongoDB ObjectId (for record tracking).
+ * @returns {{ fanGain: number, prestigeGain: number }} Actual deltas applied.
+ */
 import { addNotification } from "../helpers/notificationHelper.js";
 
 export const processStudioGrowth = (gameState, studio, movie) => {
