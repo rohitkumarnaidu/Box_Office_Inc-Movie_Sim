@@ -680,7 +680,7 @@ const Directors = () => {
         )}
 
         {loading ? (
-          <SkeletonGrid />
+          <SkeletonGrid variant="talent" />
         ) : (
           renderDirectors()
         )}

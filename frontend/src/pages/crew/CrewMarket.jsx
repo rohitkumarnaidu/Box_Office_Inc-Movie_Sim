@@ -100,37 +100,46 @@ const CrewMarket = () => {
 
   const [crewTeams, setCrewTeams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const fetchCrewTeams = useCallback(async () => {
+  const fetchCrewTeams = useCallback(async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) {
+        setLoading(true);
+      }
+
       const res = await api.get("/crew");
       setCrewTeams(res.data.crewTeams || []);
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchCrewTeams();
+    const refreshTimer = window.setTimeout(fetchCrewTeams, 0);
+
+    return () => window.clearTimeout(refreshTimer);
   }, [fetchCrewTeams]);
 
   const handleHire = async (id) => {
-    if (loading) return;
+    if (loading || actionLoading) return;
+
     try {
-      setLoading(true);
+      setActionLoading(true);
       await api.post(`/crew/hire/${id}`);
       dispatch(showToast({ message: "Crew team hired successfully!", type: "success" }));
-      fetchCrewTeams();
+      await fetchCrewTeams(false);
     } catch (error) {
       dispatch(showToast({
         message: error?.response?.data?.message || "Failed to hire crew team",
         type: "error"
       }));
     } finally {
-        setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -215,14 +224,14 @@ const CrewMarket = () => {
         </div>
 
         {loading ? (
-          <SkeletonGrid />
+          <SkeletonGrid variant="compact" />
         ) : filteredCrew.length === 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-[#111827] p-12 text-center">
             <h2 className="mb-3 text-2xl font-bold text-white">No Crew Teams</h2>
             <p className="text-slate-400">No crew teams match your filters.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={`grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 ${actionLoading ? "pointer-events-none opacity-70" : ""}`}>
             {filteredCrew.map((crew) => (
               <div key={crew.id} className="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-violet-600 transition-all group">
                 <div className="flex justify-between items-start mb-4">
@@ -247,11 +256,11 @@ const CrewMarket = () => {
                 <div className="flex items-center justify-between mt-auto">
                   <div className="text-violet-400 font-bold">₹{crew.salary.toLocaleString()}/wk</div>
                   <button
-                    disabled={loading}
+                    disabled={actionLoading}
                     onClick={() => handleHire(crew.id)}
                     className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
                   >
-                    {loading ? "Hiring..." : "Hire Team"}
+                    {actionLoading ? "Hiring..." : "Hire Team"}
                   </button>
                 </div>
               </div>

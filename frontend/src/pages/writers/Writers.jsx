@@ -512,7 +512,7 @@ const Writers = () => {
         </div>
 
         {loading ? (
-          <SkeletonGrid />
+          <SkeletonGrid variant="talent" />
         ) : (
           <>
             {activeTab === "market" && renderMarket()}

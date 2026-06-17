@@ -499,7 +499,7 @@ const Actors = () => {
         )}
 
         {loading ? (
-          <SkeletonGrid />
+          <SkeletonGrid variant="talent" />
         ) : (
           renderActors()
         )}
