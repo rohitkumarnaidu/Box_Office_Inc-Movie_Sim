@@ -12,6 +12,7 @@ import {
   createDirectingProject,
   ensureScriptsProductionDefaults,
 } from "../services/director/directingProjectService.js";
+import { getMarketplaceTalent, resolveTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
@@ -76,12 +77,19 @@ export const getMarketDirectors = async (req, res) => {
       const freshGS = await GameState.findOne({ user: req.user._id });
       freshGS.marketDirectors = generateDirectors(50);
       await freshGS.save();
-      return res.status(200).json({ success: true, directors: presentDirectors(freshGS.marketDirectors) });
+      const result = getMarketplaceTalent(freshGS.marketDirectors, req.query);
+      return res.status(200).json({
+        success: true,
+        directors: presentDirectors(result.items),
+        pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
+      });
     }
 
+    const result = getMarketplaceTalent(gameState.marketDirectors, req.query);
     res.status(200).json({
       success: true,
-      directors: presentDirectors(gameState.marketDirectors),
+      directors: presentDirectors(result.items),
+      pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
     });
   } catch (error) {
     res.status(500).json({
@@ -286,7 +294,7 @@ export const hireDirector = async (req, res) => {
       });
     }
 
-    const marketDirector = gameState.marketDirectors[index];
+    const { item: marketDirector, index: realIdx } = resolveTalent(gameState.marketDirectors || [], index);
 
     if (!marketDirector) {
       return res.status(404).json({
@@ -309,12 +317,14 @@ export const hireDirector = async (req, res) => {
     director.status = "AVAILABLE";
     director.hiredAt = new Date();
 
-    gameState.marketDirectors.splice(index, 1);
+    gameState.marketDirectors.splice(realIdx, 1);
     gameState.ownedDirectors.push(director);
 
     gameState.notifications.push({
       message: `${director.name} was hired as a director.`,
     });
+
+    invalidateUserCache(String(req.user._id));
 
     await gameState.save();
 
@@ -353,7 +363,7 @@ export const fireDirector = async (req, res) => {
       });
     }
 
-    const ownedDirector = gameState.ownedDirectors[index];
+    const { item: ownedDirector, index: realIdx } = resolveTalent(gameState.ownedDirectors || [], index);
 
     if (!ownedDirector) {
       return res.status(404).json({
@@ -386,12 +396,14 @@ export const fireDirector = async (req, res) => {
     director.busyUntilWeek = null;
     delete director.hiredAt;
 
-    gameState.ownedDirectors.splice(index, 1);
+    gameState.ownedDirectors.splice(realIdx, 1);
     gameState.marketDirectors.push(director);
 
     gameState.notifications.push({
       message: `${director.name} was released to the director market. Compensation ₹${compensation.toLocaleString("en-IN")} paid and ${fanLoss} fans lost.`,
     });
+
+    invalidateUserCache(String(req.user._id));
 
     await studio.save();
     await gameState.save();

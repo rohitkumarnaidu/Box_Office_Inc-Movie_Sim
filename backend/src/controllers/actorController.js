@@ -6,6 +6,7 @@ import {
   calculateActorCompensation,
   calculateActorFanLoss,
 } from "../services/actor/actorContractService.js";
+import { getMarketplaceTalent, resolveTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 
 const ACTOR_MARKET_SIZE = 1000;
 
@@ -26,12 +27,19 @@ export const getMarketActors = async (req, res) => {
       const freshGS = await GameState.findOne({ user: req.user._id });
       freshGS.marketActors = generateActors(100);
       await freshGS.save();
-      return res.status(200).json({ success: true, actors: presentActors(freshGS.marketActors) });
+      const result = getMarketplaceTalent(freshGS.marketActors, req.query);
+      return res.status(200).json({
+        success: true,
+        actors: presentActors(result.items),
+        pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
+      });
     }
 
+    const result = getMarketplaceTalent(gameState.marketActors, req.query);
     return res.status(200).json({
       success: true,
-      actors: presentActors(gameState.marketActors),
+      actors: presentActors(result.items),
+      pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
     });
   } catch (error) {
     return res.status(500).json({
@@ -76,7 +84,7 @@ export const hireActor = async (req, res) => {
       });
     }
 
-    const marketActor = gameState.marketActors?.[Number(index)];
+    const { item: marketActor, index: realIndex } = resolveTalent(gameState.marketActors || [], index);
 
     if (!marketActor) {
       return res.status(404).json({
@@ -103,7 +111,7 @@ export const hireActor = async (req, res) => {
       reason: "Hired by studio",
     });
 
-    gameState.marketActors.splice(Number(index), 1);
+    gameState.marketActors.splice(realIndex, 1);
     gameState.ownedActors = gameState.ownedActors || [];
     gameState.ownedActors.push(actor);
 
@@ -112,6 +120,7 @@ export const hireActor = async (req, res) => {
       createdAt: new Date(),
     });
 
+    invalidateUserCache(String(req.user._id));
     await gameState.save();
 
     return res.status(200).json({
@@ -185,7 +194,7 @@ export const fireActor = async (req, res) => {
       });
     }
 
-    const ownedActor = gameState.ownedActors?.[Number(index)];
+    const { item: ownedActor, index: realIndex } = resolveTalent(gameState.ownedActors || [], index);
 
     if (!ownedActor) {
       return res.status(404).json({
@@ -223,7 +232,7 @@ export const fireActor = async (req, res) => {
     actor.busyUntilWeek = null;
     actor.hiredAt = null;
 
-    gameState.ownedActors.splice(Number(index), 1);
+    gameState.ownedActors.splice(realIndex, 1);
     gameState.marketActors = gameState.marketActors || [];
     gameState.marketActors.push(actor);
 
@@ -232,6 +241,7 @@ export const fireActor = async (req, res) => {
       createdAt: new Date(),
     });
 
+    invalidateUserCache(String(req.user._id));
     await studio.save();
     await gameState.save();
 
