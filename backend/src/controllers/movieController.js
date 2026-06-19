@@ -12,6 +12,64 @@ import { generateMovieTitle } from "../services/movie/movieService.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
+/**
+ * Lazy backfill helper for older movie documents that lack human-readable names.
+ * Ensures the UI can always display names without massive DB migrations.
+ */
+const lazyBackfillNames = async (movies, gameState) => {
+    let anyUpdates = false;
+
+    // Create lookup maps only if there are movies missing names
+    let talentMap = null;
+    const getTalentMap = () => {
+        if (!talentMap) {
+            talentMap = new Map();
+            const addAll = (list) => {
+                if (list && Array.isArray(list)) {
+                    list.forEach(t => talentMap.set(t.id, t.name));
+                }
+            };
+            addAll(gameState.ownedDirectors);
+            addAll(gameState.retiredDirectors);
+            addAll(gameState.ownedActors);
+            addAll(gameState.retiredActors);
+            addAll(gameState.ownedCrewTeams);
+        }
+        return talentMap;
+    };
+
+    for (const movie of movies) {
+        let needsSave = false;
+        const updates = {};
+
+        if (!movie.directorName && movie.directorId) {
+            const name = getTalentMap().get(movie.directorId) || "Unknown Director";
+            movie.directorName = name;
+            updates.directorName = name;
+            needsSave = true;
+        }
+        if (!movie.leadActorName && movie.leadActorId) {
+            const name = getTalentMap().get(movie.leadActorId) || "Unknown Actor";
+            movie.leadActorName = name;
+            updates.leadActorName = name;
+            needsSave = true;
+        }
+        if (!movie.crewTeamName && movie.crewTeamId) {
+            const name = getTalentMap().get(movie.crewTeamId) || "Unknown Crew";
+            movie.crewTeamName = name;
+            updates.crewTeamName = name;
+            needsSave = true;
+        }
+
+        if (needsSave) {
+            // Persist the backfill to DB so it doesn't need to happen again
+            await Movie.updateOne({ _id: movie._id }, { $set: updates });
+            anyUpdates = true;
+        }
+    }
+    return anyUpdates;
+};
+
 export const createMovie = async (req, res) => {
   try {
     const { title, scriptId, directorId, leadActorId, supportingActorIds, marketingCampaignIds } = req.body;
@@ -117,9 +175,12 @@ export const createMovie = async (req, res) => {
       studioId: studio._id,
       scriptId,
       directorId,
+      directorName: director.name,
       leadActorId,
+      leadActorName: leadActor.name,
       supportingActorIds: supportingActorIds || [],
       crewTeamId: crewTeam.id,
+      crewTeamName: crewTeam.name,
       budget: totalBudget,
       budgetBreakdown: {
         scriptCost,
@@ -175,10 +236,13 @@ export const createMovie = async (req, res) => {
 
 export const getActiveMovies = async (req, res) => {
     try {
-        const gameState = await GameState.findOne({ user: req.user._id }).select("activeMovies").lean();
+        const gameState = await GameState.findOne({ user: req.user._id }).lean();
         if (!gameState) return res.status(404).json({ success: false, message: "Game state not found" });
 
         const movies = await Movie.find({ _id: { $in: gameState.activeMovies } }).lean();
+        
+        await lazyBackfillNames(movies, gameState);
+
         res.status(200).json({ success: true, movies });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -309,9 +373,15 @@ export const getReleasedMovies = async (req, res) => {
         const studio = await Studio.findOne({ owner: req.user._id }).select("_id").lean();
         if (!studio) return res.status(404).json({ success: false, message: "Studio not found" });
 
+        const gameState = await GameState.findOne({ user: req.user._id }).lean();
+
         const movies = await Movie.find({ studioId: studio._id, status: "RELEASED" })
             .sort({ createdAt: -1 })
             .lean();
+
+        if (gameState) {
+            await lazyBackfillNames(movies, gameState);
+        }
 
         res.status(200).json({ success: true, movies });
     } catch (error) {
@@ -321,8 +391,14 @@ export const getReleasedMovies = async (req, res) => {
 
 export const getMovieDetails = async (req, res) => {
     try {
-        const movie = await Movie.findById(req.params.id);
+        const movie = await Movie.findById(req.params.id).lean();
         if (!movie) return res.status(404).json({ success: false, message: "Movie not found" });
+
+        const gameState = await GameState.findOne({ user: req.user._id }).lean();
+        if (gameState) {
+            await lazyBackfillNames([movie], gameState);
+        }
+
         res.status(200).json({ success: true, movie });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

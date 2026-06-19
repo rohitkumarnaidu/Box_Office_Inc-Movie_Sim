@@ -7,9 +7,12 @@ const movieSchema = new mongoose.Schema(
     studioId: { type: mongoose.Schema.Types.ObjectId, ref: "Studio", required: true },
     scriptId: { type: String, required: true },
     directorId: { type: String, required: true },
+    directorName: { type: String, default: "" },
     leadActorId: { type: String, required: true },
+    leadActorName: { type: String, default: "" },
     supportingActorIds: [{ type: String }],
     crewTeamId: { type: String, required: true },
+    crewTeamName: { type: String, default: "" },
 
     budget: { type: Number, default: 0 },
     marketingBudget: { type: Number, default: 0 },

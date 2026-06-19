@@ -105,15 +105,15 @@ const ReleasedMovieDetail = () => {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-500 text-sm">Director</span>
-                                <span className="text-white font-bold">{movie.directorId}</span>
+                                <span className="text-white font-bold">{movie.directorName || movie.directorId}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-500 text-sm">Lead Actor</span>
-                                <span className="text-white font-bold">{movie.leadActorId}</span>
+                                <span className="text-white font-bold">{movie.leadActorName || movie.leadActorId}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-500 text-sm">Crew Team</span>
-                                <span className="text-white font-bold">{movie.crewTeamId}</span>
+                                <span className="text-white font-bold">{movie.crewTeamName || movie.crewTeamId}</span>
                             </div>
                         </div>
                     </div>
