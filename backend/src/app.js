@@ -59,6 +59,7 @@ import crewRoutes from "./routes/crewRoutes.js";
 import movieRoutes from "./routes/movieRoutes.js";
 import simulationRoutes from "./routes/simulationRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import { errorHandler } from "./middleware/errorMiddleware.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/scripts", scriptRoutes);
@@ -76,5 +77,7 @@ app.use((req, res) => {
     message: "Route Not Found",
   });
 });
+
+app.use(errorHandler);
 
 export default app;

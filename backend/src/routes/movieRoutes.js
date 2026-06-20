@@ -8,10 +8,12 @@ import {
   getMovieDetails,
   generateTitle,
 } from "../controllers/movieController.js";
+import { validateRequest } from "../middleware/validationMiddleware.js";
+import { createMovieSchema } from "../validators/movieValidators.js";
 
 const router = express.Router();
 
-router.post("/", protect, createMovie);
+router.post("/", protect, validateRequest(createMovieSchema), createMovie);
 router.get("/generate-title", protect, generateTitle);
 router.get("/active", protect, getActiveMovies);
 router.get("/released", protect, getReleasedMovies);
