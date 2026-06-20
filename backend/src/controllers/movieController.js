@@ -9,6 +9,7 @@ import { processStudioGrowth } from "../services/simulation/engines/studioGrowth
 import { addNotification } from "../services/simulation/helpers/notificationHelper.js";
 import { MARKETING_CAMPAIGNS } from "../constants/marketingCampaigns.js";
 import { generateMovieTitle } from "../services/movie/movieService.js";
+import { withTransaction } from "../utils/transactionHelper.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
@@ -203,8 +204,9 @@ export const releaseMovie = async (req, res) => {
             return res.status(400).json({ success: false, message: "Movie is not ready for release" });
         }
 
-        const gameState = await findGameState(req.user._id);
-        const studio = await Studio.findOne({ owner: req.user._id });
+        const result = await withTransaction(async (session) => {
+            const gameState = await findGameState(req.user._id);
+            const studio = await Studio.findOne({ owner: req.user._id });
 
         // Get all related talent/data for engines
         const script = gameState.marketScripts.find(s => s.id === movie.scriptId) ||
@@ -293,14 +295,17 @@ export const releaseMovie = async (req, res) => {
             );
         }
 
-        await movie.save();
-        await studio.save();
-        await gameState.save();
+            await movie.save({ session });
+            await studio.save({ session });
+            await gameState.save({ session });
 
-        res.status(200).json({ success: true, movie, growth });
+            return { movie, growth };
+        });
+
+        res.status(200).json({ success: true, movie: result.movie, growth: result.growth });
     } catch (error) {
         console.error("Release Movie Error:", error);
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: `Operation rolled back due to: ${error.message}` });
     }
 };
 
