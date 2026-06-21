@@ -103,11 +103,16 @@ export const generateBoxOffice = (movie, leadActor, director, marketMultiplier =
   const starPower = (leadActor.popularity / 100) * (scaleBudget * 0.18);
   const marketingBoost = (movie.marketingBudget || 0) * 0.5;
 
+  // Franchise sequel bonus: +10% per prior installment, capped at +50%
+  const sequelNumber = movie.sequelNumber || 1;
+  const franchiseBonus = Math.min(0.5, (sequelNumber - 1) * 0.1);
+  const franchiseMultiplier = 1 + franchiseBonus;
+
   // Market Trends multiplier (defaults to 1 = no active trend for this
   // movie's genre). Applied at the opening weekend so it propagates through
   // worldwide gross, profit, ROI, and verdict.
   const openingWeekend = Math.round(
-    (openingBase + starPower + marketingBoost) * (hypeFactor + 0.4) * (0.7 + Math.random() * 0.6) * marketMultiplier
+    (openingBase + starPower + marketingBoost) * (hypeFactor + 0.4) * (0.7 + Math.random() * 0.6) * marketMultiplier * franchiseMultiplier
   );
 
   // Worldwide Gross influenced by Audience Score (legs) and Critic Score (prestige)

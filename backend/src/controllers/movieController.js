@@ -1,6 +1,7 @@
 import Movie from "../models/Movie.js";
 import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
+import Franchise from "../models/Franchise.js";
 import { generateReviews } from "../services/simulation/engines/reviewEngine.js";
 import { generateBoxOffice } from "../services/simulation/engines/boxOfficeEngine.js";
 import { getGenreMultiplier } from "../services/simulation/engines/trendEngine.js";
@@ -171,6 +172,26 @@ export const createMovie = async (req, res) => {
 
     const totalBudget = scriptCost + directorCost + leadActorCost + supportingActorCost + crewCost + marketingBudget;
 
+    // Handle franchise / sequel logic
+    let franchiseId = req.body.franchiseId || null;
+    let sequelNumber = 1;
+
+    if (req.body.createFranchise && req.body.franchiseName) {
+      const newFranchise = await Franchise.create({
+        name: req.body.franchiseName,
+        studioId: studio._id,
+        movies: [],
+      });
+      franchiseId = newFranchise._id;
+    }
+
+    if (franchiseId) {
+      const franchise = await Franchise.findById(franchiseId);
+      if (franchise) {
+        sequelNumber = franchise.movies.length + 1;
+      }
+    }
+
     const movie = await Movie.create({
       title,
       studioId: studio._id,
@@ -198,8 +219,17 @@ export const createMovie = async (req, res) => {
       status: "PRE_PRODUCTION",
       createdWeek: gameState.currentWeek,
       productionProgress: 0,
-      remainingWeeks: totalProductionWeeks
+      remainingWeeks: totalProductionWeeks,
+      franchiseId,
+      sequelNumber,
     });
+
+    // Add movie to franchise
+    if (franchiseId) {
+      await Franchise.findByIdAndUpdate(franchiseId, {
+        $push: { movies: movie._id },
+      });
+    }
 
     // Update statuses
     script.status = "SOLD"; // Or a new "IN_PRODUCTION" status

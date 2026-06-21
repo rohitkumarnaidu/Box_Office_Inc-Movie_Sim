@@ -109,7 +109,14 @@ export const processStudioGrowth = (gameState, studio, movie) => {
   // Prestige Growth: Critic Score, Verdict, Quality
   const criticScoreFactor = movie.criticScore / 100;
   const qualityFactor = movie.quality / 100;
-  const prestigeGain = Math.round((criticScoreFactor * 10) + (qualityFactor * 5) + (isSuccess ? 20 : isFailure ? -10 : 0));
+  let prestigeGain = Math.round((criticScoreFactor * 10) + (qualityFactor * 5) + (isSuccess ? 20 : isFailure ? -10 : 0));
+
+  // Franchise prestige bonus: sequels in a franchise earn extra prestige
+  if (movie.franchiseId && movie.sequelNumber > 1) {
+    const franchisePrestigeBonus = Math.min(15, (movie.sequelNumber - 1) * 5);
+    prestigeGain += franchisePrestigeBonus;
+  }
+
   studio.prestige = Math.max(0, (studio.prestige || 0) + prestigeGain);
 
   // Update Stats
