@@ -42,6 +42,7 @@ const MovieLibrary = () => {
 
   const getVerdictColor = (verdict) => {
     switch(verdict) {
+        case 'ALL_TIME_BLOCKBUSTER':
         case 'LEGENDARY': return 'bg-orange-600 text-white';
         case 'BLOCKBUSTER': return 'bg-purple-600 text-white';
         case 'HIT': return 'bg-green-600 text-white';

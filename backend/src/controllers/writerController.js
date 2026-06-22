@@ -4,6 +4,8 @@ import { generateWriters } from "../services/writer/writerGenerator.js";
 import { buildWriterProfile } from "../services/writer/writerProfileService.js";
 import { presentWriters } from "../services/writer/writerPresenter.js";
 import crypto from "crypto";
+import { getMarketplaceTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
+import Notification from "../models/Notification.js";
 
 export const getMarketWriters = async (req, res) => {
   const gameState = await GameState.findOne({
@@ -20,11 +22,17 @@ export const getMarketWriters = async (req, res) => {
     const freshGameState = await GameState.findOne({ user: req.user._id });
     freshGameState.marketWriters = generateWriters(50);
     await freshGameState.save();
-    return res.status(200).json({ writers: presentWriters(freshGameState.marketWriters) });
+    const result = getMarketplaceTalent(freshGameState.marketWriters, req.query);
+    return res.status(200).json({
+      writers: presentWriters(result.items),
+      pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
+    });
   }
 
+  const result = getMarketplaceTalent(gameState.marketWriters, req.query);
   res.status(200).json({
-    writers: presentWriters(gameState.marketWriters),
+    writers: presentWriters(result.items),
+    pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
   });
 };
 
@@ -174,7 +182,8 @@ export const fireWriter = async (req, res) => {
       (project) => project.writerId !== writer.id
     );
 
-    gameState.notifications.push({
+    await Notification.create({
+      gameStateId: gameState._id,
       message: `${writer.name} was fired while writing a script. Project cancelled.`,
     });
   }
@@ -190,7 +199,8 @@ export const fireWriter = async (req, res) => {
 
   gameState.ownedWriters.splice(index, 1);
 
-  gameState.notifications.push({
+  await Notification.create({
+    gameStateId: gameState._id,
     message: `${
       writer.name
     } was fired. Penalty ₹${penalty.toLocaleString()} and ${fanLoss} fans lost.`,
@@ -339,7 +349,8 @@ export const replaceWriter = async (req, res) => {
     oldWriter.busyUntilWeek = null;
   }
 
-  gameState.notifications.push({
+  await Notification.create({
+    gameStateId: gameState._id,
     message: `${oldWriter?.name} left the project. ${newWriter.name} replaced them. Script quality -${penalty}.`,
   });
 

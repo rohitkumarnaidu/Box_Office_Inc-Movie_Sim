@@ -32,6 +32,7 @@ import Notifications from "./pages/notifications/Notifications";
 import Settings from "./pages/settings/Settings";
 import AuthMonitoring from "./pages/auth/AuthMonitoring";
 import Toast from "./components/common/Toast";
+import RivalStudios from "./pages/rivals/RivalStudios";
 
 function App() {
   return (
@@ -46,6 +47,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rivals"
+          element={
+            <ProtectedRoute>
+              <RivalStudios />
             </ProtectedRoute>
           }
         />

@@ -14,7 +14,7 @@ const ReleaseResult = () => {
     );
   }
 
-  const isHit = ["HIT", "BLOCKBUSTER", "LEGENDARY"].includes(movie.verdict);
+  const isHit = ["HIT", "BLOCKBUSTER", "ALL_TIME_BLOCKBUSTER", "LEGENDARY"].includes(movie.verdict);
   const isFlop = ["FLOP", "DISASTER"].includes(movie.verdict);
 
   return (
