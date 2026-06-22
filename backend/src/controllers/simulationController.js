@@ -3,6 +3,8 @@ import Studio from "../models/Studio.js";
 import { runWeeklySimulation } from "../services/simulation/runWeeklySimulation.js";
 import Notification from "../models/Notification.js";
 
+import { withTransaction } from "../utils/transactionHelper.js";
+
 export const simulateWeek = async (req, res) => {
   try {
     const { weeks = 1 } = req.body;
@@ -25,44 +27,46 @@ export const simulateWeek = async (req, res) => {
     // Accumulate rival releases across all simulated weeks
     const allRivalReleases = [];
 
-    // Run simulation multiple times
-    for (let i = 0; i < numWeeks; i++) {
-      const prevMoney = studio.money || 0;
-      const weekRivalReleases = await runWeeklySimulation(gameState, studio);
-      allRivalReleases.push(...(weekRivalReleases || []));
+    await withTransaction(async (session) => {
+      // Run simulation multiple times
+      for (let i = 0; i < numWeeks; i++) {
+        const prevMoney = studio.money || 0;
+        const weekRivalReleases = await runWeeklySimulation(gameState, studio);
+        allRivalReleases.push(...(weekRivalReleases || []));
 
-      // Financial History Logging
-      studio.financialHistory = studio.financialHistory || [];
-      studio.financialHistory.push({
-          week: ((gameState.currentWeek - 2) % 52) + 1,
-          year: Math.floor((gameState.currentWeek - 2) / 52) + 1,
-          revenue: Math.max(0, studio.money - prevMoney),
-          expenses: Math.max(0, prevMoney - studio.money),
-          payroll: 0,
-          movieCosts: 0,
-          marketingCosts: 0,
-          profit: studio.money - prevMoney,
-          balance: studio.money
-      });
+        // Financial History Logging
+        studio.financialHistory = studio.financialHistory || [];
+        studio.financialHistory.push({
+            week: ((gameState.currentWeek - 2) % 52) + 1,
+            year: Math.floor((gameState.currentWeek - 2) / 52) + 1,
+            revenue: Math.max(0, studio.money - prevMoney),
+            expenses: Math.max(0, prevMoney - studio.money),
+            payroll: 0,
+            movieCosts: 0,
+            marketingCosts: 0,
+            profit: studio.money - prevMoney,
+            balance: studio.money
+        });
 
-      // Limit history size to 100 entries for performance
-      if (studio.financialHistory.length > 100) {
-          studio.financialHistory.shift();
+        // Limit history size to 100 entries for performance
+        if (studio.financialHistory.length > 100) {
+            studio.financialHistory.shift();
+        }
+
+        if (gameState._pendingNotifications && gameState._pendingNotifications.length > 0) {
+          newNotifications.push(...gameState._pendingNotifications);
+          gameState._pendingNotifications = [];
+        }
       }
-      if (gameState._pendingNotifications && gameState._pendingNotifications.length > 0) {
-        newNotifications.push(...gameState._pendingNotifications);
-        gameState._pendingNotifications = [];
+
+      if (newNotifications.length > 0) {
+        const inserted = await Notification.insertMany(newNotifications, { session });
+        newNotifications = inserted;
       }
-    }
 
-    if (newNotifications.length > 0) {
-      const inserted = await Notification.insertMany(newNotifications);
-      // Replace with DB records to get the assigned _ids, though not strictly necessary for the summary
-      newNotifications = inserted;
-    }
-
-    await studio.save();
-    await gameState.save();
+      await studio.save({ session });
+      await gameState.save({ session });
+    });
 
     const endFans = studio.fans || 0;
     const endPrestige = studio.prestige || 0;
@@ -85,8 +89,8 @@ export const simulateWeek = async (req, res) => {
       summary
     });
   } catch (error) {
-    console.error("Simulation Error:", error);
-    res.status(500).json({ message: "Simulation failed" });
+    console.error("Simulation Transaction Error:", error);
+    res.status(500).json({ success: false, message: `Operation rolled back due to: ${error.message}` });
   }
 };
 

@@ -12,6 +12,7 @@ import {
   createDirectingProject,
   ensureScriptsProductionDefaults,
 } from "../services/director/directingProjectService.js";
+import { withTransaction } from "../utils/transactionHelper.js";
 import { getMarketplaceTalent, resolveTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 import Notification from "../models/Notification.js";
 
@@ -385,39 +386,42 @@ export const fireDirector = async (req, res) => {
       });
     }
 
-    const director = ownedDirector.toObject
-      ? ownedDirector.toObject()
-      : { ...ownedDirector };
+    const result = await withTransaction(async (session) => {
+        const director = ownedDirector.toObject
+          ? ownedDirector.toObject()
+          : { ...ownedDirector };
 
-    const compensation = calculateDirectorCompensation(director);
-    const fanLoss = calculateDirectorFanLoss(director);
+        const compensation = calculateDirectorCompensation(director);
+        const fanLoss = calculateDirectorFanLoss(director);
 
-    studio.money = Math.max(0, Number(studio.money || 0) - compensation);
-    studio.fans = Math.max(0, Number(studio.fans || 0) - fanLoss);
+        studio.money = Math.max(0, Number(studio.money || 0) - compensation);
+        studio.fans = Math.max(0, Number(studio.fans || 0) - fanLoss);
 
-    director.status = "AVAILABLE";
-    director.busyUntilWeek = null;
-    delete director.hiredAt;
+        director.status = "AVAILABLE";
+        director.busyUntilWeek = null;
+        delete director.hiredAt;
 
-    gameState.ownedDirectors.splice(realIdx, 1);
-    gameState.marketDirectors.push(director);
+        gameState.ownedDirectors.splice(realIdx, 1);
+        gameState.marketDirectors.push(director);
 
-    await Notification.create({
-      gameStateId: gameState._id,
-      message: `${director.name} was released to the director market. Compensation ₹${compensation.toLocaleString("en-IN")} paid and ${fanLoss} fans lost.`,
+        await Notification.create([{
+          gameStateId: gameState._id,
+          message: `${director.name} was released to the director market. Compensation ₹${compensation.toLocaleString("en-IN")} paid and ${fanLoss} fans lost.`,
+        }], { session });
+
+        await studio.save({ session });
+        await gameState.save({ session });
+        
+        return { director, compensation, fanLoss };
     });
 
     invalidateUserCache(String(req.user._id));
-
-    await studio.save();
-    await gameState.save();
-
     res.status(200).json({
       success: true,
       message: "Director released to market",
-      director,
-      compensation,
-      fanLoss,
+      director: result.director,
+      compensation: result.compensation,
+      fanLoss: result.fanLoss,
       remainingMoney: studio.money,
       remainingFans: studio.fans,
       marketDirectors: presentDirectors(gameState.marketDirectors),
@@ -426,7 +430,7 @@ export const fireDirector = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: `Operation rolled back due to: ${error.message}`,
     });
   }
 };
