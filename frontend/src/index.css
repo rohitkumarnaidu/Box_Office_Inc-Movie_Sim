@@ -1,22 +1,36 @@
 @import "tailwindcss";
 
-:root{
-  --bg:#070b17;
-  --card:#0d1326;
-  --card2:#11182d;
-  --primary:#7c3aed;
-  --primary-light:#8b5cf6;
-  --text:#f8fafc;
-  --muted:#94a3b8;
+:root, .dark {
+  --bg: #070b17;
+  --card: #0d1326;
+  --card2: #11182d;
+  --primary: #7c3aed;
+  --primary-light: #8b5cf6;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --border: #1e293b;
+  --surface: #0B1020;
 }
 
-body{
-  background:#070B17;
-  color:white;
+.light {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --card2: #f1f5f9;
+  --primary: #7c3aed;
+  --primary-light: #8b5cf6;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --surface: #ffffff;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 @media (max-width: 639px) {
-  /* Prevent title overflow on smaller screens */
   .text-4xl, .text-5xl, .text-6xl {
     font-size: 1.75rem !important;
     line-height: 2.25rem !important;

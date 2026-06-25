@@ -6,13 +6,14 @@ const DashboardLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#070B17] flex flex-col md:flex-row">
+    <div className="min-h-screen flex flex-col md:flex-row" style={{ backgroundColor: "var(--bg)" }}>
       {/* Mobile Top Navigation */}
-      <header className="md:hidden flex items-center justify-between p-4 bg-[#0B1020] border-b border-slate-800 shrink-0">
-        <h1 className="text-2xl font-bold text-violet-500">CineVerse</h1>
+      <header className="md:hidden flex items-center justify-between p-4 shrink-0" style={{ backgroundColor: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--primary)" }}>CineVerse</h1>
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="text-slate-400 hover:text-white p-2 cursor-pointer animate-pulse-subtle"
+          className="p-2 cursor-pointer"
+          style={{ color: "var(--muted)" }}
           aria-label="Open sidebar"
         >
           <Menu size={24} />
