@@ -88,7 +88,12 @@ export const applyWriterSalaryProgression = ({
       salary: nextSalary,
       reason: reasons.join(" + ") || "Career Adjustment",
     });
-  }
+    const MAX_HISTORY_RECORDS = 20;
+      if (writer.salaryHistory.length > MAX_HISTORY_RECORDS) {
+        writer.salaryHistory.shift();
+      }
+    }
+  
 
   return {
     previousSalary,
