@@ -13,6 +13,7 @@ import {
   Scale,
   IndianRupee,
   X,
+  Swords,
 } from "lucide-react";
 
 import { Link, useLocation } from "react-router-dom";
@@ -25,6 +26,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       name: "Dashboard",
       path: "/",
       icon: LayoutDashboard,
+    },
+    {
+      name: "Rival Studios",
+      path: "/rivals",
+      icon: Swords,
     },
     {
       name: "Movies",
@@ -100,6 +106,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       name: "Financials",
       path: "/studio/history",
       icon: IndianRupee,
+    },
+    {
+      name: "Franchises",
+      path: "/studio/franchises",
+      icon: Layers,
     },
     {
       name: "Market",

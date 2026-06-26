@@ -193,6 +193,92 @@ export const EVENT_DEFINITIONS = [
   },
 ];
 
+// -----------------------------------------------------------------------
+// Production-specific events — applied to individual movies in production.
+// These are separate from the global random events above.
+// -----------------------------------------------------------------------
+export const PRODUCTION_EVENT_DEFINITIONS = [
+  // --- Negative / Crisis ---
+  {
+    id: "actor-injury",
+    label: "Lead Actor Injury",
+    category: "negative",
+    chance: 0.04,
+    delayWeeks: 2,
+    qualityDelta: -3,
+    hypeDelta: 0,
+    budgetCost: 200000,
+    message: "The lead actor suffered an injury on set, causing a 2-week delay.",
+  },
+  {
+    id: "budget-overrun",
+    label: "Budget Overrun",
+    category: "negative",
+    chance: 0.06,
+    delayWeeks: 0,
+    qualityDelta: 0,
+    hypeDelta: -5,
+    budgetCost: 500000,
+    message: "Production costs spiralled out of control. Emergency funds allocated.",
+  },
+  {
+    id: "script-rewrite",
+    label: "Emergency Script Rewrite",
+    category: "negative",
+    chance: 0.05,
+    delayWeeks: 3,
+    qualityDelta: -5,
+    hypeDelta: -3,
+    budgetCost: 150000,
+    message: "Major script issues forced an emergency rewrite, delaying production.",
+  },
+  {
+    id: "director-conflict",
+    label: "Director Creative Conflict",
+    category: "negative",
+    chance: 0.04,
+    delayWeeks: 1,
+    qualityDelta: -4,
+    hypeDelta: -2,
+    budgetCost: 0,
+    message: "Creative differences between the director and producers caused friction.",
+  },
+  // --- Positive / Opportunity ---
+  {
+    id: "viral-trailer",
+    label: "Viral Trailer",
+    category: "positive",
+    chance: 0.05,
+    delayWeeks: 0,
+    qualityDelta: 0,
+    hypeDelta: 15,
+    budgetCost: 0,
+    message: "The movie's trailer went viral, generating massive audience anticipation!",
+  },
+  {
+    id: "award-buzz-movie",
+    label: "Early Award Buzz",
+    category: "positive",
+    chance: 0.03,
+    delayWeeks: 0,
+    qualityDelta: 5,
+    hypeDelta: 10,
+    budgetCost: 0,
+    message: "Industry insiders are already buzzing about this film for awards season.",
+  },
+  {
+    id: "government-incentive-movie",
+    label: "Film Tax Credit",
+    category: "positive",
+    chance: 0.04,
+    delayWeeks: 0,
+    qualityDelta: 0,
+    hypeDelta: 0,
+    budgetCost: -300000, // Negative = money gained
+    message: "The production qualified for a government film tax credit, saving costs!",
+  },
+];
+
 // Engine tuning knobs. Centralised so balancing requires no logic changes.
 export const EVENT_CONFIG = {
   // Probability (0..1) that the engine attempts to fire an event on a tick.

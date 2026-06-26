@@ -1,18 +1,50 @@
 import crypto from "crypto";
-
 import { calculateProjectedMovieQuality } from "../../director/directingProjectService.js";
 import { addNotification } from "../helpers/notificationHelper.js";
 
+/**
+ * @fileoverview Directing Project Engine
+ *
+ * Advances active director projects each week. On completion:
+ * - Updates director stats (reputation, morale, discovery, career history).
+ * - Calculates projected movie quality.
+ * - Builds a `preProductionMovie` object and pushes it to gameState.
+ * - Marks the script as PRE_PRODUCTION_READY.
+ * - Frees the director back to AVAILABLE status.
+ *
+ * Projects awaiting director replacement are skipped until resolved.
+ * Discovery fires a notification when `discovered` first crosses 50.
+ */
+
+/** Score threshold at which all hidden director stats are revealed to the player. */
 const DISCOVERY_REVEAL_THRESHOLD = 50;
 
+/**
+ * Appends `studioName` to `director.studiosWorkedWith` if not already present.
+ *
+ * @param {object} director - Director object (mutated in place).
+ * @param {string} studioName - Studio name to record.
+ * @returns {void}
+ */
 const addUniqueStudio = (director, studioName) => {
   director.studiosWorkedWith = director.studiosWorkedWith || [];
-
   if (!director.studiosWorkedWith.includes(studioName)) {
     director.studiosWorkedWith.push(studioName);
   }
 };
 
+/**
+ * Constructs a lean pre-production movie record from a completed directing project.
+ * The player uses this to start the full production pipeline.
+ *
+ * @param {object} params
+ * @param {object} params.project          - Completed directing project.
+ * @param {object|null} params.script      - Associated script (may be null).
+ * @param {object} params.director         - Director who completed the project.
+ * @param {object} params.studio           - Studio document.
+ * @param {number} params.projectedQuality - Pre-computed quality score.
+ * @returns {object} Pre-production movie record with a fresh UUID.
+ */
 const buildPreProductionMovie = ({ project, script, director, studio, projectedQuality }) => ({
   id: crypto.randomUUID(),
   title: project.movieName || project.scriptTitle,
@@ -26,6 +58,19 @@ const buildPreProductionMovie = ({ project, script, director, studio, projectedQ
   studio: studio?.name || "Unknown Studio",
 });
 
+/**
+ * Processes all active directing projects for the current simulation week.
+ * Mutates `gameState` in place; the caller persists the document.
+ *
+ * @param {object} gameState - GameState document.
+ * @param {number} gameState.currentWeek - The week currently being processed.
+ * @param {Array}  [gameState.activeDirectorProjects=[]] - In-progress directing projects.
+ * @param {Array}  [gameState.ownedDirectors=[]]         - Directors under contract.
+ * @param {Array}  [gameState.ownedScripts=[]]           - Scripts owned by the studio.
+ * @param {Array}  [gameState.preProductionMovies=[]]    - Completed pre-production packages.
+ * @param {object} studio - Studio document; name used in history and notifications.
+ * @returns {void}
+ */
 export const processDirectingProjects = (gameState, studio) => {
   const completedProjects = [];
 
@@ -103,13 +148,7 @@ export const processDirectingProjects = (gameState, studio) => {
     }
 
     gameState.preProductionMovies.push(
-      buildPreProductionMovie({
-        project,
-        script,
-        director,
-        studio,
-        projectedQuality,
-      })
+      buildPreProductionMovie({ project, script, director, studio, projectedQuality })
     );
 
     addNotification(

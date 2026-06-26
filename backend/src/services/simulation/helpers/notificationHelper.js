@@ -1,6 +1,12 @@
 export const addNotification = (gameState, message) => {
-  gameState.notifications.push({
+  if (!gameState._pendingNotifications) {
+    gameState._pendingNotifications = [];
+  }
+  gameState._pendingNotifications.push({
+    gameStateId: gameState._id,
+    type: "SYSTEM",
     message,
+    read: false,
     createdAt: new Date(),
   });
 };

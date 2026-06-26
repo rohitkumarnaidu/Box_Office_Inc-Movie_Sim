@@ -11,6 +11,7 @@ import DashboardLayout from "../../layouts/DashboardLayout";
 
 import WriterCard from "../../components/writers/WriterCard";
 import WritingProjectCard from "../../components/writers/WritingProjectCard";
+import SkeletonGrid from "../../components/common/SkeletonGrid";
 
 const genres = [
   "Action",
@@ -511,9 +512,7 @@ const Writers = () => {
         </div>
 
         {loading ? (
-          <div className="bg-[#111827] border border-slate-800 rounded-2xl p-12 text-center">
-            <h2 className="text-2xl font-bold text-white">Loading...</h2>
-          </div>
+          <SkeletonGrid variant="talent" />
         ) : (
           <>
             {activeTab === "market" && renderMarket()}

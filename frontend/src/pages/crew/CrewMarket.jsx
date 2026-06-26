@@ -3,11 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { showToast } from "../../features/ui/toastSlice";
+import { STANDARD_CONTRACT_WEEKS, getTotalSalary } from "../../config/contract";
 import {
   selectCrewFilters,
   setCrewFilters,
   resetCrewFilters,
 } from "../../features/talent/talentSlice";
+import SkeletonGrid from "../../components/common/SkeletonGrid";
 
 // Average of a crew team's four skill stats — used for the quality filter
 // and the overall-quality sort so "quality" means the same thing everywhere.
@@ -99,37 +101,46 @@ const CrewMarket = () => {
 
   const [crewTeams, setCrewTeams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const fetchCrewTeams = useCallback(async () => {
+  const fetchCrewTeams = useCallback(async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) {
+        setLoading(true);
+      }
+
       const res = await api.get("/crew");
       setCrewTeams(res.data.crewTeams || []);
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchCrewTeams();
+    const refreshTimer = window.setTimeout(fetchCrewTeams, 0);
+
+    return () => window.clearTimeout(refreshTimer);
   }, [fetchCrewTeams]);
 
   const handleHire = async (id) => {
-    if (loading) return;
+    if (loading || actionLoading) return;
+
     try {
-      setLoading(true);
+      setActionLoading(true);
       await api.post(`/crew/hire/${id}`);
       dispatch(showToast({ message: "Crew team hired successfully!", type: "success" }));
-      fetchCrewTeams();
+      await fetchCrewTeams(false);
     } catch (error) {
       dispatch(showToast({
         message: error?.response?.data?.message || "Failed to hire crew team",
         type: "error"
       }));
     } finally {
-        setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -214,14 +225,14 @@ const CrewMarket = () => {
         </div>
 
         {loading ? (
-          <div className="text-white text-center py-10">Loading crew teams...</div>
+          <SkeletonGrid variant="compact" />
         ) : filteredCrew.length === 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-[#111827] p-12 text-center">
             <h2 className="mb-3 text-2xl font-bold text-white">No Crew Teams</h2>
             <p className="text-slate-400">No crew teams match your filters.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={`grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 ${actionLoading ? "pointer-events-none opacity-70" : ""}`}>
             {filteredCrew.map((crew) => (
               <div key={crew.id} className="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-violet-600 transition-all group">
                 <div className="flex justify-between items-start mb-4">
@@ -244,13 +255,19 @@ const CrewMarket = () => {
                 </div>
 
                 <div className="flex items-center justify-between mt-auto">
-                  <div className="text-violet-400 font-bold">₹{crew.salary.toLocaleString()}/wk</div>
+                  <div>
+                    <div className="text-violet-400 font-bold">₹{crew.salary.toLocaleString()}/wk</div>
+                    <div className="text-xs text-slate-400">
+                      Total ₹{getTotalSalary(crew.salary, STANDARD_CONTRACT_WEEKS).toLocaleString()}
+                      <span className="ml-1">({STANDARD_CONTRACT_WEEKS}w)</span>
+                    </div>
+                  </div>
                   <button
-                    disabled={loading}
+                    disabled={actionLoading}
                     onClick={() => handleHire(crew.id)}
                     className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
                   >
-                    {loading ? "Hiring..." : "Hire Team"}
+                    {actionLoading ? "Hiring..." : "Hire Team"}
                   </button>
                 </div>
               </div>

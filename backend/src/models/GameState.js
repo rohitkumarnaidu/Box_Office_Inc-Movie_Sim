@@ -997,26 +997,81 @@ const gameStateSchema = new mongoose.Schema(
       },
     ],
 
-    notifications: [
+    // -----------------------------------------------------------------------
+    // AI Rival Studios
+    // -----------------------------------------------------------------------
+    rivalStudiosInitialized: {
+      type: Boolean,
+      default: false,
+    },
+
+    rivalStudios: [
       {
-        type: {
+        id: String,
+
+        name: String,
+
+        // Drives AI decision-making style
+        personality: {
           type: String,
-          default: "SYSTEM",
+          enum: ["BLOCKBUSTER", "PRESTIGE", "INDIE", "COMMERCIAL", "CHAOTIC"],
+          default: "COMMERCIAL",
         },
 
-        message: {
-          type: String,
-          required: true,
+        money: {
+          type: Number,
+          default: 5000000,
         },
 
-        read: {
-          type: Boolean,
-          default: false,
+        prestige: {
+          type: Number,
+          default: 0,
         },
 
-        createdAt: {
-          type: Date,
-          default: Date.now,
+        fans: {
+          type: Number,
+          default: 0,
+        },
+
+        level: {
+          type: Number,
+          default: 1,
+        },
+
+        // Movies currently in production (simplified — no full talent pipeline)
+        activeMovies: [
+          {
+            id: String,
+            title: String,
+            genre: String,
+            budget: Number,
+            quality: Number,       // 0-100, determines box office
+            weeksRemaining: Number,
+            totalWeeks: Number,
+          },
+        ],
+
+        // Completed releases
+        movieHistory: [
+          {
+            id: String,
+            title: String,
+            genre: String,
+            budget: Number,
+            boxOffice: Number,
+            profit: Number,
+            verdict: String,
+            releaseWeek: Number,
+          },
+        ],
+
+        stats: {
+          moviesReleased: { type: Number, default: 0 },
+          hits: { type: Number, default: 0 },
+          blockbusters: { type: Number, default: 0 },
+          flops: { type: Number, default: 0 },
+          totalRevenue: { type: Number, default: 0 },
+          totalFansEarned: { type: Number, default: 0 },
         },
       },
     ],
@@ -1040,6 +1095,22 @@ const gameStateSchema = new mongoose.Schema(
         default: {},
       },
     },
+
+    streamingPlatforms: [
+      {
+        id: String,
+        name: String,
+        popularity: Number,
+        contentBudget: Number,
+        subscribers: Number,
+        exclusiveMovies: [
+          {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Movie",
+          },
+        ],
+      },
+    ],
   },
   {
     timestamps: true,

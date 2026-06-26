@@ -1,5 +1,5 @@
 import GameState from "../models/GameState.js";
-import { unreadCount } from "../services/notification/notificationService.js";
+import Notification from "../models/Notification.js";
 
 const findUserGameState = async (userId) => {
   const gameState = await GameState.findOne({
@@ -21,9 +21,12 @@ export const getNotifications = async (req, res) => {
     return sendGameStateNotFound(res);
   }
 
+  const notifications = await Notification.find({ gameStateId: gameState._id }).sort({ createdAt: -1 });
+  const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
+
   res.json({
-    notifications: gameState.notifications,
-    unreadCount: unreadCount(gameState.notifications),
+    notifications,
+    unreadCount,
   });
 };
 
@@ -34,8 +37,10 @@ export const getUnreadNotificationCount = async (req, res) => {
     return sendGameStateNotFound(res);
   }
 
+  const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
+
   res.json({
-    unreadCount: unreadCount(gameState.notifications),
+    unreadCount,
   });
 };
 
@@ -48,7 +53,11 @@ export const markNotificationRead = async (req, res) => {
     return sendGameStateNotFound(res);
   }
 
-  const notification = gameState.notifications.id(id);
+  const notification = await Notification.findOneAndUpdate(
+    { _id: id, gameStateId: gameState._id },
+    { read: true },
+    { new: true }
+  );
 
   if (!notification) {
     return res.status(404).json({
@@ -56,13 +65,11 @@ export const markNotificationRead = async (req, res) => {
     });
   }
 
-  notification.read = true;
-
-  await gameState.save();
+  const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
 
   res.json({
     message: "Notification marked as read",
-    unreadCount: unreadCount(gameState.notifications),
+    unreadCount,
   });
 };
 
@@ -73,15 +80,13 @@ export const markAllNotificationsRead = async (req, res) => {
     return sendGameStateNotFound(res);
   }
 
-  gameState.notifications.forEach((notification) => {
-    notification.read = true;
-  });
+  await Notification.updateMany({ gameStateId: gameState._id }, { read: true });
 
-  await gameState.save();
+  const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
 
   res.json({
     message: "All notifications marked as read",
-    unreadCount: unreadCount(gameState.notifications),
+    unreadCount,
   });
 };
 
@@ -94,23 +99,19 @@ export const deleteNotification = async (req, res) => {
     return sendGameStateNotFound(res);
   }
 
-  const notificationExists = Boolean(gameState.notifications.id(id));
+  const notification = await Notification.findOneAndDelete({ _id: id, gameStateId: gameState._id });
 
-  if (!notificationExists) {
+  if (!notification) {
     return res.status(404).json({
       message: "Notification not found",
     });
   }
 
-  gameState.notifications = gameState.notifications.filter(
-    (notification) => notification._id.toString() !== id
-  );
-
-  await gameState.save();
+  const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
 
   res.json({
     message: "Notification deleted",
-    unreadCount: unreadCount(gameState.notifications),
+    unreadCount,
   });
 };
 
@@ -121,15 +122,11 @@ export const deleteAllNotifications = async (req, res) => {
     return sendGameStateNotFound(res);
   }
 
-  const deletedCount = gameState.notifications.length;
-
-  gameState.notifications = [];
-
-  await gameState.save();
+  const result = await Notification.deleteMany({ gameStateId: gameState._id });
 
   res.json({
     message: "All notifications deleted",
-    deletedCount,
+    deletedCount: result.deletedCount,
     unreadCount: 0,
   });
 };

@@ -112,7 +112,7 @@ const MovieDetails = () => {
                         <div className="bg-slate-800 p-3 rounded-xl"><Calendar className="text-violet-400" /></div>
                         <div>
                             <div className="text-slate-500 text-[10px] font-bold uppercase">Director</div>
-                            <div className="text-white font-bold">{movie.directorId}</div>
+                            <div className="text-white font-bold">{movie.directorName || movie.directorId}</div>
                         </div>
                     </div>
 
@@ -120,7 +120,7 @@ const MovieDetails = () => {
                         <div className="bg-slate-800 p-3 rounded-xl"><Users className="text-blue-400" /></div>
                         <div>
                             <div className="text-slate-500 text-[10px] font-bold uppercase">Lead Actor</div>
-                            <div className="text-white font-bold">{movie.leadActorId}</div>
+                            <div className="text-white font-bold">{movie.leadActorName || movie.leadActorId}</div>
                         </div>
                     </div>
 
@@ -128,7 +128,7 @@ const MovieDetails = () => {
                         <div className="bg-slate-800 p-3 rounded-xl"><Briefcase className="text-emerald-400" /></div>
                         <div>
                             <div className="text-slate-500 text-[10px] font-bold uppercase">Crew Team</div>
-                            <div className="text-white font-bold">{movie.crewTeamId}</div>
+                            <div className="text-white font-bold">{movie.crewTeamName || movie.crewTeamId}</div>
                         </div>
                     </div>
                 </div>

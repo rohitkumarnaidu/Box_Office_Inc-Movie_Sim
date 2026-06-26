@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import SkeletonGrid from "../../components/common/SkeletonGrid";
 
 const Scripts = () => {
   const [scripts, setScripts] = useState([]);
@@ -359,9 +360,7 @@ const Scripts = () => {
         </div>
 
         {initialLoading ? (
-          <div className="bg-[#111827] border border-slate-800 rounded-2xl p-12 text-center">
-            <h2 className="text-2xl font-bold text-white">Loading...</h2>
-          </div>
+          <SkeletonGrid />
         ) : (
           <>{activeTab === "market" ? renderMarket() : renderOwned()}</>
         )}

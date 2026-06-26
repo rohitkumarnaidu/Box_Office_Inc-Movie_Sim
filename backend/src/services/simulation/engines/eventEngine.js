@@ -230,4 +230,91 @@ export const processRandomEvents = (gameState, studio, rng = Math.random) => {
   return result.fired;
 };
 
+// ---------------------------------------------------------------------------
+// Production Events — movie-level crises & opportunities
+// ---------------------------------------------------------------------------
+
+import { PRODUCTION_EVENT_DEFINITIONS } from "../../../constants/eventTypes.js";
+
+/**
+ * Processes production events for all active movies currently in production
+ * (PRE_PRODUCTION, PRODUCTION, POST_PRODUCTION).
+ *
+ * Each event has an independent probability of firing per movie per tick.
+ * At most one production event fires per movie per tick to avoid pile-ups.
+ *
+ * Effects:
+ * - `delayWeeks` → added to movie.delayWeeks (pauses progress in productionEngine)
+ * - `qualityDelta` → adjusts movie.quality
+ * - `hypeDelta` → adjusts movie.hype
+ * - `budgetCost` → deducted from studio.money (negative = money gained)
+ * - Event is logged to `movie.events[]` and a notification is sent.
+ *
+ * @async
+ * @param {object} gameState - GameState document.
+ * @param {object} studio - Studio document.
+ * @param {() => number} [rng=Math.random] - RNG for testability.
+ * @returns {Promise<void>}
+ */
+export const processProductionEvents = async (gameState, studio, rng = Math.random) => {
+  if (!gameState.activeMovies || gameState.activeMovies.length === 0) return;
+
+  // Dynamic import to avoid mongoose dependency at module load (keeps pure functions testable)
+  const { default: Movie } = await import("../../../models/Movie.js");
+
+  const productionStatuses = ["PRE_PRODUCTION", "PRODUCTION", "POST_PRODUCTION"];
+  const movies = await Movie.find({
+    _id: { $in: gameState.activeMovies },
+    status: { $in: productionStatuses },
+  });
+
+  for (const movie of movies) {
+    // At most one event per movie per tick
+    let eventFired = false;
+
+    for (const eventDef of PRODUCTION_EVENT_DEFINITIONS) {
+      if (eventFired) break;
+      if (rng() >= eventDef.chance) continue;
+
+      eventFired = true;
+
+      // Apply delay
+      if (eventDef.delayWeeks > 0) {
+        movie.delayWeeks = (movie.delayWeeks || 0) + eventDef.delayWeeks;
+        movie.remainingWeeks = (movie.remainingWeeks || 0) + eventDef.delayWeeks;
+      }
+
+      // Adjust quality and hype (clamped 0-100)
+      if (eventDef.qualityDelta) {
+        movie.quality = Math.max(0, Math.min(100, (movie.quality || 0) + eventDef.qualityDelta));
+      }
+      if (eventDef.hypeDelta) {
+        movie.hype = Math.max(0, Math.min(100, (movie.hype || 0) + eventDef.hypeDelta));
+      }
+
+      // Budget cost (positive = expense, negative = savings)
+      if (eventDef.budgetCost && studio) {
+        studio.money = Math.max(0, (studio.money || 0) - eventDef.budgetCost);
+      }
+
+      // Log the event on the movie
+      if (!movie.events) movie.events = [];
+      movie.events.push({
+        eventId: eventDef.id,
+        label: eventDef.label,
+        message: eventDef.message,
+        week: gameState.currentWeek || 0,
+      });
+
+      // Notification
+      addNotification(
+        gameState,
+        `🎬 "${movie.title}" — ${eventDef.label}: ${eventDef.message}`
+      );
+
+      await movie.save();
+    }
+  }
+};
+
 export default processRandomEvents;

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { VERDICT_LIST } from "../constants/verdicts.js";
 
 const movieSchema = new mongoose.Schema(
   {
@@ -6,9 +7,12 @@ const movieSchema = new mongoose.Schema(
     studioId: { type: mongoose.Schema.Types.ObjectId, ref: "Studio", required: true },
     scriptId: { type: String, required: true },
     directorId: { type: String, required: true },
+    directorName: { type: String, default: "" },
     leadActorId: { type: String, required: true },
+    leadActorName: { type: String, default: "" },
     supportingActorIds: [{ type: String }],
     crewTeamId: { type: String, required: true },
+    crewTeamName: { type: String, default: "" },
 
     budget: { type: Number, default: 0 },
     marketingBudget: { type: Number, default: 0 },
@@ -29,12 +33,20 @@ const movieSchema = new mongoose.Schema(
     worldwideGross: { type: Number, default: 0 },
     profit: { type: Number, default: 0 },
     roi: { type: Number, default: 0 },
-    verdict: { type: String, default: "N/A" },
+    verdict: { type: String, enum: [...VERDICT_LIST, "N/A"], default: "N/A" },
 
     status: {
       type: String,
-      enum: ["PLANNING", "PRE_PRODUCTION", "PRODUCTION", "POST_PRODUCTION", "READY_FOR_RELEASE", "RELEASED"],
+      enum: ["PLANNING", "PRE_PRODUCTION", "PRODUCTION", "POST_PRODUCTION", "READY_FOR_RELEASE", "RELEASED", "RELEASED_STREAMING"],
       default: "PLANNING",
+    },
+
+    releaseType: { type: String, enum: ['THEATRICAL', 'STREAMING'], default: 'THEATRICAL' },
+    streamingDeal: {
+      platformId: String,
+      dealValue: Number,
+      exclusiveWeeks: Number,
+      status: { type: String, enum: ['OFFERED', 'ACCEPTED', 'REJECTED'] }
     },
 
     createdWeek: { type: Number, required: true },
@@ -53,6 +65,19 @@ const movieSchema = new mongoose.Schema(
 
     // Track weeks in each stage
     weeksInStage: { type: Number, default: 0 },
+
+    // Franchise and Sequel details
+    franchiseId: { type: mongoose.Schema.Types.ObjectId, ref: "Franchise", default: null },
+    sequelNumber: { type: Number, default: 1 },
+
+    // Production event tracking
+    delayWeeks: { type: Number, default: 0 },
+    events: [{
+      eventId: String,
+      label: String,
+      message: String,
+      week: Number,
+    }],
   },
   { timestamps: true }
 );

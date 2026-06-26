@@ -25,6 +25,7 @@ const CreateMovie = () => {
   const [directors, setDirectors] = useState([]);
   const [actors, setActors] = useState([]);
   const [crewTeams, setCrewTeams] = useState([]);
+  const [franchises, setFranchises] = useState([]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -32,22 +33,27 @@ const CreateMovie = () => {
     directorId: "",
     leadActorId: "",
     crewTeamId: "",
-    marketingCampaignIds: []
+    marketingCampaignIds: [],
+    franchiseId: "",
+    createFranchise: false,
+    franchiseName: ""
   });
 
   const loadData = useCallback(async () => {
     try {
       setFetching(true);
-      const [sRes, dRes, aRes, cRes] = await Promise.all([
+      const [sRes, dRes, aRes, cRes, fRes] = await Promise.all([
         api.get("/scripts/owned"),
         api.get("/directors/owned"),
         api.get("/actors/owned"),
-        api.get("/crew/owned")
+        api.get("/crew/owned"),
+        api.get("/franchises").catch(() => ({ data: { franchises: [] } }))
       ]);
       setScripts(sRes.data.scripts.filter(s => s.status === "AVAILABLE"));
       setDirectors(dRes.data.directors.filter(d => d.status === "AVAILABLE"));
       setActors(aRes.data.actors.filter(a => a.status === "AVAILABLE"));
       setCrewTeams(cRes.data.crewTeams.filter(c => c.status === "AVAILABLE"));
+      setFranchises(fRes.data.franchises || []);
     } catch (error) {
       console.error("Failed to load movie creation data", error);
     } finally {
@@ -139,6 +145,49 @@ const CreateMovie = () => {
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-violet-600 disabled:opacity-50"
                 placeholder="Enter movie title..."
               />
+            </div>
+
+            <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 space-y-4">
+               <h3 className="text-white font-bold mb-4">Franchise & Universe</h3>
+               <div className="flex items-center gap-4 mb-4">
+                 <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
+                   <input
+                     type="checkbox"
+                     checked={formData.createFranchise}
+                     onChange={(e) => setFormData({ ...formData, createFranchise: e.target.checked, franchiseId: "" })}
+                     className="w-4 h-4 text-violet-600 bg-slate-900 border-slate-700 rounded focus:ring-violet-600"
+                   />
+                   Start a New Franchise
+                 </label>
+               </div>
+
+               {formData.createFranchise ? (
+                 <div>
+                    <label className="block text-slate-400 text-sm mb-2">New Franchise Name</label>
+                    <input
+                      type="text"
+                      required={formData.createFranchise}
+                      value={formData.franchiseName}
+                      onChange={(e) => setFormData({ ...formData, franchiseName: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-violet-600"
+                      placeholder="e.g., The Cinematic Universe"
+                    />
+                 </div>
+               ) : (
+                 <div>
+                    <label className="block text-slate-400 text-sm mb-2">Part of Existing Franchise?</label>
+                    <select
+                      value={formData.franchiseId}
+                      onChange={(e) => setFormData({ ...formData, franchiseId: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-violet-600"
+                    >
+                      <option value="">No Franchise (Standalone)</option>
+                      {franchises.map(f => (
+                        <option key={f._id} value={f._id}>{f.name} ({f.movies?.length || 0} movies)</option>
+                      ))}
+                    </select>
+                 </div>
+               )}
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
