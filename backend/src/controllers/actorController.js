@@ -9,6 +9,7 @@ import {
 } from "../services/actor/actorContractService.js";
 import { getMarketplaceTalent, resolveTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 import Notification from "../models/Notification.js";
+import TalentHistory from "../models/TalentHistory.js";
 
 const ACTOR_MARKET_SIZE = 1000;
 
@@ -104,12 +105,16 @@ export const hireActor = async (req, res) => {
 
         actor.status = "AVAILABLE";
         actor.hiredAt = new Date();
-        actor.salaryHistory = actor.salaryHistory || [];
-        actor.salaryHistory.push({
-          week: Number(gameState.currentWeek || 1),
-          salary: Number(actor.salary || 0),
-          reason: "Hired by studio",
-        });
+        await TalentHistory.create([{
+          gameStateId: gameState._id,
+          talentId: actor.id,
+          type: "SALARY",
+          data: {
+            week: Number(gameState.currentWeek || 1),
+            salary: Number(actor.salary || 0),
+            reason: "Hired by studio",
+          }
+        }], { session });
 
         gameState.marketActors.splice(realIndex, 1);
         gameState.ownedActors = gameState.ownedActors || [];
@@ -164,6 +169,15 @@ export const getActorProfile = async (req, res) => {
         message: "Actor not found",
       });
     }
+
+    const histories = await TalentHistory.find({
+      gameStateId: gameState._id,
+      talentId: actor.id,
+    }).lean();
+
+    actor.careerHistory = histories.filter((h) => h.type === "CAREER").map((h) => h.data);
+    actor.salaryHistory = histories.filter((h) => h.type === "SALARY").map((h) => h.data);
+    actor.awardsHistory = histories.filter((h) => h.type === "AWARD").map((h) => h.data);
 
     return res.status(200).json({
       success: true,

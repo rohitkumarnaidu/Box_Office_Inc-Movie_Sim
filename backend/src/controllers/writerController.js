@@ -6,6 +6,7 @@ import { presentWriters } from "../services/writer/writerPresenter.js";
 import crypto from "crypto";
 import { getMarketplaceTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 import Notification from "../models/Notification.js";
+import TalentHistory from "../models/TalentHistory.js";
 
 export const getMarketWriters = async (req, res) => {
   const gameState = await GameState.findOne({
@@ -75,6 +76,15 @@ export const getWriterProfile = async (req, res) => {
       message: "Writer not found",
     });
   }
+
+  const histories = await TalentHistory.find({
+    gameStateId: gameState._id,
+    talentId: writer.id,
+  }).lean();
+
+  writer.careerHistory = histories.filter((h) => h.type === "CAREER").map((h) => h.data);
+  writer.salaryHistory = histories.filter((h) => h.type === "SALARY").map((h) => h.data);
+  writer.awardsHistory = histories.filter((h) => h.type === "AWARD").map((h) => h.data);
 
   res.status(200).json({
     profile: buildWriterProfile(writer),

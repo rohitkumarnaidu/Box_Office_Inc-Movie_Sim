@@ -8,6 +8,8 @@ const MAX_SINGLE_UPDATE_DECREASE_RATE = 0.2;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+import { addTalentHistory } from "../simulation/helpers/historyHelper.js";
+
 export const calculateSalaryProgression = ({
   currentSalary,
   scriptQuality,
@@ -46,6 +48,7 @@ export const calculateSalaryProgression = ({
 };
 
 export const applyWriterSalaryProgression = ({
+  gameState,
   writer,
   script,
   currentWeek,
@@ -72,22 +75,20 @@ export const applyWriterSalaryProgression = ({
   }
 
   writer.salary = nextSalary;
-  writer.salaryHistory = writer.salaryHistory || [];
-
-  const reasons = [];
-
-  if (wasHit) reasons.push("Hit Script");
-  if (awardsWon > 0) reasons.push("Awards");
-  if (Number(script.quality || 0) >= QUALITY_INCREASE_THRESHOLD) {
-    reasons.push("Script Quality");
+  if (gameState) {
+    addTalentHistory(gameState, writer.id, "SALARY", {
+      week: currentWeek,
+      salary: nextSalary,
+      reason: reasons.join(" + ") || "Career Adjustment",
+    });
+  } else {
+    writer.salaryHistory = writer.salaryHistory || [];
+    writer.salaryHistory.push({
+      week: currentWeek,
+      salary: nextSalary,
+      reason: reasons.join(" + ") || "Career Adjustment",
+    });
   }
-  if (wasFlop) reasons.push("Flop Script");
-
-  writer.salaryHistory.push({
-    week: currentWeek,
-    salary: nextSalary,
-    reason: reasons.join(" + ") || "Career Adjustment",
-  });
 
   return {
     previousSalary,

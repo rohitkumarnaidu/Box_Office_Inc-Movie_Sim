@@ -8,7 +8,7 @@ import { getGenreMultiplier } from "../services/simulation/engines/trendEngine.j
 import { processCareerImpact } from "../services/simulation/engines/careerImpactEngine.js";
 import { processStudioGrowth } from "../services/simulation/engines/studioGrowthEngine.js";
 import { addNotification } from "../services/simulation/helpers/notificationHelper.js";
-import { MARKETING_CAMPAIGNS } from "../constants/marketingCampaigns.js";
+import { MARKETING_CAMPAIGNS, getEffectiveHypeBoost } from "../constants/marketingCampaigns.js";
 import { generateMovieTitle } from "../services/movie/movieService.js";
 import { generateNewsFromRelease } from "../services/simulation/engines/newsEngine.js";
 import { withTransaction } from "../utils/transactionHelper.js";
@@ -131,7 +131,10 @@ export const createMovie = async (req, res) => {
             const campaign = MARKETING_CAMPAIGNS.find(c => c.id === cid);
             if (campaign) {
                 marketingBudget += campaign.cost;
-                marketingHypeBoost += campaign.hypeBoost;
+                // Genre-specific effectiveness: a campaign that matches the
+                // script's genres yields more hype. Neutral (x1) for unlisted
+                // genre/campaign pairs, so existing behaviour is preserved.
+                marketingHypeBoost += getEffectiveHypeBoost(campaign, script.genres);
                 selectedCampaigns.push(cid);
             }
         });

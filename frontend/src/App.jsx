@@ -25,6 +25,7 @@ import StreamingDeals from "./pages/movies/StreamingDeals";
 import StudioStats from "./pages/studio/StudioStats";
 import FinancialHistory from "./pages/studio/FinancialHistory";
 import Franchises from "./pages/studio/Franchises";
+import Leaderboard from "./pages/studio/Leaderboard";
 import TalentProfile from "./pages/talent/TalentProfile";
 import DirectorProfile from "./pages/directors/DirectorProfile";
 import WriterProfile from "./pages/writers/WriterProfile";
@@ -56,6 +57,14 @@ function App() {
           element={
             <ProtectedRoute>
               <RivalStudios />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard"
+          element={
+            <ProtectedRoute>
+              <Leaderboard />
             </ProtectedRoute>
           }
         />

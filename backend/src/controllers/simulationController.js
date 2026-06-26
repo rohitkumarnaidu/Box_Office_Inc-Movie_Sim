@@ -2,6 +2,7 @@ import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
 import { runWeeklySimulation } from "../services/simulation/runWeeklySimulation.js";
 import Notification from "../models/Notification.js";
+import TalentHistory from "../models/TalentHistory.js";
 
 import { withTransaction } from "../utils/transactionHelper.js";
 
@@ -23,6 +24,7 @@ export const simulateWeek = async (req, res) => {
 
     // Accumulate notifications generated during the simulation ticks
     let newNotifications = [];
+    let newHistories = [];
 
     // Accumulate rival releases across all simulated weeks
     const allRivalReleases = [];
@@ -57,11 +59,19 @@ export const simulateWeek = async (req, res) => {
           newNotifications.push(...gameState._pendingNotifications);
           gameState._pendingNotifications = [];
         }
+        if (gameState._pendingTalentHistories && gameState._pendingTalentHistories.length > 0) {
+          newHistories.push(...gameState._pendingTalentHistories);
+          gameState._pendingTalentHistories = [];
+        }
       }
 
       if (newNotifications.length > 0) {
         const inserted = await Notification.insertMany(newNotifications, { session });
         newNotifications = inserted;
+      }
+
+      if (newHistories.length > 0) {
+        await TalentHistory.insertMany(newHistories, { session });
       }
 
       await studio.save({ session });

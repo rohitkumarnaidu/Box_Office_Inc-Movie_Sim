@@ -13,6 +13,7 @@ import { processStreamingPlatformGrowth } from "./streamingEngine.js";
 
 import { addNotification } from "../helpers/notificationHelper.js";
 import { processWriterAging } from "../helpers/agingHelper.js";
+import TalentHistory from "../../../models/TalentHistory.js";
 
 /**
  * @fileoverview Tick Engine — Weekly Simulation Orchestrator
@@ -86,6 +87,26 @@ export const processWeeklyTick = async (gameState, studio) => {
   processWriterAging(gameState);
 
   processDirectorAging(gameState);
+
+  const awardYear = Math.floor((Number(gameState.currentWeek || 1) - 1) / 52) + 1;
+  const isAwardWeek = gameState.currentWeek % 52 === 0;
+  const alreadyProcessed = (gameState.directorAwardYearsProcessed || []).includes(awardYear);
+
+  if (isAwardWeek && !alreadyProcessed) {
+    const histories = await TalentHistory.find({ gameStateId: gameState._id }).lean();
+    
+    const attachHistory = (talentList) => {
+      if (!talentList) return;
+      talentList.forEach((director) => {
+        director.careerHistory = histories.filter(h => h.talentId === director.id && h.type === "CAREER").map(h => h.data);
+        director.awardsHistory = histories.filter(h => h.talentId === director.id && h.type === "AWARD").map(h => h.data);
+      });
+    };
+
+    attachHistory(gameState.marketDirectors);
+    attachHistory(gameState.ownedDirectors);
+    attachHistory(gameState.retiredDirectors);
+  }
 
   processDirectorAwards(gameState, studio);
 

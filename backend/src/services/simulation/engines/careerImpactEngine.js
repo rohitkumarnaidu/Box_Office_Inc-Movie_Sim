@@ -15,6 +15,7 @@
  * No database calls are made; the caller persists the mutated documents.
  */
 import { VERDICTS } from "../../../constants/verdicts.js";
+import { addTalentHistory } from "../helpers/historyHelper.js";
 
 /**
  * Applies career-impact side-effects to all talent involved in a movie release.
@@ -109,16 +110,14 @@ export const processCareerImpact = (gameState, movie, writer, director, leadActo
     talent.careerEarnings = (talent.careerEarnings || 0) + movie.worldwideGross * 0.001; // Mock share
 
     // History
-    if (talent.careerHistory) {
-        talent.careerHistory.push({
-            movieId: movie._id,
-            movieTitle: movie.title,
-            releaseWeek: gameState.currentWeek,
-            quality: movie.quality,
-            boxOffice: movie.worldwideGross,
-            verdict: movie.verdict
-        });
-    }
+    addTalentHistory(gameState, talent.id, "CAREER", {
+        movieId: movie._id,
+        movieTitle: movie.title,
+        releaseWeek: gameState.currentWeek,
+        quality: movie.quality,
+        boxOffice: movie.worldwideGross,
+        verdict: movie.verdict
+    });
   };
 
   if (writer) updateTalent(writer, 'writer');

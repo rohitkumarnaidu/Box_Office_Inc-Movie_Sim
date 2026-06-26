@@ -15,6 +15,7 @@ import {
 import { withTransaction } from "../utils/transactionHelper.js";
 import { getMarketplaceTalent, resolveTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 import Notification from "../models/Notification.js";
+import TalentHistory from "../models/TalentHistory.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
@@ -272,6 +273,15 @@ export const getDirectorProfile = async (req, res) => {
         message: "Director not found",
       });
     }
+
+    const histories = await TalentHistory.find({
+      gameStateId: gameState._id,
+      talentId: director.id,
+    }).lean();
+
+    director.careerHistory = histories.filter((h) => h.type === "CAREER").map((h) => h.data);
+    director.salaryHistory = histories.filter((h) => h.type === "SALARY").map((h) => h.data);
+    director.awardsHistory = histories.filter((h) => h.type === "AWARD").map((h) => h.data);
 
     res.status(200).json({
       success: true,
