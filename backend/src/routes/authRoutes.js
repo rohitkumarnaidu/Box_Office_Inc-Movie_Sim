@@ -10,12 +10,14 @@ import {
 } from "../controllers/authController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
+import { validate } from "../middleware/validationMiddleware.js";
+import { registerSchema, loginSchema } from "../validators/authValidator.js";
 
 const router = express.Router();
 
-router.post("/register", register);
+router.post("/register", validate(registerSchema), register);
 
-router.post("/login", login);
+router.post("/login", validate(loginSchema), login);
 
 router.post("/refresh", refreshSession);
 

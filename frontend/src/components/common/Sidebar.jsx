@@ -13,6 +13,7 @@ import {
   Scale,
   IndianRupee,
   X,
+  Swords,
   Trophy,
 } from "lucide-react";
 
@@ -26,6 +27,16 @@ const Sidebar = ({ isOpen, onClose }) => {
       name: "Dashboard",
       path: "/",
       icon: LayoutDashboard,
+    },
+    {
+      name: "Rival Studios",
+      path: "/rivals",
+      icon: Swords,
+    },
+    {
+      name: "Leaderboard",
+      path: "/leaderboard",
+      icon: Trophy,
     },
     {
       name: "Movies",
@@ -106,6 +117,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       name: "Awards History",
       path: "/studio/awards",
       icon: Trophy,
+    },
+    {
+      name: "Franchises",
+      path: "/studio/franchises",
+      icon: Layers,
     },
     {
       name: "Market",

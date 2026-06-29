@@ -12,6 +12,10 @@ import {
   createDirectingProject,
   ensureScriptsProductionDefaults,
 } from "../services/director/directingProjectService.js";
+import { withTransaction } from "../utils/transactionHelper.js";
+import { getMarketplaceTalent, resolveTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
+import Notification from "../models/Notification.js";
+import TalentHistory from "../models/TalentHistory.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
@@ -76,12 +80,19 @@ export const getMarketDirectors = async (req, res) => {
       const freshGS = await GameState.findOne({ user: req.user._id });
       freshGS.marketDirectors = generateDirectors(50);
       await freshGS.save();
-      return res.status(200).json({ success: true, directors: presentDirectors(freshGS.marketDirectors) });
+      const result = getMarketplaceTalent(freshGS.marketDirectors, req.query);
+      return res.status(200).json({
+        success: true,
+        directors: presentDirectors(result.items),
+        pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
+      });
     }
 
+    const result = getMarketplaceTalent(gameState.marketDirectors, req.query);
     res.status(200).json({
       success: true,
-      directors: presentDirectors(gameState.marketDirectors),
+      directors: presentDirectors(result.items),
+      pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
     });
   } catch (error) {
     res.status(500).json({
@@ -215,7 +226,8 @@ export const startDirectingProject = async (req, res) => {
     gameState.activeDirectorProjects = gameState.activeDirectorProjects || [];
     gameState.activeDirectorProjects.push(project);
 
-    gameState.notifications.push({
+    await Notification.create({
+      gameStateId: gameState._id,
       message: `${director.name} started directing ${script.title}.`,
       createdAt: new Date(),
     });
@@ -262,6 +274,15 @@ export const getDirectorProfile = async (req, res) => {
       });
     }
 
+    const histories = await TalentHistory.find({
+      gameStateId: gameState._id,
+      talentId: director.id,
+    }).lean();
+
+    director.careerHistory = histories.filter((h) => h.type === "CAREER").map((h) => h.data);
+    director.salaryHistory = histories.filter((h) => h.type === "SALARY").map((h) => h.data);
+    director.awardsHistory = histories.filter((h) => h.type === "AWARD").map((h) => h.data);
+
     res.status(200).json({
       success: true,
       director: buildDirectorProfile(director, gameState.currentWeek),
@@ -286,7 +307,7 @@ export const hireDirector = async (req, res) => {
       });
     }
 
-    const marketDirector = gameState.marketDirectors[index];
+    const { item: marketDirector, index: realIdx } = resolveTalent(gameState.marketDirectors || [], index);
 
     if (!marketDirector) {
       return res.status(404).json({
@@ -309,12 +330,15 @@ export const hireDirector = async (req, res) => {
     director.status = "AVAILABLE";
     director.hiredAt = new Date();
 
-    gameState.marketDirectors.splice(index, 1);
+    gameState.marketDirectors.splice(realIdx, 1);
     gameState.ownedDirectors.push(director);
 
-    gameState.notifications.push({
+    await Notification.create({
+      gameStateId: gameState._id,
       message: `${director.name} was hired as a director.`,
     });
+
+    invalidateUserCache(String(req.user._id));
 
     await gameState.save();
 
@@ -353,7 +377,7 @@ export const fireDirector = async (req, res) => {
       });
     }
 
-    const ownedDirector = gameState.ownedDirectors[index];
+    const { item: ownedDirector, index: realIdx } = resolveTalent(gameState.ownedDirectors || [], index);
 
     if (!ownedDirector) {
       return res.status(404).json({
@@ -372,36 +396,42 @@ export const fireDirector = async (req, res) => {
       });
     }
 
-    const director = ownedDirector.toObject
-      ? ownedDirector.toObject()
-      : { ...ownedDirector };
+    const result = await withTransaction(async (session) => {
+        const director = ownedDirector.toObject
+          ? ownedDirector.toObject()
+          : { ...ownedDirector };
 
-    const compensation = calculateDirectorCompensation(director);
-    const fanLoss = calculateDirectorFanLoss(director);
+        const compensation = calculateDirectorCompensation(director);
+        const fanLoss = calculateDirectorFanLoss(director);
 
-    studio.money = Math.max(0, Number(studio.money || 0) - compensation);
-    studio.fans = Math.max(0, Number(studio.fans || 0) - fanLoss);
+        studio.money = Math.max(0, Number(studio.money || 0) - compensation);
+        studio.fans = Math.max(0, Number(studio.fans || 0) - fanLoss);
 
-    director.status = "AVAILABLE";
-    director.busyUntilWeek = null;
-    delete director.hiredAt;
+        director.status = "AVAILABLE";
+        director.busyUntilWeek = null;
+        delete director.hiredAt;
 
-    gameState.ownedDirectors.splice(index, 1);
-    gameState.marketDirectors.push(director);
+        gameState.ownedDirectors.splice(realIdx, 1);
+        gameState.marketDirectors.push(director);
 
-    gameState.notifications.push({
-      message: `${director.name} was released to the director market. Compensation ₹${compensation.toLocaleString("en-IN")} paid and ${fanLoss} fans lost.`,
+        await Notification.create([{
+          gameStateId: gameState._id,
+          message: `${director.name} was released to the director market. Compensation ₹${compensation.toLocaleString("en-IN")} paid and ${fanLoss} fans lost.`,
+        }], { session });
+
+        await studio.save({ session });
+        await gameState.save({ session });
+        
+        return { director, compensation, fanLoss };
     });
 
-    await studio.save();
-    await gameState.save();
-
+    invalidateUserCache(String(req.user._id));
     res.status(200).json({
       success: true,
       message: "Director released to market",
-      director,
-      compensation,
-      fanLoss,
+      director: result.director,
+      compensation: result.compensation,
+      fanLoss: result.fanLoss,
       remainingMoney: studio.money,
       remainingFans: studio.fans,
       marketDirectors: presentDirectors(gameState.marketDirectors),
@@ -410,7 +440,7 @@ export const fireDirector = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: `Operation rolled back due to: ${error.message}`,
     });
   }
 };
@@ -500,7 +530,8 @@ export const replaceDirector = async (req, res) => {
       oldDirector.busyUntilWeek = null;
     }
 
-    gameState.notifications.push({
+    await Notification.create({
+      gameStateId: gameState._id,
       message: `${oldDirector?.name || "A director"} was replaced by ${newDirector.name} on ${project.movieName || "an active production"}. Movie quality -${penalty}.`,
     });
 

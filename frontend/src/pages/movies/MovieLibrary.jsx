@@ -42,12 +42,14 @@ const MovieLibrary = () => {
 
   const getVerdictColor = (verdict) => {
     switch(verdict) {
+        case 'ALL_TIME_BLOCKBUSTER':
         case 'LEGENDARY': return 'bg-orange-600 text-white';
         case 'BLOCKBUSTER': return 'bg-purple-600 text-white';
         case 'HIT': return 'bg-green-600 text-white';
         case 'AVERAGE': return 'bg-slate-600 text-white';
         case 'FLOP': return 'bg-red-600 text-white';
         case 'DISASTER': return 'bg-red-900 text-white';
+        case 'STREAMING_EXCLUSIVE': return 'bg-blue-600 text-white';
         default: return 'bg-slate-700 text-slate-300';
     }
   }

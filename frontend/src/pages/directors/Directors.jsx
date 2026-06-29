@@ -5,6 +5,7 @@ import api from "../../api/axios";
 import DirectorCard from "../../components/directors/DirectorCard";
 import DirectingProjectCard from "../../components/directors/DirectingProjectCard";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import SkeletonGrid from "../../components/common/SkeletonGrid";
 import {
   selectDirectorFilters,
   setDirectorFilters,
@@ -679,9 +680,7 @@ const Directors = () => {
         )}
 
         {loading ? (
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-12 text-center">
-            <h2 className="text-2xl font-bold text-white">Loading...</h2>
-          </div>
+          <SkeletonGrid variant="talent" />
         ) : (
           renderDirectors()
         )}

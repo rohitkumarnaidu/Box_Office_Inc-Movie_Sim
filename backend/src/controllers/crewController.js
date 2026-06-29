@@ -1,6 +1,8 @@
 import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
 import { generateCrewTeams } from "../services/crew/crewGenerator.js";
+import { getMarketplaceTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
+import Notification from "../models/Notification.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
@@ -14,7 +16,12 @@ export const getMarketCrewTeams = async (req, res) => {
       await gameState.save();
     }
 
-    res.status(200).json({ success: true, crewTeams: gameState.marketCrewTeams });
+    const result = getMarketplaceTalent(gameState.marketCrewTeams, req.query);
+    res.status(200).json({
+      success: true,
+      crewTeams: result.items,
+      pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -49,11 +56,13 @@ export const hireCrewTeam = async (req, res) => {
     gameState.ownedCrewTeams = gameState.ownedCrewTeams || [];
     gameState.ownedCrewTeams.push(hiredCrew);
 
-    gameState.notifications.push({
+    await Notification.create({
+      gameStateId: gameState._id,
       message: `${hiredCrew.name} has been hired.`,
       createdAt: new Date(),
     });
 
+    invalidateUserCache(String(req.user._id));
     await gameState.save();
     res.status(200).json({ success: true, message: "Crew team hired", crewTeam: hiredCrew });
   } catch (error) {
@@ -101,11 +110,13 @@ export const fireCrewTeam = async (req, res) => {
     gameState.ownedCrewTeams.splice(index, 1);
     gameState.marketCrewTeams.push(firedCrew);
 
-    gameState.notifications.push({
+    await Notification.create({
+      gameStateId: gameState._id,
       message: `${firedCrew.name} has been fired.`,
       createdAt: new Date(),
     });
 
+    invalidateUserCache(String(req.user._id));
     await gameState.save();
     res.status(200).json({ success: true, message: "Crew team fired" });
   } catch (error) {

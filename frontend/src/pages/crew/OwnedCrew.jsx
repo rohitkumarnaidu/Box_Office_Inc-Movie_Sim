@@ -1,37 +1,49 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
-import { Users, Briefcase } from "lucide-react";
+import { Briefcase } from "lucide-react";
+import SkeletonGrid from "../../components/common/SkeletonGrid";
 
 const OwnedCrew = () => {
   const [crewTeams, setCrewTeams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const fetchOwnedCrew = useCallback(async () => {
+  const fetchOwnedCrew = useCallback(async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) {
+        setLoading(true);
+      }
+
       const res = await api.get("/crew/owned");
       setCrewTeams(res.data.crewTeams || []);
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchOwnedCrew();
+    const refreshTimer = window.setTimeout(fetchOwnedCrew, 0);
+
+    return () => window.clearTimeout(refreshTimer);
   }, [fetchOwnedCrew]);
 
   const handleFire = async (id) => {
     if (!window.confirm("Are you sure you want to fire this crew team?")) return;
-    if (loading) return;
+    if (loading || actionLoading) return;
+
     try {
-      setLoading(true);
+      setActionLoading(true);
       await api.post(`/crew/fire/${id}`);
-      fetchOwnedCrew();
+      await fetchOwnedCrew(false);
     } catch (error) {
       alert(error?.response?.data?.message || "Failed to fire crew team");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -44,7 +56,7 @@ const OwnedCrew = () => {
         </div>
 
         {loading ? (
-          <div className="text-white text-center py-10">Loading your crew...</div>
+          <SkeletonGrid variant="compact" />
         ) : crewTeams.length === 0 ? (
             <div className="bg-[#111827] border border-slate-800 rounded-2xl p-12 text-center">
                 <Briefcase size={48} className="text-slate-600 mx-auto mb-4" />
@@ -52,8 +64,8 @@ const OwnedCrew = () => {
                 <p className="text-slate-400">Hire crew teams from the market to start productions.</p>
             </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {crewTeams.map((crew, idx) => (
+          <div className={`grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 ${actionLoading ? "pointer-events-none opacity-70" : ""}`}>
+            {crewTeams.map((crew) => (
               <div key={crew.id} className="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-violet-600 transition-all">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-xl font-bold text-white">{crew.name}</h3>
@@ -72,11 +84,11 @@ const OwnedCrew = () => {
                 </div>
 
                 <button
-                  disabled={crew.status === 'BUSY' || loading}
+                  disabled={crew.status === 'BUSY' || actionLoading}
                   onClick={() => handleFire(crew.id)}
                   className="w-full bg-slate-800 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "Processing..." : crew.status === 'BUSY' ? 'Busy on Project' : 'Fire Team'}
+                  {actionLoading ? "Processing..." : crew.status === 'BUSY' ? 'Busy on Project' : 'Fire Team'}
                 </button>
               </div>
             ))}

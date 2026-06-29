@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [elusoc, main]
+  pull_request:
+    branches: [elusoc, main]
+
+jobs:
+  backend-tests:
+    name: Backend test suite
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Throwaway secrets so src/config/env.js does not throw during tests.
+      # The suites also set these via tests/helpers/testEnv.js; these are a
+      # belt-and-suspenders default for the CI runner.
+      JWT_ACCESS_SECRET: ci-access-secret-not-for-production
+      JWT_REFRESH_SECRET: ci-refresh-secret-not-for-production
+      MONGO_URI: mongodb://127.0.0.1:27017/boxoffice-test
+      CLIENT_URL: http://localhost:5173
+      NODE_ENV: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run test suite
+        # Node's built-in test runner. DB-backed suites use
+        # mongodb-memory-server, which downloads a mongod binary here (the CI
+        # runner has network access).
+        run: npm test

@@ -208,7 +208,7 @@ test("rollEvents applies the fired event's effect to the returned stats", () => 
 // --------------------------------------------------------------------------
 
 test("processRandomEvents initialises randomEvents on first call (backward-compat)", () => {
-  const gameState = { currentWeek: 5, notifications: [] };
+  const gameState = { currentWeek: 5, _pendingNotifications: [] };
   const studio = { money: 1000000, fans: 1000, prestige: 10 };
   processRandomEvents(gameState, studio, seq([0.99]));
   assert.ok(gameState.randomEvents);
@@ -217,30 +217,30 @@ test("processRandomEvents initialises randomEvents on first call (backward-compa
 });
 
 test("processRandomEvents writes stat changes back to the studio and notifies", () => {
-  const gameState = { currentWeek: 5, notifications: [] };
+  const gameState = { currentWeek: 5, _pendingNotifications: [] };
   const studio = { money: 1000000, fans: 1000, prestige: 10 };
   const fired = processRandomEvents(gameState, studio, seq([0.0, 0.0]));
   assert.equal(fired.length, 1);
-  assert.equal(gameState.notifications.length, 1);
-  assert.match(gameState.notifications[0].message, /Industry Event/);
+  assert.equal(gameState._pendingNotifications.length, 1);
+  assert.match(gameState._pendingNotifications[0].message, /Industry Event/);
   assert.equal(gameState.randomEvents.history.length, 1);
   assert.equal(gameState.randomEvents.history[0].week, 5);
 });
 
 test("processRandomEvents is a no-op on the studio when nothing fires", () => {
-  const gameState = { currentWeek: 5, notifications: [] };
+  const gameState = { currentWeek: 5, _pendingNotifications: [] };
   const studio = { money: 1000000, fans: 1000, prestige: 10 };
   processRandomEvents(gameState, studio, seq([0.99]));
   assert.equal(studio.money, 1000000);
   assert.equal(studio.fans, 1000);
   assert.equal(studio.prestige, 10);
-  assert.equal(gameState.notifications.length, 0);
+  assert.equal(gameState._pendingNotifications.length, 0);
 });
 
 test("processRandomEvents caps history at 50 entries", () => {
   const gameState = {
     currentWeek: 100,
-    notifications: [],
+    _pendingNotifications: [],
     randomEvents: {
       cooldowns: {},
       history: Array.from({ length: 50 }, (_, i) => ({ id: `old${i}`, label: "Old", week: i })),

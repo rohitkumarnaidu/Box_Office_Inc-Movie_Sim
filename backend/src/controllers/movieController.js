@@ -1,16 +1,77 @@
 import Movie from "../models/Movie.js";
 import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
+import Franchise from "../models/Franchise.js";
 import { generateReviews } from "../services/simulation/engines/reviewEngine.js";
 import { generateBoxOffice } from "../services/simulation/engines/boxOfficeEngine.js";
 import { getGenreMultiplier } from "../services/simulation/engines/trendEngine.js";
 import { processCareerImpact } from "../services/simulation/engines/careerImpactEngine.js";
 import { processStudioGrowth } from "../services/simulation/engines/studioGrowthEngine.js";
 import { addNotification } from "../services/simulation/helpers/notificationHelper.js";
-import { MARKETING_CAMPAIGNS } from "../constants/marketingCampaigns.js";
+import { MARKETING_CAMPAIGNS, getEffectiveHypeBoost } from "../constants/marketingCampaigns.js";
 import { generateMovieTitle } from "../services/movie/movieService.js";
+import { withTransaction } from "../utils/transactionHelper.js";
+import Notification from "../models/Notification.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
+
+/**
+ * Lazy backfill helper for older movie documents that lack human-readable names.
+ * Ensures the UI can always display names without massive DB migrations.
+ */
+const lazyBackfillNames = async (movies, gameState) => {
+    let anyUpdates = false;
+
+    // Create lookup maps only if there are movies missing names
+    let talentMap = null;
+    const getTalentMap = () => {
+        if (!talentMap) {
+            talentMap = new Map();
+            const addAll = (list) => {
+                if (list && Array.isArray(list)) {
+                    list.forEach(t => talentMap.set(t.id, t.name));
+                }
+            };
+            addAll(gameState.ownedDirectors);
+            addAll(gameState.retiredDirectors);
+            addAll(gameState.ownedActors);
+            addAll(gameState.retiredActors);
+            addAll(gameState.ownedCrewTeams);
+        }
+        return talentMap;
+    };
+
+    for (const movie of movies) {
+        let needsSave = false;
+        const updates = {};
+
+        if (!movie.directorName && movie.directorId) {
+            const name = getTalentMap().get(movie.directorId) || "Unknown Director";
+            movie.directorName = name;
+            updates.directorName = name;
+            needsSave = true;
+        }
+        if (!movie.leadActorName && movie.leadActorId) {
+            const name = getTalentMap().get(movie.leadActorId) || "Unknown Actor";
+            movie.leadActorName = name;
+            updates.leadActorName = name;
+            needsSave = true;
+        }
+        if (!movie.crewTeamName && movie.crewTeamId) {
+            const name = getTalentMap().get(movie.crewTeamId) || "Unknown Crew";
+            movie.crewTeamName = name;
+            updates.crewTeamName = name;
+            needsSave = true;
+        }
+
+        if (needsSave) {
+            // Persist the backfill to DB so it doesn't need to happen again
+            await Movie.updateOne({ _id: movie._id }, { $set: updates });
+            anyUpdates = true;
+        }
+    }
+    return anyUpdates;
+};
 
 export const createMovie = async (req, res) => {
   try {
@@ -69,7 +130,10 @@ export const createMovie = async (req, res) => {
             const campaign = MARKETING_CAMPAIGNS.find(c => c.id === cid);
             if (campaign) {
                 marketingBudget += campaign.cost;
-                marketingHypeBoost += campaign.hypeBoost;
+                // Genre-specific effectiveness: a campaign that matches the
+                // script's genres yields more hype. Neutral (x1) for unlisted
+                // genre/campaign pairs, so existing behaviour is preserved.
+                marketingHypeBoost += getEffectiveHypeBoost(campaign, script.genres);
                 selectedCampaigns.push(cid);
             }
         });
@@ -112,14 +176,37 @@ export const createMovie = async (req, res) => {
 
     const totalBudget = scriptCost + directorCost + leadActorCost + supportingActorCost + crewCost + marketingBudget;
 
+    // Handle franchise / sequel logic
+    let franchiseId = req.body.franchiseId || null;
+    let sequelNumber = 1;
+
+    if (req.body.createFranchise && req.body.franchiseName) {
+      const newFranchise = await Franchise.create({
+        name: req.body.franchiseName,
+        studioId: studio._id,
+        movies: [],
+      });
+      franchiseId = newFranchise._id;
+    }
+
+    if (franchiseId) {
+      const franchise = await Franchise.findById(franchiseId);
+      if (franchise) {
+        sequelNumber = franchise.movies.length + 1;
+      }
+    }
+
     const movie = await Movie.create({
       title,
       studioId: studio._id,
       scriptId,
       directorId,
+      directorName: director.name,
       leadActorId,
+      leadActorName: leadActor.name,
       supportingActorIds: supportingActorIds || [],
       crewTeamId: crewTeam.id,
+      crewTeamName: crewTeam.name,
       budget: totalBudget,
       budgetBreakdown: {
         scriptCost,
@@ -136,8 +223,17 @@ export const createMovie = async (req, res) => {
       status: "PRE_PRODUCTION",
       createdWeek: gameState.currentWeek,
       productionProgress: 0,
-      remainingWeeks: totalProductionWeeks
+      remainingWeeks: totalProductionWeeks,
+      franchiseId,
+      sequelNumber,
     });
+
+    // Add movie to franchise
+    if (franchiseId) {
+      await Franchise.findByIdAndUpdate(franchiseId, {
+        $push: { movies: movie._id },
+      });
+    }
 
     // Update statuses
     script.status = "SOLD"; // Or a new "IN_PRODUCTION" status
@@ -159,7 +255,8 @@ export const createMovie = async (req, res) => {
 
     gameState.activeMovies.push(movie._id);
 
-    gameState.notifications.push({
+    await Notification.create({
+        gameStateId: gameState._id,
         message: `Production started for "${title}". Quality: ${quality}, Hype: ${hype}`,
         createdAt: new Date()
     });
@@ -175,10 +272,13 @@ export const createMovie = async (req, res) => {
 
 export const getActiveMovies = async (req, res) => {
     try {
-        const gameState = await GameState.findOne({ user: req.user._id }).select("activeMovies").lean();
+        const gameState = await GameState.findOne({ user: req.user._id }).lean();
         if (!gameState) return res.status(404).json({ success: false, message: "Game state not found" });
 
         const movies = await Movie.find({ _id: { $in: gameState.activeMovies } }).lean();
+        
+        await lazyBackfillNames(movies, gameState);
+
         res.status(200).json({ success: true, movies });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -203,8 +303,9 @@ export const releaseMovie = async (req, res) => {
             return res.status(400).json({ success: false, message: "Movie is not ready for release" });
         }
 
-        const gameState = await findGameState(req.user._id);
-        const studio = await Studio.findOne({ owner: req.user._id });
+        const result = await withTransaction(async (session) => {
+            const gameState = await findGameState(req.user._id);
+            const studio = await Studio.findOne({ owner: req.user._id });
 
         // Get all related talent/data for engines
         const script = gameState.marketScripts.find(s => s.id === movie.scriptId) ||
@@ -293,14 +394,17 @@ export const releaseMovie = async (req, res) => {
             );
         }
 
-        await movie.save();
-        await studio.save();
-        await gameState.save();
+            await movie.save({ session });
+            await studio.save({ session });
+            await gameState.save({ session });
 
-        res.status(200).json({ success: true, movie, growth });
+            return { movie, growth };
+        });
+
+        res.status(200).json({ success: true, movie: result.movie, growth: result.growth });
     } catch (error) {
         console.error("Release Movie Error:", error);
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: `Operation rolled back due to: ${error.message}` });
     }
 };
 
@@ -309,9 +413,15 @@ export const getReleasedMovies = async (req, res) => {
         const studio = await Studio.findOne({ owner: req.user._id }).select("_id").lean();
         if (!studio) return res.status(404).json({ success: false, message: "Studio not found" });
 
+        const gameState = await GameState.findOne({ user: req.user._id }).lean();
+
         const movies = await Movie.find({ studioId: studio._id, status: "RELEASED" })
             .sort({ createdAt: -1 })
             .lean();
+
+        if (gameState) {
+            await lazyBackfillNames(movies, gameState);
+        }
 
         res.status(200).json({ success: true, movies });
     } catch (error) {
@@ -321,8 +431,14 @@ export const getReleasedMovies = async (req, res) => {
 
 export const getMovieDetails = async (req, res) => {
     try {
-        const movie = await Movie.findById(req.params.id);
+        const movie = await Movie.findById(req.params.id).lean();
         if (!movie) return res.status(404).json({ success: false, message: "Movie not found" });
+
+        const gameState = await GameState.findOne({ user: req.user._id }).lean();
+        if (gameState) {
+            await lazyBackfillNames([movie], gameState);
+        }
+
         res.status(200).json({ success: true, movie });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

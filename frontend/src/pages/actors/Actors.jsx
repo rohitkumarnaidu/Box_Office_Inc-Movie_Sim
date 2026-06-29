@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import api from "../../api/axios";
 import ActorCard from "../../components/actors/ActorCard";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import SkeletonGrid from "../../components/common/SkeletonGrid";
 import {
   selectActorFilters,
   setActorFilters,
@@ -498,9 +499,7 @@ const Actors = () => {
         )}
 
         {loading ? (
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-12 text-center">
-            <h2 className="text-2xl font-bold text-white">Loading...</h2>
-          </div>
+          <SkeletonGrid variant="talent" />
         ) : (
           renderActors()
         )}

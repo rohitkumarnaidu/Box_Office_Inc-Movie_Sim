@@ -1,3 +1,5 @@
+import { STANDARD_CONTRACT_WEEKS, getTotalSalary } from "../../config/contract";
+
 const rarityStyles = {
   Common: "bg-slate-500/20 text-slate-300 border border-slate-500/30",
   Uncommon: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
@@ -16,7 +18,7 @@ const cardStyles = {
 
 const formatMoney = (amount) => Number(amount || 0).toLocaleString("en-IN");
 
-const ActorCard = ({ actor, index, mode, onHire, onFire }) => {
+const ActorCard = ({ actor, index, mode, onHire, onFire, contractWeeks = STANDARD_CONTRACT_WEEKS }) => {
   const avatar = `https://api.dicebear.com/7.x/personas/svg?seed=${actor.avatarSeed}`;
   const canRelease = actor.status === "AVAILABLE";
   const hiddenStats = actor.statsRevealed === false || Number(actor.discovered || 0) < 50;
@@ -95,11 +97,21 @@ const ActorCard = ({ actor, index, mode, onHire, onFire }) => {
         </div>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-5 space-y-1">
         <p className="text-lg font-bold text-green-400">
           ₹{formatMoney(actor.salary)}
           <span className="ml-1 text-xs text-slate-400">/week</span>
         </p>
+        <div className="flex items-center justify-between text-xs text-slate-400">
+          <span>Contract Duration</span>
+          <span>{contractWeeks} weeks</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-400">Total Salary</span>
+          <span className="font-semibold text-green-400">
+            ₹{formatMoney(getTotalSalary(actor.salary, contractWeeks))}
+          </span>
+        </div>
       </div>
 
       {mode === "market" && (

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { STANDARD_CONTRACT_WEEKS, getTotalSalary } from "../../config/contract";
 
 const rarityStyles = {
   Common: "bg-slate-500/20 text-slate-300 border border-slate-500/30",
@@ -27,6 +28,7 @@ const DirectorCard = ({
   onStartDirecting,
   hitRate = 0,
   averageRating = 0,
+  contractWeeks = STANDARD_CONTRACT_WEEKS,
 }) => {
   const avatar = `https://api.dicebear.com/7.x/personas/svg?seed=${director.avatarSeed}`;
   const canRelease = director.status === "AVAILABLE";
@@ -153,11 +155,21 @@ const DirectorCard = ({
         </div>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-5 space-y-1">
         <p className="text-lg font-bold text-green-400">
           ₹{formatMoney(director.salary)}
           <span className="ml-1 text-xs text-slate-400">/week</span>
         </p>
+        <div className="flex items-center justify-between text-xs text-slate-400">
+          <span>Contract Duration</span>
+          <span>{contractWeeks} weeks</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-400">Total Salary</span>
+          <span className="font-semibold text-green-400">
+            ₹{formatMoney(getTotalSalary(director.salary, contractWeeks))}
+          </span>
+        </div>
       </div>
 
       <Link

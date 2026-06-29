@@ -2,10 +2,14 @@ import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
 import { generateActors } from "../services/actor/actorGenerator.js";
 import { presentActors } from "../services/actor/actorPresenter.js";
+import { withTransaction } from "../utils/transactionHelper.js";
 import {
   calculateActorCompensation,
   calculateActorFanLoss,
 } from "../services/actor/actorContractService.js";
+import { getMarketplaceTalent, resolveTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
+import Notification from "../models/Notification.js";
+import TalentHistory from "../models/TalentHistory.js";
 
 const ACTOR_MARKET_SIZE = 1000;
 
@@ -26,12 +30,19 @@ export const getMarketActors = async (req, res) => {
       const freshGS = await GameState.findOne({ user: req.user._id });
       freshGS.marketActors = generateActors(100);
       await freshGS.save();
-      return res.status(200).json({ success: true, actors: presentActors(freshGS.marketActors) });
+      const result = getMarketplaceTalent(freshGS.marketActors, req.query);
+      return res.status(200).json({
+        success: true,
+        actors: presentActors(result.items),
+        pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
+      });
     }
 
+    const result = getMarketplaceTalent(gameState.marketActors, req.query);
     return res.status(200).json({
       success: true,
-      actors: presentActors(gameState.marketActors),
+      actors: presentActors(result.items),
+      pagination: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages },
     });
   } catch (error) {
     return res.status(500).json({
@@ -76,7 +87,7 @@ export const hireActor = async (req, res) => {
       });
     }
 
-    const marketActor = gameState.marketActors?.[Number(index)];
+    const { item: marketActor, index: realIndex } = resolveTalent(gameState.marketActors || [], index);
 
     if (!marketActor) {
       return res.status(404).json({
@@ -85,46 +96,52 @@ export const hireActor = async (req, res) => {
       });
     }
 
-    const actor = marketActor.toObject ? marketActor.toObject() : { ...marketActor };
+    const result = await withTransaction(async (session) => {
+        const actor = marketActor.toObject ? marketActor.toObject() : { ...marketActor };
 
-    if (actor.status === "RETIRED") {
-      return res.status(400).json({
-        success: false,
-        message: "Retired actors cannot be hired",
-      });
-    }
+        if (actor.status === "RETIRED") {
+          throw new Error("Retired actors cannot be hired");
+        }
 
-    actor.status = "AVAILABLE";
-    actor.hiredAt = new Date();
-    actor.salaryHistory = actor.salaryHistory || [];
-    actor.salaryHistory.push({
-      week: Number(gameState.currentWeek || 1),
-      salary: Number(actor.salary || 0),
-      reason: "Hired by studio",
+        actor.status = "AVAILABLE";
+        actor.hiredAt = new Date();
+        await TalentHistory.create([{
+          gameStateId: gameState._id,
+          talentId: actor.id,
+          type: "SALARY",
+          data: {
+            week: Number(gameState.currentWeek || 1),
+            salary: Number(actor.salary || 0),
+            reason: "Hired by studio",
+          }
+        }], { session });
+
+        gameState.marketActors.splice(realIndex, 1);
+        gameState.ownedActors = gameState.ownedActors || [];
+        gameState.ownedActors.push(actor);
+
+        await Notification.create([{
+          gameStateId: gameState._id,
+          message: `${actor.name} has joined your studio.`,
+          createdAt: new Date(),
+        }], { session });
+
+        await gameState.save({ session });
+        return actor;
     });
 
-    gameState.marketActors.splice(Number(index), 1);
-    gameState.ownedActors = gameState.ownedActors || [];
-    gameState.ownedActors.push(actor);
-
-    gameState.notifications.push({
-      message: `${actor.name} has joined your studio.`,
-      createdAt: new Date(),
-    });
-
-    await gameState.save();
-
+    invalidateUserCache(String(req.user._id));
     return res.status(200).json({
       success: true,
       message: "Actor hired",
-      actor,
+      actor: result,
       marketActors: presentActors(gameState.marketActors || []),
       ownedActors: presentActors(gameState.ownedActors || []),
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: `Operation rolled back due to: ${error.message}`,
     });
   }
 };
@@ -152,6 +169,15 @@ export const getActorProfile = async (req, res) => {
         message: "Actor not found",
       });
     }
+
+    const histories = await TalentHistory.find({
+      gameStateId: gameState._id,
+      talentId: actor.id,
+    }).lean();
+
+    actor.careerHistory = histories.filter((h) => h.type === "CAREER").map((h) => h.data);
+    actor.salaryHistory = histories.filter((h) => h.type === "SALARY").map((h) => h.data);
+    actor.awardsHistory = histories.filter((h) => h.type === "AWARD").map((h) => h.data);
 
     return res.status(200).json({
       success: true,
@@ -185,7 +211,7 @@ export const fireActor = async (req, res) => {
       });
     }
 
-    const ownedActor = gameState.ownedActors?.[Number(index)];
+    const { item: ownedActor, index: realIndex } = resolveTalent(gameState.ownedActors || [], index);
 
     if (!ownedActor) {
       return res.status(404).json({
@@ -212,35 +238,41 @@ export const fireActor = async (req, res) => {
       });
     }
 
-    const actor = ownedActor.toObject ? ownedActor.toObject() : { ...ownedActor };
-    const compensation = calculateActorCompensation(actor);
-    const fanLoss = calculateActorFanLoss(actor);
+    const result = await withTransaction(async (session) => {
+        const actor = ownedActor.toObject ? ownedActor.toObject() : { ...ownedActor };
+        const compensation = calculateActorCompensation(actor);
+        const fanLoss = calculateActorFanLoss(actor);
 
-    studio.money = Math.max(0, Number(studio.money || 0) - compensation);
-    studio.fans = Math.max(0, Number(studio.fans || 0) - fanLoss);
+        studio.money = Math.max(0, Number(studio.money || 0) - compensation);
+        studio.fans = Math.max(0, Number(studio.fans || 0) - fanLoss);
 
-    actor.status = "AVAILABLE";
-    actor.busyUntilWeek = null;
-    actor.hiredAt = null;
+        actor.status = "AVAILABLE";
+        actor.busyUntilWeek = null;
+        actor.hiredAt = null;
 
-    gameState.ownedActors.splice(Number(index), 1);
-    gameState.marketActors = gameState.marketActors || [];
-    gameState.marketActors.push(actor);
+        gameState.ownedActors.splice(realIndex, 1);
+        gameState.marketActors = gameState.marketActors || [];
+        gameState.marketActors.push(actor);
 
-    gameState.notifications.push({
-      message: `${actor.name} has been released.`,
-      createdAt: new Date(),
+        await Notification.create([{
+          gameStateId: gameState._id,
+          message: `${actor.name} has been released.`,
+          createdAt: new Date(),
+        }], { session });
+
+        await studio.save({ session });
+        await gameState.save({ session });
+        
+        return { actor, compensation, fanLoss };
     });
 
-    await studio.save();
-    await gameState.save();
-
+    invalidateUserCache(String(req.user._id));
     return res.status(200).json({
       success: true,
       message: "Actor released to market",
-      actor,
-      compensation,
-      fanLoss,
+      actor: result.actor,
+      compensation: result.compensation,
+      fanLoss: result.fanLoss,
       remainingMoney: studio.money,
       remainingFans: studio.fans,
       marketActors: presentActors(gameState.marketActors || []),
@@ -249,7 +281,7 @@ export const fireActor = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: `Operation rolled back due to: ${error.message}`,
     });
   }
 };

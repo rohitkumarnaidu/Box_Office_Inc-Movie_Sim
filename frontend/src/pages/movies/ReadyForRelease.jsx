@@ -66,13 +66,23 @@ const ReadyForRelease = () => {
                   <div className="text-slate-400 text-xs uppercase tracking-wider">Budget: <span className="text-white font-bold">₹{((movie.budget || 0) + (movie.marketingBudget || 0)).toLocaleString()}</span></div>
                 </div>
 
-                <button
-                  disabled={loading}
-                  onClick={() => handleRelease(movie._id)}
-                  className="w-full bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition disabled:opacity-50"
-                >
-                  {loading ? "Releasing..." : <><Play size={18} /> Release Movie</>}
-                </button>
+                <div className="flex flex-col gap-3">
+                  <button
+                    disabled={loading}
+                    onClick={() => handleRelease(movie._id)}
+                    className="w-full bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition disabled:opacity-50"
+                  >
+                    {loading ? "Releasing..." : <><Play size={18} /> Release Theatrically</>}
+                  </button>
+                  
+                  <button
+                    disabled={loading}
+                    onClick={() => navigate(`/movies/${movie._id}/streaming-deals`)}
+                    className="w-full bg-slate-800 hover:bg-slate-700 text-blue-400 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition disabled:opacity-50"
+                  >
+                    View Streaming Offers
+                  </button>
+                </div>
               </div>
             ))}
           </div>

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { STANDARD_CONTRACT_WEEKS, getTotalSalary } from "../../config/contract";
 
 const rarityStyles = {
   Common: "bg-slate-500/20 text-slate-300 border border-slate-500/30",
@@ -31,6 +32,7 @@ const WriterCard = ({
   onHire,
   onFire,
   onStartWriting,
+  contractWeeks = STANDARD_CONTRACT_WEEKS,
 }) => {
   const avatar = `https://api.dicebear.com/7.x/personas/svg?seed=${writer.avatarSeed}`;
 
@@ -131,11 +133,21 @@ const WriterCard = ({
         ))}
       </div>
 
-      <div className="mt-5">
+      <div className="mt-5 space-y-1">
         <p className="text-green-400 text-lg font-bold">
           ₹{writer.salary?.toLocaleString()}
           <span className="text-xs text-slate-400 ml-1">/week</span>
         </p>
+        <div className="flex items-center justify-between text-xs text-slate-400">
+          <span>Contract Duration</span>
+          <span>{contractWeeks} weeks</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-400">Total Salary</span>
+          <span className="text-green-400 font-semibold">
+            ₹{getTotalSalary(writer.salary, contractWeeks).toLocaleString()}
+          </span>
+        </div>
       </div>
 
       <Link

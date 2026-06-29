@@ -4,7 +4,46 @@ import { applyWriterAwards } from "../../writer/writerAwardsEngine.js";
 import { applyWriterSalaryProgression } from "../../writer/writerSalaryProgressionEngine.js";
 
 import { addNotification } from "../helpers/notificationHelper.js";
+import { addTalentHistory } from "../helpers/historyHelper.js";
 
+/**
+ * @fileoverview Writer Engine
+ *
+ * Advances all active writing projects for one simulation week. When a project's
+ * `completionWeek` is reached, the engine:
+ *
+ * 1. Generates the finished script via `createScriptFromWriter`.
+ * 2. Updates the writer's stats (reputation, morale, discovery, career history).
+ * 3. Evaluates and applies any awards the writer may have earned.
+ * 4. Calculates a resale sell price for the new script.
+ * 5. Appends the script to `gameState.ownedScripts`.
+ * 6. Releases the writer back to the public market (`gameState.marketWriters`).
+ * 7. Removes the completed project from `gameState.activeWritingProjects`.
+ *
+ * Hit/flop tracking and salary progression for writers are intentionally deferred
+ * to the Movie Release pipeline to ensure consistency with the box-office result.
+ *
+ * **Discovery System**: A writer's `discovered` stat starts low and grows each time
+ * they complete a project. Once it crosses 50, all hidden writer stats are revealed
+ * to the player and a notification fires.
+ */
+
+/**
+ * Processes all active writing projects for the current simulation week.
+ * Mutates `gameState` in place; the caller persists the document.
+ *
+ * @async
+ * @param {object} gameState                      - GameState document (mutated in place).
+ * @param {number} gameState.currentWeek          - The week currently being processed.
+ * @param {Array}  gameState.activeWritingProjects - In-progress writing projects.
+ *   Each project has: `{ id, writerId, startWeek, completionWeek, genre, qualityPenalty?, progress }`.
+ * @param {Array}  gameState.ownedWriters         - Writers currently under contract.
+ * @param {Array}  gameState.ownedScripts         - Scripts owned by the studio; completed scripts are pushed here.
+ * @param {Array}  gameState.marketWriters        - Public writer market; released writers are pushed here.
+ * @param {object} studio                         - Studio document; used for script metadata and notifications.
+ * @param {string} [studio.name="Unknown Studio"] - Studio name recorded in script/career history.
+ * @returns {Promise<void>}
+ */
 export const processWritingProjects = async (gameState, studio) => {
   const completedProjects = [];
 
@@ -53,9 +92,7 @@ export const processWritingProjects = async (gameState, studio) => {
 
       writer.discovered = Math.min(100, previousDiscovery + 15);
 
-      writer.careerHistory = writer.careerHistory || [];
-
-      writer.careerHistory.push({
+      addTalentHistory(gameState, writer.id, "CAREER", {
         scriptName: script.title,
         studioName: studio?.name || "Unknown Studio",
         completionWeek: gameState.currentWeek,
@@ -64,6 +101,7 @@ export const processWritingProjects = async (gameState, studio) => {
       });
 
       const awardsWon = applyWriterAwards({
+        gameState,
         writer,
         script,
         currentWeek: gameState.currentWeek,

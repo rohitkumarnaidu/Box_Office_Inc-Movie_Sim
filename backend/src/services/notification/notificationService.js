@@ -1,5 +1,9 @@
 export const addNotification = (gameState, message, type = "SYSTEM") => {
-  gameState.notifications.unshift({
+  if (!gameState._pendingNotifications) {
+    gameState._pendingNotifications = [];
+  }
+  gameState._pendingNotifications.unshift({
+    gameStateId: gameState._id,
     message,
     type,
     read: false,
@@ -7,6 +11,3 @@ export const addNotification = (gameState, message, type = "SYSTEM") => {
   });
 };
 
-export const unreadCount = (notifications = []) => {
-  return notifications.filter((notification) => !notification.read).length;
-};
