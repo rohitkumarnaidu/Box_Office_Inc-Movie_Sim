@@ -216,7 +216,9 @@ const Actors = () => {
       setMarketActors(res.data.marketActors || []);
       setOwnedActors(res.data.ownedActors || []);
       setActiveTab("owned");
-      setNotice(`${res.data.actor?.name || "Actor"} hired successfully.`);
+      setNotice(
+        `${res.data.actor?.name || "Actor"} hired. Signing fee ₹${Number(res.data.signingFee || 0).toLocaleString()}. Balance ₹${Number(res.data.remainingMoney || 0).toLocaleString()}.`
+      );
     } catch (hireError) {
       console.error(hireError);
       setError(hireError?.response?.data?.message || "Failed to hire actor");

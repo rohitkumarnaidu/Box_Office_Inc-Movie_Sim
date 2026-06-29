@@ -1,4 +1,5 @@
-import { STANDARD_CONTRACT_WEEKS, getTotalSalary } from "../../config/contract";
+import { useState } from "react";
+import { STANDARD_CONTRACT_WEEKS, getTotalSalary, getSigningFee } from "../../config/contract";
 
 const rarityStyles = {
   Common: "bg-slate-500/20 text-slate-300 border border-slate-500/30",
@@ -21,6 +22,8 @@ const formatMoney = (amount) => Number(amount || 0).toLocaleString("en-IN");
 const ActorCard = ({ actor, index, mode, onHire, onFire, contractWeeks = STANDARD_CONTRACT_WEEKS }) => {
   const avatar = `https://api.dicebear.com/7.x/personas/svg?seed=${actor.avatarSeed}`;
   const canRelease = actor.status === "AVAILABLE";
+  const signingFee = getSigningFee(actor.salary);
+  const [confirming, setConfirming] = useState(false);
   const hiddenStats = actor.statsRevealed === false || Number(actor.discovered || 0) < 50;
   const renderDiscoveredStat = (stat, formatter = (value) => value) =>
     hiddenStats || stat === null || stat === undefined ? "???" : formatter(stat);
@@ -112,16 +115,47 @@ const ActorCard = ({ actor, index, mode, onHire, onFire, contractWeeks = STANDAR
             ₹{formatMoney(getTotalSalary(actor.salary, contractWeeks))}
           </span>
         </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-400">Signing Fee</span>
+          <span className="font-semibold text-violet-300">
+            ₹{formatMoney(signingFee)} <span className="text-xs text-slate-500">one-time</span>
+          </span>
+        </div>
       </div>
 
-      {mode === "market" && (
-        <button
-          onClick={() => onHire(index)}
-          className="mt-4 w-full rounded-xl bg-violet-600 py-3 font-semibold text-white transition hover:bg-violet-700"
-        >
-          Hire Actor
-        </button>
-      )}
+      {mode === "market" &&
+        (confirming ? (
+          <div className="mt-4 space-y-2">
+            <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-3 text-center">
+              <p className="text-sm text-slate-300">One-time signing fee</p>
+              <p className="text-lg font-bold text-violet-300">₹{formatMoney(signingFee)}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setConfirming(false);
+                  onHire(index);
+                }}
+                className="rounded-xl bg-violet-600 py-2.5 font-semibold text-white transition hover:bg-violet-700"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setConfirming(false)}
+                className="rounded-xl border border-slate-700 bg-slate-800 py-2.5 font-semibold text-slate-200 transition hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirming(true)}
+            className="mt-4 w-full rounded-xl bg-violet-600 py-3 font-semibold text-white transition hover:bg-violet-700"
+          >
+            Hire Actor
+          </button>
+        ))}
 
       {mode === "owned" && (
         <div className="mt-4 space-y-2">

@@ -12,3 +12,12 @@ export const STANDARD_CONTRACT_WEEKS = 20;
 // (e.g. a film's remaining production weeks) gets a total that updates with it.
 export const getTotalSalary = (weeklySalary, weeks = STANDARD_CONTRACT_WEEKS) =>
   Number(weeklySalary || 0) * Number(weeks || 0);
+
+// One-time signing fee charged when hiring talent. Mirrors the backend
+// (services/talent/signingFeeService.js): a fixed multiple of weekly salary.
+// The backend re-computes and enforces this on hire and remains the source of
+// truth — this helper is purely for displaying the cost before confirmation.
+export const SIGNING_FEE_WEEKS = 4;
+
+export const getSigningFee = (weeklySalary) =>
+  Math.round(Number(weeklySalary || 0) * SIGNING_FEE_WEEKS);

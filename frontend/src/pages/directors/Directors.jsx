@@ -276,7 +276,9 @@ const Directors = () => {
       setMarketDirectors(res.data.marketDirectors || []);
       setOwnedDirectors(res.data.ownedDirectors || []);
       setActiveTab("owned");
-      setNotice(`${res.data.director?.name || "Director"} hired successfully.`);
+      setNotice(
+        `${res.data.director?.name || "Director"} hired. Signing fee ₹${Number(res.data.signingFee || 0).toLocaleString()}. Balance ₹${Number(res.data.remainingMoney || 0).toLocaleString()}.`
+      );
     } catch (hireError) {
       console.error(hireError);
       setError(hireError?.response?.data?.message || "Failed to hire director");

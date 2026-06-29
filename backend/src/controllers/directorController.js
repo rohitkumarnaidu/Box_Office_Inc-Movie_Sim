@@ -13,6 +13,7 @@ import {
   ensureScriptsProductionDefaults,
 } from "../services/director/directingProjectService.js";
 import { withTransaction } from "../utils/transactionHelper.js";
+import { calculateSigningFee } from "../services/talent/signingFeeService.js";
 import { getMarketplaceTalent, resolveTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 import Notification from "../models/Notification.js";
 import TalentHistory from "../models/TalentHistory.js";
@@ -327,6 +328,24 @@ export const hireDirector = async (req, res) => {
       });
     }
 
+    const studio = await Studio.findOne({ owner: req.user._id });
+    if (!studio) {
+      return res.status(404).json({
+        success: false,
+        message: "Studio not found",
+      });
+    }
+
+    const signingFee = calculateSigningFee(director);
+    if (Number(studio.money || 0) < signingFee) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient funds: hiring ${director.name} requires a signing fee of ${signingFee}, but the studio has ${studio.money}.`,
+        signingFee,
+        studioMoney: studio.money,
+      });
+    }
+
     director.status = "AVAILABLE";
     director.hiredAt = new Date();
 
@@ -340,12 +359,17 @@ export const hireDirector = async (req, res) => {
 
     invalidateUserCache(String(req.user._id));
 
+    studio.money = Math.max(0, Number(studio.money || 0) - signingFee);
+    await studio.save();
+
     await gameState.save();
 
     res.status(200).json({
       success: true,
       message: "Director hired",
       director,
+      signingFee,
+      remainingMoney: studio.money,
       marketDirectors: presentDirectors(gameState.marketDirectors),
       ownedDirectors: presentDirectors(gameState.ownedDirectors),
     });

@@ -9,6 +9,7 @@ import {
 } from "../services/actor/actorContractService.js";
 import { getMarketplaceTalent, resolveTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 import Notification from "../models/Notification.js";
+import { calculateSigningFee } from "../services/talent/signingFeeService.js";
 import TalentHistory from "../models/TalentHistory.js";
 
 const ACTOR_MARKET_SIZE = 1000;
@@ -96,6 +97,24 @@ export const hireActor = async (req, res) => {
       });
     }
 
+    const studio = await Studio.findOne({ owner: req.user._id });
+    if (!studio) {
+      return res.status(404).json({
+        success: false,
+        message: "Studio not found",
+      });
+    }
+
+    const signingFee = calculateSigningFee(marketActor);
+    if (Number(studio.money || 0) < signingFee) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient funds: hiring this actor requires a signing fee of ${signingFee}, but the studio has ${studio.money}.`,
+        signingFee,
+        studioMoney: studio.money,
+      });
+    }
+
     const result = await withTransaction(async (session) => {
         const actor = marketActor.toObject ? marketActor.toObject() : { ...marketActor };
 
@@ -126,6 +145,9 @@ export const hireActor = async (req, res) => {
           createdAt: new Date(),
         }], { session });
 
+        studio.money = Math.max(0, Number(studio.money || 0) - signingFee);
+        await studio.save({ session });
+
         await gameState.save({ session });
         return actor;
     });
@@ -135,6 +157,8 @@ export const hireActor = async (req, res) => {
       success: true,
       message: "Actor hired",
       actor: result,
+      signingFee,
+      remainingMoney: studio.money,
       marketActors: presentActors(gameState.marketActors || []),
       ownedActors: presentActors(gameState.ownedActors || []),
     });

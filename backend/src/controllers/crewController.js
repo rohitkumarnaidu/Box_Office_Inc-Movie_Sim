@@ -3,6 +3,7 @@ import Studio from "../models/Studio.js";
 import { generateCrewTeams } from "../services/crew/crewGenerator.js";
 import { getMarketplaceTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 import Notification from "../models/Notification.js";
+import { calculateSigningFee } from "../services/talent/signingFeeService.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
@@ -48,6 +49,19 @@ export const hireCrewTeam = async (req, res) => {
     if (index === -1) return res.status(404).json({ success: false, message: "Crew team not found" });
     const crewTeam = gameState.marketCrewTeams[index];
 
+    const studio = await Studio.findOne({ owner: req.user._id });
+    if (!studio) return res.status(404).json({ success: false, message: "Studio not found" });
+
+    const signingFee = calculateSigningFee(crewTeam);
+    if (Number(studio.money || 0) < signingFee) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient funds: hiring ${crewTeam.name} requires a signing fee of ${signingFee}, but the studio has ${studio.money}.`,
+        signingFee,
+        studioMoney: studio.money,
+      });
+    }
+
     const hiredCrew = crewTeam.toObject ? crewTeam.toObject() : { ...crewTeam };
     hiredCrew.hiredAt = new Date();
     hiredCrew.status = "AVAILABLE";
@@ -63,8 +77,10 @@ export const hireCrewTeam = async (req, res) => {
     });
 
     invalidateUserCache(String(req.user._id));
+    studio.money = Math.max(0, Number(studio.money || 0) - signingFee);
+    await studio.save();
     await gameState.save();
-    res.status(200).json({ success: true, message: "Crew team hired", crewTeam: hiredCrew });
+    res.status(200).json({ success: true, message: "Crew team hired", crewTeam: hiredCrew, signingFee, remainingMoney: studio.money });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
