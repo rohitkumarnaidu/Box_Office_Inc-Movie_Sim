@@ -4,12 +4,14 @@ import authReducer from "../features/auth/authSlice";
 import toastReducer from "../features/ui/toastSlice";
 import talentReducer from "../features/talent/talentSlice";
 import { saveTalentFilters } from "../features/talent/talentFiltersStorage";
+import awardsReducer from "../features/awards/awardsSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     toast: toastReducer,
     talent: talentReducer,
+    awards: awardsReducer,
   },
 });
 

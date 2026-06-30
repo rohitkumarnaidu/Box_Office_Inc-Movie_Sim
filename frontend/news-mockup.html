@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>News Feed Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-300 min-h-screen">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Mock Sidebar -->
+    <div class="w-64 bg-slate-900 border-r border-slate-800 hidden md:flex flex-col p-6">
+      <div class="text-2xl font-black text-white mb-8 tracking-tight">🎬 CineVerse</div>
+      <div class="space-y-2 flex-1">
+        <div class="px-4 py-2 text-slate-400 rounded-lg hover:bg-slate-800 cursor-pointer">Dashboard</div>
+        <div class="px-4 py-2 bg-blue-600/10 text-blue-400 border-r-2 border-blue-500 font-medium rounded-l-lg cursor-pointer">News Feed</div>
+        <div class="px-4 py-2 text-slate-400 rounded-lg hover:bg-slate-800 cursor-pointer">Movies</div>
+        <div class="px-4 py-2 text-slate-400 rounded-lg hover:bg-slate-800 cursor-pointer">Marketplace</div>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex-1 overflow-y-auto p-8">
+      <div class="space-y-6 max-w-5xl mx-auto">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-4xl font-extrabold text-white tracking-tight">Industry News</h1>
+            <p class="mt-2 text-slate-400">The latest scoops, releases, and trends from Hollywood.</p>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20">All News</button>
+            <button class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700">Box Office</button>
+            <button class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700">Trends</button>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Item 1: Box Office -->
+          <div class="bg-slate-950/60 backdrop-blur-xl border border-slate-800/60 rounded-2xl p-6 hover:border-slate-700/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/5 group cursor-pointer">
+            <div class="flex items-center justify-between gap-4 mb-3">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Box Office</span>
+              <span class="text-xs text-slate-500 font-medium">Week 42</span>
+            </div>
+            <h3 class="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors duration-200">
+              "Galactic Wars" Smashes Box Office Records!
+            </h3>
+            <p class="mt-3 text-slate-400 leading-relaxed text-sm md:text-base">
+              The highly anticipated sci-fi epic opened to a staggering ₹450 Cr worldwide, exceeding all industry expectations. Exhibitors are scrambling to add more screens as positive word-of-mouth spreads like wildfire.
+            </p>
+          </div>
+
+          <!-- Item 2: Rivalry -->
+          <div class="bg-slate-950/60 backdrop-blur-xl border border-slate-800/60 rounded-2xl p-6 hover:border-slate-700/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/5 group cursor-pointer">
+            <div class="flex items-center justify-between gap-4 mb-3">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold border bg-rose-500/10 text-rose-400 border-rose-500/20">Rivalry</span>
+              <span class="text-xs text-slate-500 font-medium">Week 41</span>
+            </div>
+            <h3 class="text-xl font-bold text-white group-hover:text-rose-400 transition-colors duration-200">
+              Paramount Strikes Back
+            </h3>
+            <p class="mt-3 text-slate-400 leading-relaxed text-sm md:text-base">
+              Rival studio Paramount just announced a surprise release for next week, directly challenging our upcoming comedy. Analysts predict a fierce battle for the #1 spot at the box office.
+            </p>
+          </div>
+
+          <!-- Item 3: Trend Alert -->
+          <div class="bg-slate-950/60 backdrop-blur-xl border border-slate-800/60 rounded-2xl p-6 hover:border-slate-700/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/5 group cursor-pointer">
+            <div class="flex items-center justify-between gap-4 mb-3">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold border bg-indigo-500/10 text-indigo-400 border-indigo-500/20">Trend Alert</span>
+              <span class="text-xs text-slate-500 font-medium">Week 40</span>
+            </div>
+            <h3 class="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors duration-200">
+              Horror is Dead, Long Live Fantasy
+            </h3>
+            <p class="mt-3 text-slate-400 leading-relaxed text-sm md:text-base">
+              Market data indicates a sharp 15% decline in audience interest for Horror films, while High Fantasy scripts are seeing a massive surge. Studios are advised to pivot their slates immediately.
+            </p>
+          </div>
+          
+          <!-- Item 4: Industry Event -->
+          <div class="bg-slate-950/60 backdrop-blur-xl border border-slate-800/60 rounded-2xl p-6 hover:border-slate-700/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-500/5 group cursor-pointer">
+            <div class="flex items-center justify-between gap-4 mb-3">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold border bg-amber-500/10 text-amber-400 border-amber-500/20">Industry Event</span>
+              <span class="text-xs text-slate-500 font-medium">Week 39</span>
+            </div>
+            <h3 class="text-xl font-bold text-white group-hover:text-amber-400 transition-colors duration-200">
+              Writers Guild Announces Strike Deadline
+            </h3>
+            <p class="mt-3 text-slate-400 leading-relaxed text-sm md:text-base">
+              Tensions are rising as the Writers Guild sets a strike deadline for the end of the month. Studios are rushing to fast-track scripts into production before the looming shutdown hits Hollywood.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

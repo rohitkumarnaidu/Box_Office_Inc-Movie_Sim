@@ -4,6 +4,7 @@ import { applyWriterAwards } from "../../writer/writerAwardsEngine.js";
 import { applyWriterSalaryProgression } from "../../writer/writerSalaryProgressionEngine.js";
 
 import { addNotification } from "../helpers/notificationHelper.js";
+import { addTalentHistory } from "../helpers/historyHelper.js";
 
 /**
  * @fileoverview Writer Engine
@@ -91,9 +92,7 @@ export const processWritingProjects = async (gameState, studio) => {
 
       writer.discovered = Math.min(100, previousDiscovery + 15);
 
-      writer.careerHistory = writer.careerHistory || [];
-
-      writer.careerHistory.push({
+      addTalentHistory(gameState, writer.id, "CAREER", {
         scriptName: script.title,
         studioName: studio?.name || "Unknown Studio",
         completionWeek: gameState.currentWeek,
@@ -102,6 +101,7 @@ export const processWritingProjects = async (gameState, studio) => {
       });
 
       const awardsWon = applyWriterAwards({
+        gameState,
         writer,
         script,
         currentWeek: gameState.currentWeek,

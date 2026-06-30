@@ -71,7 +71,12 @@ const movieSchema = new mongoose.Schema(
     // Franchise and Sequel details
     franchiseId: { type: mongoose.Schema.Types.ObjectId, ref: "Franchise", default: null },
     sequelNumber: { type: Number, default: 1 },
-
+// Awards tracking
+    awards: [{
+      name: String,
+      category: String,
+      year: Number
+    }],
     // Production event tracking
     delayWeeks: { type: Number, default: 0 },
     events: [{

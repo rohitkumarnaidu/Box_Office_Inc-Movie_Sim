@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { STANDARD_CONTRACT_WEEKS, getTotalSalary } from "../../config/contract";
+import { STANDARD_CONTRACT_WEEKS, getTotalSalary, getSigningFee } from "../../config/contract";
 
 const rarityStyles = {
   Common: "bg-slate-500/20 text-slate-300 border border-slate-500/30",
@@ -35,6 +36,9 @@ const WriterCard = ({
   contractWeeks = STANDARD_CONTRACT_WEEKS,
 }) => {
   const avatar = `https://api.dicebear.com/7.x/personas/svg?seed=${writer.avatarSeed}`;
+
+  const signingFee = getSigningFee(writer.salary);
+  const [confirming, setConfirming] = useState(false);
 
   const hiddenStats =
     writer.statsRevealed === false || Number(writer.discovered || 0) < 50;
@@ -148,6 +152,12 @@ const WriterCard = ({
             ₹{getTotalSalary(writer.salary, contractWeeks).toLocaleString()}
           </span>
         </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-400">Signing Fee</span>
+          <span className="font-semibold text-violet-300">
+            ₹{signingFee.toLocaleString()} <span className="text-xs text-slate-500">one-time</span>
+          </span>
+        </div>
       </div>
 
       <Link
@@ -157,14 +167,39 @@ const WriterCard = ({
         View Profile
       </Link>
 
-      {mode === "market" && (
-        <button
-          onClick={() => onHire(index)}
-          className="mt-4 w-full bg-violet-600 hover:bg-violet-700 py-3 rounded-xl text-white font-semibold transition"
-        >
-          Hire Writer
-        </button>
-      )}
+      {mode === "market" &&
+        (confirming ? (
+          <div className="mt-4 space-y-2">
+            <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-3 text-center">
+              <p className="text-sm text-slate-300">One-time signing fee</p>
+              <p className="text-lg font-bold text-violet-300">₹{signingFee.toLocaleString()}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setConfirming(false);
+                  onHire(index);
+                }}
+                className="bg-violet-600 hover:bg-violet-700 py-2.5 rounded-xl text-white font-semibold transition"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setConfirming(false)}
+                className="border border-slate-700 bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl text-slate-200 font-semibold transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirming(true)}
+            className="mt-4 w-full bg-violet-600 hover:bg-violet-700 py-3 rounded-xl text-white font-semibold transition"
+          >
+            Hire Writer
+          </button>
+        ))}
 
       {mode === "owned" && (
         <div className="mt-4 space-y-2">

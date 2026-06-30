@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { showToast } from "../../features/ui/toastSlice";
-import { STANDARD_CONTRACT_WEEKS, getTotalSalary } from "../../config/contract";
+import { STANDARD_CONTRACT_WEEKS, getTotalSalary, getSigningFee } from "../../config/contract";
 import {
   selectCrewFilters,
   setCrewFilters,
@@ -126,13 +126,17 @@ const CrewMarket = () => {
     return () => window.clearTimeout(refreshTimer);
   }, [fetchCrewTeams]);
 
+  const [confirmingId, setConfirmingId] = useState(null);
+
   const handleHire = async (id) => {
     if (loading || actionLoading) return;
 
     try {
       setActionLoading(true);
-      await api.post(`/crew/hire/${id}`);
-      dispatch(showToast({ message: "Crew team hired successfully!", type: "success" }));
+      const res = await api.post(`/crew/hire/${id}`);
+      const fee = Number(res.data?.signingFee || 0).toLocaleString();
+      const bal = Number(res.data?.remainingMoney || 0).toLocaleString();
+      dispatch(showToast({ message: `Crew team hired. Signing fee ₹${fee}. Balance ₹${bal}.`, type: "success" }));
       await fetchCrewTeams(false);
     } catch (error) {
       dispatch(showToast({
@@ -254,21 +258,48 @@ const CrewMarket = () => {
                   <div className="text-slate-400">VFX: <span className="text-white">{crew.vfxQuality}</span></div>
                 </div>
 
-                <div className="flex items-center justify-between mt-auto">
-                  <div>
-                    <div className="text-violet-400 font-bold">₹{crew.salary.toLocaleString()}/wk</div>
-                    <div className="text-xs text-slate-400">
-                      Total ₹{getTotalSalary(crew.salary, STANDARD_CONTRACT_WEEKS).toLocaleString()}
-                      <span className="ml-1">({STANDARD_CONTRACT_WEEKS}w)</span>
-                    </div>
+                <div className="mt-auto">
+                  <div className="text-violet-400 font-bold">₹{crew.salary.toLocaleString()}/wk</div>
+                  <div className="text-xs text-slate-400">
+                    Total ₹{getTotalSalary(crew.salary, STANDARD_CONTRACT_WEEKS).toLocaleString()}
+                    <span className="ml-1">({STANDARD_CONTRACT_WEEKS}w)</span>
                   </div>
-                  <button
-                    disabled={actionLoading}
-                    onClick={() => handleHire(crew.id)}
-                    className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
-                  >
-                    {actionLoading ? "Hiring..." : "Hire Team"}
-                  </button>
+                  <div className="mt-2 flex items-center justify-between text-sm">
+                    <span className="text-slate-400">Signing Fee</span>
+                    <span className="font-semibold text-violet-300">
+                      ₹{getSigningFee(crew.salary).toLocaleString()} <span className="text-xs text-slate-500">one-time</span>
+                    </span>
+                  </div>
+
+                  {confirmingId === crew.id ? (
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button
+                        disabled={actionLoading}
+                        onClick={() => {
+                          setConfirmingId(null);
+                          handleHire(crew.id);
+                        }}
+                        className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
+                      >
+                        {actionLoading ? "Hiring..." : "Confirm"}
+                      </button>
+                      <button
+                        disabled={actionLoading}
+                        onClick={() => setConfirmingId(null)}
+                        className="border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => setConfirmingId(crew.id)}
+                      className="mt-3 w-full bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
+                    >
+                      Hire Team
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

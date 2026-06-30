@@ -1,0 +1,34 @@
+import NewsItem from "../models/NewsItem.js";
+
+export const getNews = async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 20));
+    const skip = (page - 1) * limit;
+
+    const query = {};
+    if (req.query.type) {
+      query.type = req.query.type;
+    }
+
+    const total = await NewsItem.countDocuments(query);
+    const news = await NewsItem.find(query)
+      .sort({ week: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      news,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

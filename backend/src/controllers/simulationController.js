@@ -2,6 +2,7 @@ import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
 import { runWeeklySimulation } from "../services/simulation/runWeeklySimulation.js";
 import Notification from "../models/Notification.js";
+import TalentHistory from "../models/TalentHistory.js";
 
 import { withTransaction } from "../utils/transactionHelper.js";
 
@@ -23,6 +24,7 @@ export const simulateWeek = async (req, res) => {
 
     // Accumulate notifications generated during the simulation ticks
     let newNotifications = [];
+    let newHistories = [];
 
     // Accumulate rival releases across all simulated weeks
     const allRivalReleases = [];
@@ -57,11 +59,19 @@ export const simulateWeek = async (req, res) => {
           newNotifications.push(...gameState._pendingNotifications);
           gameState._pendingNotifications = [];
         }
+        if (gameState._pendingTalentHistories && gameState._pendingTalentHistories.length > 0) {
+          newHistories.push(...gameState._pendingTalentHistories);
+          gameState._pendingTalentHistories = [];
+        }
       }
 
       if (newNotifications.length > 0) {
         const inserted = await Notification.insertMany(newNotifications, { session });
         newNotifications = inserted;
+      }
+
+      if (newHistories.length > 0) {
+        await TalentHistory.insertMany(newHistories, { session });
       }
 
       await studio.save({ session });
@@ -94,3 +104,38 @@ export const simulateWeek = async (req, res) => {
   }
 };
 
+export const getPastAwards = async (req, res) => {
+  try {
+    const gameState = await GameState.findOne({ user: req.user._id });
+    if (!gameState) {
+      return res.status(404).json({ message: "Game state not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      awards: gameState.pastAwards || []
+    });
+  } catch (error) {
+    console.error("Error fetching awards:", error);
+    res.status(500).json({ message: "Failed to fetch awards" });
+  }
+};
+
+export const getMarketIntelligence = async (req, res) => {
+  try {
+    const gameState = await GameState.findOne({ user: req.user._id });
+    if (!gameState) {
+      return res.status(404).json({ message: "Game state not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      currentWeek: gameState.currentWeek,
+      marketTrends: gameState.marketTrends || { activeTrends: [] },
+      randomEvents: gameState.randomEvents?.history?.slice(-10).reverse() || []
+    });
+  } catch (error) {
+    console.error("Error fetching market intelligence:", error);
+    res.status(500).json({ message: "Failed to fetch market intelligence" });
+  }
+};

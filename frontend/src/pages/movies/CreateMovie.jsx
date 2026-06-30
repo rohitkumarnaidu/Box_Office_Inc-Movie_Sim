@@ -16,6 +16,35 @@ const MARKETING_CAMPAIGNS = [
   { id: "billboards", name: "Billboards", cost: 200000, hypeBoost: 10 },
 ];
 
+// Mirror of the server-side genre effectiveness map (backend/src/constants/
+// marketingCampaigns.js). The server is authoritative for the hype actually
+// applied; this copy lets the movie-creation screen preview how effective each
+// campaign is for the selected script's genres. Keep the two in sync.
+const CAMPAIGN_GENRE_EFFECTIVENESS = {
+  Horror: { social: 1.5, influencer: 1.4, digital: 1.2 },
+  Action: { trailer: 1.5, teaser: 1.3, tv: 1.3 },
+  Drama: { pr: 1.5, newspaper: 1.3 },
+  "Sci-Fi": { digital: 1.4, social: 1.3, influencer: 1.3 },
+  Animation: { tv: 1.5, billboards: 1.3, social: 1.2 },
+  Comedy: { social: 1.4, digital: 1.3 },
+  Romance: { social: 1.3, pr: 1.3 },
+  Thriller: { trailer: 1.4, digital: 1.3 },
+  Adventure: { trailer: 1.3, tv: 1.3 },
+  Fantasy: { trailer: 1.3, digital: 1.3 },
+};
+
+const getCampaignEffectiveness = (campaignId, genres) => {
+  if (!Array.isArray(genres) || genres.length === 0) return 1;
+  let best = 1;
+  for (const genre of genres) {
+    const multiplier = CAMPAIGN_GENRE_EFFECTIVENESS[genre]?.[campaignId];
+    if (typeof multiplier === "number" && multiplier > best) {
+      best = multiplier;
+    }
+  }
+  return best;
+};
+
 const CreateMovie = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -79,6 +108,15 @@ const CreateMovie = () => {
   const totalMarketingBudget = formData.marketingCampaignIds.reduce((sum, id) => {
     const campaign = MARKETING_CAMPAIGNS.find(c => c.id === id);
     return sum + (campaign?.cost || 0);
+  }, 0);
+
+  const selectedScript = scripts.find(s => s.id === formData.scriptId);
+  const selectedGenres = selectedScript?.genres || [];
+
+  const totalEffectiveHype = formData.marketingCampaignIds.reduce((sum, id) => {
+    const campaign = MARKETING_CAMPAIGNS.find(c => c.id === id);
+    if (!campaign) return sum;
+    return sum + Math.round(campaign.hypeBoost * getCampaignEffectiveness(id, selectedGenres));
   }, 0);
 
   const generateTitle = async () => {
@@ -276,6 +314,9 @@ const CreateMovie = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {MARKETING_CAMPAIGNS.map(campaign => {
                     const active = formData.marketingCampaignIds.includes(campaign.id);
+                    const effectiveness = getCampaignEffectiveness(campaign.id, selectedGenres);
+                    const effectiveHype = Math.round(campaign.hypeBoost * effectiveness);
+                    const boosted = effectiveness > 1;
                     return (
                         <button
                             key={campaign.id}
@@ -290,6 +331,16 @@ const CreateMovie = () => {
                         >
                             <div className="text-white font-bold text-sm mb-1">{campaign.name}</div>
                             <div className="text-violet-400 font-bold text-xs">₹{campaign.cost.toLocaleString()}</div>
+                            <div className="text-xs mt-1 flex flex-wrap items-center gap-1">
+                                <span className={boosted ? 'text-emerald-400 font-bold' : 'text-slate-400'}>
+                                    +{effectiveHype} hype
+                                </span>
+                                {boosted && (
+                                    <span className="text-emerald-400 font-semibold">
+                                        ↑ x{effectiveness.toFixed(1)} genre match
+                                    </span>
+                                )}
+                            </div>
                             {active && <div className="absolute top-2 right-2 bg-violet-500 rounded-full p-0.5"><Check size={12} className="text-white" /></div>}
                         </button>
                     )
@@ -300,6 +351,14 @@ const CreateMovie = () => {
                 <span className="text-slate-400 font-bold uppercase text-xs">Total Marketing Budget</span>
                 <span className="text-white font-black text-xl">₹{totalMarketingBudget.toLocaleString()}</span>
               </div>
+              {formData.marketingCampaignIds.length > 0 && (
+                <div className="mt-3 p-4 bg-slate-950 rounded-xl flex justify-between items-center border border-slate-800">
+                  <span className="text-slate-400 font-bold uppercase text-xs">
+                    Est. Hype from Marketing{selectedGenres.length > 0 ? ` (for ${selectedGenres.join(', ')})` : ''}
+                  </span>
+                  <span className="text-emerald-400 font-black text-xl">+{totalEffectiveHype}</span>
+                </div>
+              )}
             </div>
           </div>
 

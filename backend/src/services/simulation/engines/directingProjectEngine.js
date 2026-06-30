@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { calculateProjectedMovieQuality } from "../../director/directingProjectService.js";
 import { addNotification } from "../helpers/notificationHelper.js";
+import { addTalentHistory } from "../helpers/historyHelper.js";
 
 /**
  * @fileoverview Directing Project Engine
@@ -129,8 +130,7 @@ export const processDirectingProjects = (gameState, studio) => {
 
     addUniqueStudio(director, studio?.name || "Unknown Studio");
 
-    director.careerHistory = director.careerHistory || [];
-    director.careerHistory.push({
+    addTalentHistory(gameState, director.id, "CAREER", {
       movieName: project.movieName || project.scriptTitle,
       studioName: studio?.name || "Unknown Studio",
       releaseWeek: gameState.currentWeek,

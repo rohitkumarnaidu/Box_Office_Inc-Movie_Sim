@@ -1,4 +1,5 @@
 import { generateDirector } from "./directorGenerator.js";
+import { addNotification } from "../simulation/helpers/notificationHelper.js";
 
 export const createReplacementDirector = () => generateDirector(18);
 
@@ -15,9 +16,7 @@ export const retireDirector = ({ director, gameState, source }) => {
   gameState.retiredDirectors = gameState.retiredDirectors || [];
   gameState.retiredDirectors.push(retiredDirector);
 
-  gameState.notifications.push({
-    message: `${retiredDirector.name} has retired from directing.`,
-  });
+  addNotification(gameState, `${retiredDirector.name} has retired from directing.`);
 
   return retiredDirector;
 };

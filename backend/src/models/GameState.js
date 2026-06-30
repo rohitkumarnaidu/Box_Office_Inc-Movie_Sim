@@ -224,43 +224,10 @@ const gameStateSchema = new mongoose.Schema(
           default: 0,
         },
 
-        awardsHistory: [
-          {
-            awardName: String,
-            scriptName: String,
-            week: Number,
-            genre: String,
-            reputationGain: Number,
-            skillBoosts: {
-              originality: Number,
-              consistency: Number,
-              reliability: Number,
-            },
-          },
-        ],
-
         totalEarnings: {
           type: Number,
           default: 0,
         },
-
-        salaryHistory: [
-          {
-            week: Number,
-            salary: Number,
-            reason: String,
-          },
-        ],
-
-        careerHistory: [
-          {
-            scriptName: String,
-            studioName: String,
-            completionWeek: Number,
-            genre: String,
-            scriptQuality: Number,
-          },
-        ],
 
         discovered: {
           type: Number,
@@ -324,43 +291,10 @@ const gameStateSchema = new mongoose.Schema(
           default: 0,
         },
 
-        awardsHistory: [
-          {
-            awardName: String,
-            scriptName: String,
-            week: Number,
-            genre: String,
-            reputationGain: Number,
-            skillBoosts: {
-              originality: Number,
-              consistency: Number,
-              reliability: Number,
-            },
-          },
-        ],
-
         totalEarnings: {
           type: Number,
           default: 0,
         },
-
-        salaryHistory: [
-          {
-            week: Number,
-            salary: Number,
-            reason: String,
-          },
-        ],
-
-        careerHistory: [
-          {
-            scriptName: String,
-            studioName: String,
-            completionWeek: Number,
-            genre: String,
-            scriptQuality: Number,
-          },
-        ],
 
         discovered: {
           type: Number,
@@ -431,51 +365,10 @@ const gameStateSchema = new mongoose.Schema(
           default: 0,
         },
 
-        awardsHistory: [
-          {
-            awardName: String,
-            category: String,
-            movieId: String,
-            movieTitle: String,
-            movieName: String,
-            year: Number,
-            week: Number,
-            genre: String,
-            rating: Number,
-            prestigeValue: Number,
-            reputationGain: Number,
-            skillBoosts: {
-              creativity: Number,
-              reliability: Number,
-              leadership: Number,
-            },
-          },
-        ],
-
         totalEarnings: {
           type: Number,
           default: 0,
         },
-
-        salaryHistory: [
-          {
-            week: Number,
-            salary: Number,
-            reason: String,
-          },
-        ],
-
-        careerHistory: [
-          {
-            movieName: String,
-            studioName: String,
-            releaseWeek: Number,
-            genre: String,
-            movieRating: Number,
-            boxOffice: Number,
-            outcome: String,
-          },
-        ],
 
         studiosWorkedWith: [String],
 
@@ -548,51 +441,10 @@ const gameStateSchema = new mongoose.Schema(
           default: 0,
         },
 
-        awardsHistory: [
-          {
-            awardName: String,
-            category: String,
-            movieId: String,
-            movieTitle: String,
-            movieName: String,
-            year: Number,
-            week: Number,
-            genre: String,
-            rating: Number,
-            prestigeValue: Number,
-            reputationGain: Number,
-            skillBoosts: {
-              creativity: Number,
-              reliability: Number,
-              leadership: Number,
-            },
-          },
-        ],
-
         totalEarnings: {
           type: Number,
           default: 0,
         },
-
-        salaryHistory: [
-          {
-            week: Number,
-            salary: Number,
-            reason: String,
-          },
-        ],
-
-        careerHistory: [
-          {
-            movieName: String,
-            studioName: String,
-            releaseWeek: Number,
-            genre: String,
-            movieRating: Number,
-            boxOffice: Number,
-            outcome: String,
-          },
-        ],
 
         studiosWorkedWith: [String],
 
@@ -683,28 +535,6 @@ const gameStateSchema = new mongoose.Schema(
           default: 0,
         },
 
-        salaryHistory: [
-          {
-            week: Number,
-            salary: Number,
-            reason: String,
-          },
-        ],
-
-        careerHistory: [
-          {
-            movieId: String,
-            movieTitle: String,
-            studioName: String,
-            roleType: String,
-            genre: String,
-            completionWeek: Number,
-            actorRating: Number,
-            boxOffice: Number,
-            verdict: String,
-          },
-        ],
-
         studiosWorkedWith: [String],
 
         discovered: {
@@ -790,28 +620,6 @@ const gameStateSchema = new mongoose.Schema(
           type: Number,
           default: 0,
         },
-
-        salaryHistory: [
-          {
-            week: Number,
-            salary: Number,
-            reason: String,
-          },
-        ],
-
-        careerHistory: [
-          {
-            movieId: String,
-            movieTitle: String,
-            studioName: String,
-            roleType: String,
-            genre: String,
-            completionWeek: Number,
-            actorRating: Number,
-            boxOffice: Number,
-            verdict: String,
-          },
-        ],
 
         studiosWorkedWith: [String],
 

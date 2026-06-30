@@ -9,6 +9,8 @@ const createAward = ({ awardName, script, currentWeek, genre, skillBoosts }) => 
   reputationGain: 5,
 });
 
+import { addTalentHistory } from "../simulation/helpers/historyHelper.js";
+
 export const determineWriterAwards = ({ script, currentWeek }) => {
   const awards = [];
   const primaryGenre = script.genres?.[0] || "General";
@@ -84,7 +86,7 @@ export const determineWriterAwards = ({ script, currentWeek }) => {
   return awards;
 };
 
-export const applyWriterAwards = ({ writer, script, currentWeek }) => {
+export const applyWriterAwards = ({ gameState, writer, script, currentWeek }) => {
   const awards = determineWriterAwards({ script, currentWeek });
 
   if (awards.length === 0) {
@@ -108,7 +110,12 @@ export const applyWriterAwards = ({ writer, script, currentWeek }) => {
       Number(writer.reputation || 0) + Number(award.reputationGain || 0)
     );
 
-    writer.awardsHistory.push(award);
+    if (gameState) {
+      addTalentHistory(gameState, writer.id, "AWARD", award);
+    } else {
+      writer.awardsHistory = writer.awardsHistory || [];
+      writer.awardsHistory.push(award);
+    }
   });
 
   return awards;

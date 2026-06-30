@@ -13,10 +13,13 @@ import {
   Scale,
   IndianRupee,
   X,
+  Newspaper,
   Swords,
+  Trophy,
 } from "lucide-react";
 
 import { Link, useLocation } from "react-router-dom";
+import ThemeToggle from "./ThemeToggle";
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
@@ -28,9 +31,19 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: LayoutDashboard,
     },
     {
+      name: "Industry News",
+      path: "/news",
+      icon: Newspaper,
+    },
+    {
       name: "Rival Studios",
       path: "/rivals",
       icon: Swords,
+    },
+    {
+      name: "Leaderboard",
+      path: "/leaderboard",
+      icon: Trophy,
     },
     {
       name: "Movies",
@@ -195,6 +208,9 @@ const Sidebar = ({ isOpen, onClose }) => {
             );
           })}
         </nav>
+        <div className="mt-auto pt-4 border-t" style={{ borderColor: "var(--border)" }}>
+          <ThemeToggle />
+        </div>
       </aside>
     </>
   );
