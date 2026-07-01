@@ -1,19 +1,72 @@
 ---
 name: 📝 Documentation Update
-about: Suggest improvements to our documentation.
-title: 'docs: [Short Description]'
+about: Suggest improvements to the project documentation.
+title: "docs: "
 labels: documentation
-assignees: ''
+assignees: ""
 ---
 
-**Which documentation needs improvement?**
-Please provide a link to the document or describe the section.
+# 📝 Documentation Overview
 
-**What is the issue?**
-Describe the current state and what is missing or incorrect.
+Which document or section needs improvement?
 
-**What is the suggested change?**
-Provide your suggested wording or outline the new documentation.
+Examples:
 
-**Additional context**
-Add any other context here.
+- README.md
+- CONTRIBUTING.md
+- CODE_OF_CONDUCT.md
+- API Documentation
+- Deployment Guide
+- Installation Guide
+
+---
+
+# 🚀 Open Source Program
+
+- [ ] ECSOC 2026
+- [ ] ELUSOC 2026
+- [ ] General Contribution
+
+> If this documentation issue is part of an open-source program, please add the appropriate label:
+>
+> - `ECSOC2026`
+> - `ELUSOC2026`
+
+---
+
+# 📍 Current Documentation
+
+Provide the file name, section, or link to the documentation.
+
+---
+
+# ❌ Problem
+
+Describe what is incorrect, outdated, unclear, or missing.
+
+---
+
+# ✅ Suggested Improvement
+
+Describe the proposed documentation update.
+
+You may include:
+
+- Correct wording
+- Additional explanations
+- Examples
+- Code snippets
+- Screenshots
+- Links to relevant resources
+
+---
+
+# 🎯 Expected Outcome
+
+Explain how this documentation improvement will help contributors or users.
+
+---
+
+# 📋 Additional Context
+
+Add any other information, references, or screenshots that may help us understand your suggestion.

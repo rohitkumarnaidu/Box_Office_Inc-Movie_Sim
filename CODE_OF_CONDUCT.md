@@ -1,4 +1,10 @@
-# Contributor Covenant Code of Conduct
+# Code of Conduct
+
+Welcome to **Box Office Inc - Movie Studio Simulator**!
+
+We are committed to fostering an open, welcoming, inclusive, and respectful community for everyone participating in this project, including contributors from **ECSOC 2026**, **ELUSOC 2026**, and the broader open-source community.
+
+By participating in this project, you agree to abide by this Code of Conduct. This project adopts the **Contributor Covenant Code of Conduct v2.1**.
 
 ## Our Pledge
 
@@ -58,10 +64,7 @@ representative at an online or offline event.
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-[INSERT EMAIL ADDRESS]. All complaints will be reviewed and investigated
-promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainers at **sahilrv196@gmail.com**. All reports will be handled confidentially, reviewed promptly, and investigated fairly.
 
 All community leaders are obligated to respect the privacy and security of the
 reporter of any incident.
@@ -130,3 +133,7 @@ For answers to common questions about this code of conduct, see the FAQ at
 [Mozilla CoC]: https://github.com/mozilla/diversity
 [faq]: https://www.contributor-covenant.org/faq
 [translations]: https://www.contributor-covenant.org/translations
+
+---
+
+Thank you for helping us build a welcoming, collaborative, and professional open-source community.

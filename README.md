@@ -1,152 +1,248 @@
-# CineVerse: The Ultimate Movie Studio Tycoon
+# 🎬 Box Office Inc - Movie Studio Simulator
 
-CineVerse is a sophisticated, full-stack movie studio simulation game where players step into the role of a Studio Head. Build your cinematic empire from the ground up, manage talent, greenlight scripts, and dominate the global box office.
+A full-stack **Movie Studio Tycoon** simulation game where you build a cinematic empire, hire talent, produce blockbuster movies, and dominate the global box office.
 
-## 🎬 Project Overview
+![License](https://img.shields.io/badge/License-MIT-green)
+![Open Source](https://img.shields.io/badge/Open%20Source-Welcome-brightgreen)
+![ECSOC](https://img.shields.io/badge/ECSOC-2026-blue)
+![ELUSOC](https://img.shields.io/badge/ELUSOC-2026-orange)
 
-CineVerse provides a deep simulation of the film industry. From the initial spark of a script idea to the high-stakes world of theatrical releases, every decision matters. Balance your budget, nurture talent careers, and react to shifting market trends to become a legendary studio.
+---
 
-## 🚀 Features
+## 🚀 Open Source Programs
+
+This repository is an official participating project in:
+
+- 🌟 **ECSOC 2026**
+- 🚀 **ELUSOC 2026**
+
+Please read **[CONTRIBUTING.md](CONTRIBUTING.md)** before submitting any contribution.
+
+---
+
+## 🎬 Overview
+
+Become the head of your own movie studio and experience every stage of filmmaking—from discovering scripts and hiring actors to managing production, marketing, and worldwide theatrical releases.
+
+Every decision affects your studio's reputation, finances, and long-term success.
+
+---
+
+## ✨ Features
 
 ### 🏢 Studio Management
-- **Financial Control:** Manage your studio's cash flow, weekly payroll, and project budgets.
-- **Growth & Prestige:** Earn fans and increase your studio's reputation with every hit.
+- Financial management
+- Studio reputation system
+- Weekly payroll
+- Revenue & expense tracking
 
-### 🎭 Talent Agency
-- **Writers:** Discover and hire writers with varying stats (Quality, Originality, Audience Appeal).
-- **Directors:** Assign visionary directors to bring your projects to life.
-- **Actors & Crew:** Recruit top-tier lead actors and technical crew teams to ensure production quality.
-- **Career Progression:** Watch your talent grow (or fade) based on movie performance.
+### 🎭 Talent Management
+- Hire Writers
+- Hire Directors
+- Recruit Actors
+- Manage Production Crews
+- Talent progression
 
-### 🎥 Production Pipeline
-- **Script Marketplace:** Browse and buy scripts ranging from Common to Legendary rarity.
-- **Project Lifecycle:** Manage movies through Planning, Pre-Production, Production, and Post-Production stages.
-- **Marketing:** Launch targeted campaigns (Trailer, TV, Digital) to build hype before release.
+### 🎥 Movie Production
+- Script marketplace
+- Multi-stage production pipeline
+- Marketing campaigns
+- Movie release management
 
-### 📊 Simulation & Results
-- **Weekly Tick System:** A unified simulation engine that processes finances, production progress, and talent updates.
-- **Dynamic Box Office:** Realistic earnings calculation based on quality, marketing, and genre appeal.
-- **Critical Reviews:** Receive detailed scores from both critics and audiences.
+### 📊 Simulation
+- Weekly simulation engine
+- Dynamic box office
+- Audience & critic ratings
+- Financial analytics
+
+---
 
 ## 🛠 Tech Stack
 
-- **Frontend:** React, Vite, Redux Toolkit (State Management), TailwindCSS (Styling), Lucide React (Icons).
-- **Backend:** Node.js, Express, Mongoose (ODM).
-- **Database:** MongoDB Atlas.
-- **Deployment:** Vercel (Frontend & Backend).
+| Layer | Technologies |
+|--------|--------------|
+| Frontend | React, Vite, Redux Toolkit, TailwindCSS |
+| Backend | Node.js, Express.js |
+| Database | MongoDB Atlas |
+| Deployment | Vercel |
+
+---
 
 ## 💻 Local Setup
 
 ### Prerequisites
-- Node.js (v18+)
-- MongoDB (Local or Atlas)
 
-### Backend Setup
-1. Navigate to the backend directory: `cd backend`
-2. Install dependencies: `npm install`
-3. Create a `.env` file based on `.env.example`.
-4. Start the development server: `npm run dev`
+- Node.js v18+
+- MongoDB
 
-### Frontend Setup
-1. Navigate to the frontend directory: `cd frontend`
-2. Install dependencies: `npm install`
-3. Create a `.env` file based on `.env.example`.
-4. Start the development server: `npm run dev`
+### Backend
 
-## 🌍 Deployment Setup
+```bash
+cd backend
+npm install
+npm run dev
+```
 
-CineVerse is optimized for deployment on **Vercel** with **MongoDB Atlas**.
+### Frontend
 
-### 1. MongoDB Atlas
-- Create a new cluster and database.
-- Whitelist `0.0.0.0/0` in Network Access.
-- Obtain your Connection String.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-### 2. Backend Deployment (Vercel)
-- Deploy the `backend` folder as a new Vercel project.
-- Configure Environment Variables:
-  - `MONGO_URI`: Your Atlas string.
-  - `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET`: Secure random strings.
-  - `CLIENT_URL`: The URL of your future frontend deployment.
-  - `NODE_ENV`: `production`.
+Create `.env` files using the provided examples before running the project.
 
-### 3. Frontend Deployment (Vercel)
-- Deploy the `frontend` folder as a new Vercel project.
-- Configure Environment Variables:
-  - `VITE_BACKEND_API_URL`: The URL of your deployed backend (e.g., `https://api.cineverse.com/api`).
+---
+
+## 🌍 Deployment
+
+Deploy using **Vercel** and **MongoDB Atlas**.
+
+Required environment variables include:
+
+- `MONGO_URI`
+- `JWT_ACCESS_SECRET`
+- `JWT_REFRESH_SECRET`
+- `CLIENT_URL`
+- `NODE_ENV`
+- `VITE_BACKEND_API_URL`
+
+---
 
 ## 📁 Project Structure
 
 ```text
-├── backend/
-│   ├── api/            # Vercel Serverless Entry Point
-│   ├── src/
-│   │   ├── config/     # DB and Env config
-│   │   ├── controllers/# Route handlers
-│   │   ├── models/     # Mongoose Schemas
-│   │   ├── routes/     # API Endpoints
-│   │   ├── services/   # Simulation Engines & Logic
-│   │   └── utils/      # Helpers
-│   └── vercel.json     # Backend Vercel Config
-├── frontend/
-│   ├── src/
-│   │   ├── api/        # Axios & API client
-│   │   ├── app/        # Redux Store
-│   │   ├── components/ # UI Components
-│   │   ├── features/   # Redux Slices
-│   │   └── pages/      # Route Views
-│   └── vercel.json     # Frontend Vercel Config
-└── AUDIT_REPORT.md     # Detailed Deployment Audit
+backend/
+ ├── api/
+ ├── src/
+ │   ├── config/
+ │   ├── controllers/
+ │   ├── models/
+ │   ├── routes/
+ │   ├── services/
+ │   └── utils/
+
+frontend/
+ ├── src/
+ │   ├── api/
+ │   ├── app/
+ │   ├── components/
+ │   ├── features/
+ │   └── pages/
 ```
 
-## 🛠 Available Scripts
+---
 
-| Command | Action |
-|---------|--------|
-| `npm run dev` | Starts development server (Frontend/Backend) |
-| `npm run build` | Builds the frontend for production |
-| `npm start` | Starts the backend production server |
+## 🛠 Scripts
 
-## ❓ Troubleshooting
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Run development server |
+| `npm run build` | Build frontend |
+| `npm start` | Start backend |
 
-- **CORS Issues:** Ensure `CLIENT_URL` in the backend environment variables exactly matches your frontend deployment URL.
-- **Cookie/Auth Failures:** In production, ensure both sites use HTTPS. The backend uses `secure: true` and `sameSite: 'none'` for cookies.
-- **Database Connection:** Verify that your MongoDB Atlas IP Whitelist allows all connections (`0.0.0.0/0`) if using Vercel.
+---
 
-## 🗺 Future Roadmap
+## 🤝 Contribution Guide
 
-- **AI Studios:** Compete against procedurally generated rival studios.
-- **Industry Simulation:** Market trends, genre booms, and seasonal events.
-- **Awards Season:** Win prestigious awards for high-quality productions.
-- **Franchise System:** Build sequels and cinematic universes.
+We welcome contributors from both open-source programs.
 
-## 🌟 ELUSOC 2026 Contribution Guide
+Please read **[CONTRIBUTING.md](CONTRIBUTING.md)** before contributing.
 
-CineVerse is proud to be a participating project in ELUSOC 2026! We welcome contributions from developers of all skill levels.
+### 🌟 ECSOC 2026
 
-### ⚠️ Important Rules
-- **Target Branch:** All Pull Requests must target the `elusoc` branch. The `main` branch is reserved for stable releases.
-- **Issue Assignment:** You **must** request assignment on an issue and wait for approval before starting any work. Work submitted without assignment will not be merged.
-- **No Duplicates:** Check existing issues before opening a new one.
+- Target Branch → `ecsoc`
+- Never create PRs against `main`.
+- PRs opened against `main` are automatically closed by repository automation.
+- Request issue assignment before starting work.
+- If you create an issue, add the **`ECSOC2026`** label.
+- If you create a PR, mention it is for **ECSOC 2026** and request the appropriate labels.
+- During review, project admins will apply the **`ECSoC26`** label **before merging** so ECSOC Sentinel can automatically process your contribution.
 
-### 🛠 How to Contribute
-1. Browse [Open Issues](https://github.com/your-repo/cineverse/issues).
-2. Request assignment in the comments.
-3. Once assigned, fork the repo and create a branch from `elusoc`.
-4. Follow the guidelines in [CONTRIBUTING.md](CONTRIBUTING.md).
+### 🚀 ELUSOC 2026
 
-## 🌍 Open Source
+- Target Branch → `elusoc`
+- Never create PRs against `main`.
+- PRs opened against `main` are automatically closed.
+- Request issue assignment before starting work.
+- If you create an issue, add the **`ELUSOC2026`** label.
+- If you create a PR, mention it is for **ELUSOC 2026** and request the appropriate labels.
 
-CineVerse is an open-source project licensed under the [MIT License](LICENSE). We believe in the power of community-driven development to create the best possible movie studio simulation experience.
+---
 
-## 🤝 Contributions
+## 🌿 Branch Rules
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+| Branch | Purpose |
+|---------|---------|
+| `main` | Stable production branch |
+| `ecsoc` | ECSOC 2026 contributions |
+| `elusoc` | ELUSOC 2026 contributions |
 
-### Labels Explanation
-- `bug`: Something isn't working correctly.
-- `enhancement`: New feature or request.
-- `documentation`: Improvements or additions to documentation.
-- `good first issue`: Ideal for beginners.
-- `help wanted`: Extra attention needed.
-- `elusoc`: Specifically for ELUSOC 2026 participants.
+> **⚠️ Pull Requests opened against `main` are automatically closed without human review. Always submit PRs to `ecsoc` or `elusoc` depending on your program.**
+
+---
+
+## 🏷 Labels
+
+### General
+
+- `bug`
+- `enhancement`
+- `documentation`
+- `frontend`
+- `backend`
+- `performance`
+- `security`
+- `testing`
+- `refactor`
+- `good first issue`
+- `help wanted`
+
+### ECSOC
+
+- `ECSOC2026`
+- `ECSoC26`
+- `good-issue`
+- `good-pr`
+- `good-ui`
+- `good-backend`
+
+### ELUSOC
+
+- `ELUSOC2026`
+
+---
+
+## 🛣 Roadmap
+
+- AI Studios
+- Awards System
+- Franchise & Sequels
+- Seasonal Events
+- Dynamic Industry Trends
+- Multiplayer Mode
+
+---
+
+## ❤️ Open Source
+
+Box Office Inc - Movie Studio Simulator is licensed under the **MIT License**.
+
+We welcome contributions from developers worldwide through **ECSOC 2026**, **ELUSOC 2026**, and the open-source community.
+
+If you're interested in contributing, please read **[CONTRIBUTING.md](CONTRIBUTING.md)** before getting started.
+
+---
+
+## ⭐ Support
+
+If you find this project useful:
+
+- ⭐ Star the repository
+- 🍴 Fork the project
+- 🐛 Report bugs
+- 💡 Suggest new features
+- 🚀 Contribute through ECSOC 2026 or ELUSOC 2026
+
+Happy Coding! 🎬

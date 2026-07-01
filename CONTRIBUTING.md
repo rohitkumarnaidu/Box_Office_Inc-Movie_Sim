@@ -1,59 +1,276 @@
-# Contributing to CineVerse
+# Contributing to Box Office Inc - Movie Studio Simulator
 
-First off, thank you for considering contributing to CineVerse! It's people like you that make CineVerse such a great tool.
+First off, thank you for considering contributing to **Box Office Inc - Movie Studio Simulator**! 🎉
 
-This project is participating in **ELUSOC 2026**. Please follow these guidelines to ensure a smooth contribution process.
+Your contributions help make Box Office Inc - Movie Studio Simulator a better movie studio management and simulation experience for everyone.
 
-## ELUSOC 2026 Participation
+This repository is an official participating project in:
 
-- **Target Branch:** All contributions must be made against the `elusoc` branch.
-- **Main Branch Protection:** The `main` branch is protected and stable. Do not target PRs to `main`.
-- **Assignment Required:** Do not start work on an issue unless it has been explicitly assigned to you.
+- 🌟 **ECSOC 2026**
+- 🚀 **ELUSOC 2026**
 
-## Contribution Workflow
+Please read the following guidelines carefully before contributing.
 
-We follow a strict workflow to maintain project quality:
+---
 
-1. **Find an Issue:** Browse the issue tracker for open issues.
-2. **Request Assignment:** Comment on the issue to request assignment. Wait for a project admin to assign it to you.
-3. **Branching:** Create a feature branch from the `elusoc` branch.
-   ```bash
-   git checkout elusoc
-   git pull origin elusoc
-   git checkout -b feature/your-feature-name
-   ```
-4. **Development:** Implement your changes. Ensure you follow our coding standards.
-5. **Testing:** Verify your changes locally (see setup instructions).
-6. **Commit:** Use descriptive commit messages.
-7. **Pull Request:** Submit a PR targeting the `elusoc` branch.
-8. **Review:** Address any feedback provided during the review process.
-9. **Merge:** Once approved, an admin will merge your PR.
+# Open Source Program Guidelines
 
-## Coding Standards
+## 🌟 ECSOC 2026
 
-- **JavaScript:** Use ES6+ syntax. Follow the project's Prettier/ESLint configuration.
-- **Naming:** Use camelCase for variables and functions, PascalCase for React components.
-- **Comments:** Provide meaningful comments for complex logic.
-- **Commit Messages:** Follow conventional commits (e.g., `feat: add new movie genre`, `fix: resolve login bug`).
+- **Target Branch:** `ecsoc`
+- **Do not create Pull Requests against `main`.**
+- Only work on issues that have been assigned to you by a project admin.
+- If you create a new issue related to ECSOC, please add the **`ECSOC2026`** label.
+- When opening your Pull Request, mention that it is an **ECSOC 2026** contribution and ensure the **`ECSOC2026`** label is applied if available.
+- During the review process, a project admin will apply the **`ECSoC26`** label **before the Pull Request is merged**. This ensures the ECSOC Sentinel bot can automatically detect and process your merged contribution without delays.
 
-## Duplicate Issue Prevention
+## 🚀 ELUSOC 2026
 
-Before creating a new issue, please search existing issues (both open and closed) to see if it has already been reported or suggested. Duplicate issues will be closed.
+- **Target Branch:** `elusoc`
+- **Do not create Pull Requests against `main`.**
+- Only work on issues that have been assigned to you by a project admin.
+- If you create a new issue related to ELUSOC, please add the **`ELUSOC2026`** label.
+- When opening your Pull Request, mention that it is an **ELUSOC 2026** contribution and ensure the **`ELUSOC2026`** label is applied if available.
 
-## Merge Conflict Resolution
+---
 
-If your branch has conflicts with the `elusoc` branch:
-1. Rebase or merge `elusoc` into your feature branch.
-2. Resolve conflicts locally.
-3. Test again to ensure everything still works.
-4. Push the updated branch.
+# Branch Rules
 
-## Getting Started
+| Program | Target Branch |
+|----------|---------------|
+| ECSOC 2026 | `ecsoc` |
+| ELUSOC 2026 | `elusoc` |
 
-Refer to the [README.md](../README.md) for project setup instructions.
+> **Important:** Pull Requests submitted to the wrong branch may be closed without review.
 
-## Need Help?
+---
 
-If you have questions, feel free to open a discussion or reach out to the project admins.
+# Contribution Workflow
 
-Happy coding!
+We follow a structured workflow to maintain high code quality.
+
+## 1. Find an Issue
+
+Browse the **Issues** section and choose an open issue.
+
+Please read the issue carefully before requesting assignment.
+
+---
+
+## 2. Request Assignment
+
+Comment on the issue requesting assignment.
+
+Wait until a project admin assigns the issue before starting work.
+
+Contributions made without assignment may not be accepted.
+
+---
+
+## 3. Fork & Clone the Repository
+
+```bash
+git clone https://github.com/<owner>/<repository>.git
+cd <repository>
+```
+
+---
+
+## 4. Checkout the Correct Branch
+
+### ECSOC Contributors
+
+```bash
+git checkout ecsoc
+git pull origin ecsoc
+git checkout -b feature/your-feature-name
+```
+
+### ELUSOC Contributors
+
+```bash
+git checkout elusoc
+git pull origin elusoc
+git checkout -b feature/your-feature-name
+```
+
+---
+
+## 5. Development
+
+While implementing your solution:
+
+- Follow the existing project structure.
+- Keep your changes limited to the assigned issue.
+- Write clean, readable, and maintainable code.
+- Avoid unnecessary refactoring unrelated to the issue.
+
+---
+
+## 6. Test Your Changes
+
+Before creating a Pull Request, make sure:
+
+- The application builds successfully.
+- Existing functionality is not broken.
+- New features work correctly.
+- No unnecessary warnings or console errors are introduced.
+
+---
+
+## 7. Commit Your Changes
+
+Use meaningful commit messages following the Conventional Commits format.
+
+Examples:
+
+```text
+feat: add actor search functionality
+fix: resolve movie production crash
+docs: update installation guide
+refactor: optimize weekly simulation engine
+```
+
+---
+
+## 8. Open a Pull Request
+
+Create your Pull Request against the correct branch.
+
+- ECSOC Contributors → `ecsoc`
+- ELUSOC Contributors → `elusoc`
+
+⚠️ **Important:** Pull Requests opened against the **`main`** branch are automatically detected by our repository automation and **will be closed immediately without human review**. Always target the appropriate program branch (`ecsoc` or `elusoc`) based on the open-source program you are participating in.
+
+Your PR should:
+
+- Link the related issue using:
+
+```text
+Closes #IssueNumber
+```
+
+- Include a clear description of the changes.
+- Attach screenshots or screen recordings for UI changes.
+- Mention whether your contribution is for **ECSOC 2026** or **ELUSOC 2026**.
+- If you created the related issue, ensure it has the appropriate program label (`ECSOC2026` or `ELUSOC2026`).
+- Request that the corresponding program label be applied to your Pull Request if it has not already been added.
+
+---
+
+## 9. Code Review
+
+Project admins will review your Pull Request.
+
+Please address review comments promptly and update your PR if requested.
+
+For ECSOC contributions, project admins will apply the **`ECSoC26`** label during the review process **before the Pull Request is merged** to ensure successful processing by the ECSOC Sentinel automation.
+
+---
+
+## 10. Merge
+
+Once approved, a project admin will merge your Pull Request.
+
+For **ECSOC 2026** contributions, the **`ECSoC26`** label will be added by a project admin **during the review phase before merging**. This allows the ECSOC Sentinel bot to automatically detect, evaluate, and score the Pull Request immediately after it is merged.
+
+---
+
+# Coding Standards
+
+## JavaScript
+
+- Use modern ES6+ syntax.
+- Follow the project's ESLint and Prettier configuration.
+
+## React
+
+- Use functional components.
+- Prefer React Hooks.
+- Keep components modular and reusable.
+
+## Naming Conventions
+
+- Variables → `camelCase`
+- Functions → `camelCase`
+- React Components → `PascalCase`
+- Constants → `UPPER_SNAKE_CASE`
+
+## Comments
+
+Write comments only where necessary to explain complex logic.
+
+---
+
+# Pull Request Checklist
+
+Before submitting your Pull Request, ensure that:
+
+- [ ] I have been assigned this issue.
+- [ ] My PR targets the correct branch.
+- [ ] My code builds successfully.
+- [ ] I tested my changes locally.
+- [ ] I followed the project's coding standards.
+- [ ] I linked the related issue.
+- [ ] I attached screenshots for UI changes (if applicable).
+- [ ] I indicated whether this contribution is for ECSOC 2026 or ELUSOC 2026.
+- [ ] The appropriate program label has been requested or applied.
+
+---
+
+# Duplicate Issue Prevention
+
+Before creating a new issue, please search the existing issues (both open and closed).
+
+Duplicate issues may be closed.
+
+If you create a new issue, please apply the appropriate program label:
+
+- **`ECSOC2026`** for ECSOC contributions.
+- **`ELUSOC2026`** for ELUSOC contributions.
+
+---
+
+# Merge Conflict Resolution
+
+If your branch becomes outdated:
+
+### ECSOC
+
+```bash
+git checkout ecsoc
+git pull origin ecsoc
+```
+
+### ELUSOC
+
+```bash
+git checkout elusoc
+git pull origin elusoc
+```
+
+Resolve conflicts locally, test your changes again, and push the updated branch.
+
+---
+
+# Getting Started
+
+Please refer to **README.md** for installation instructions and project setup.
+
+---
+
+# Need Help?
+
+If you have any questions:
+
+- Open a GitHub Discussion.
+- Ask your question in the issue comments.
+- Reach out to the project admins.
+
+We're happy to help!
+
+---
+
+Thank you for contributing to **Box Office Inc - Movie Studio Simulator** and being part of **ECSOC 2026** and **ELUSOC 2026**.
+
+Happy Coding! 🚀

@@ -1,31 +1,67 @@
 ---
 name: 🐛 Bug Report
-about: Create a report to help us improve.
-title: 'bug: [Short Description]'
+about: Report a bug to help improve Box Office Inc - Movie Studio Simulator.
+title: "bug: "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+# 🐛 Bug Description
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Provide a clear and concise description of the bug.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+---
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+# 🚀 Open Source Program
 
-**Environment (please complete the following information):**
-- Browser [e.g. chrome, safari]
-- Node version [e.g. 18.x]
-- Operating System [e.g. Windows, macOS]
+- [ ] ECSOC 2026
+- [ ] ELUSOC 2026
+- [ ] General Issue
 
-**Additional context**
-Add any other context about the problem here.
+> If this issue is for an open-source program, please add the corresponding label:
+>
+> - `ECSOC2026`
+> - `ELUSOC2026`
+
+---
+
+# 📍 Steps to Reproduce
+
+1.
+2.
+3.
+4.
+
+---
+
+# ✅ Expected Behavior
+
+Describe what you expected to happen.
+
+---
+
+# ❌ Actual Behavior
+
+Describe what actually happened.
+
+---
+
+# 📸 Screenshots / Screen Recording
+
+If applicable, attach screenshots or recordings to help explain the issue.
+
+---
+
+# 💻 Environment
+
+- OS:
+- Browser:
+- Node.js Version:
+- Project Branch:
+- Commit Hash (optional):
+
+---
+
+# 📋 Additional Context
+
+Add any additional information that may help us reproduce or resolve the issue.
