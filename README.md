@@ -93,6 +93,29 @@ npm run dev
 
 Create `.env` files using the provided examples before running the project.
 
+### Environment Variables
+
+#### Backend (`backend/.env`)
+
+| Variable | Required | Description | Example |
+|---|---|---|---|
+| `MONGO_URI` | ✅ Yes | MongoDB Atlas connection string | `mongodb+srv://user:pass@cluster.mongodb.net/dbname` |
+| `JWT_ACCESS_SECRET` | ✅ Yes | Secret key for signing access tokens | `your-64-char-random-string` |
+| `JWT_REFRESH_SECRET` | ✅ Yes | Secret key for signing refresh tokens | `your-64-char-random-string` |
+| `CLIENT_URL` | ✅ Yes | Frontend URL used for CORS | `http://localhost:5173` |
+| `PORT` | ❌ No | Port the backend server listens on | `5000` |
+| `NODE_ENV` | ❌ No | Environment mode | `development` |
+| `JWT_ACCESS_EXPIRE` | ❌ No | Access token expiry duration | `15m` |
+| `JWT_REFRESH_EXPIRE` | ❌ No | Refresh token expiry duration | `30d` |
+
+#### Frontend (`frontend/.env`)
+
+| Variable | Required | Description | Example |
+|---|---|---|---|
+| `VITE_BACKEND_API_URL` | ✅ Yes | Backend API base URL | `http://localhost:5000/api` |
+
+> **Tip:** Copy `backend/.env.example` to `backend/.env` and `frontend/.env.example` to `frontend/.env`, then fill in your values.
+
 ---
 
 ## 🌍 Deployment
