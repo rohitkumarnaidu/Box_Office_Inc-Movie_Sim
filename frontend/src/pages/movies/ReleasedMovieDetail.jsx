@@ -58,6 +58,9 @@ const ReleasedMovieDetail = () => {
                 <span className="flex items-center gap-1"><Calendar size={16} /> Released Week {movie.releaseWeek}</span>
                 <span className="flex items-center gap-1"><Star size={16} className="text-yellow-500" /> Audience: {movie.audienceScore}</span>
                 <span className="flex items-center gap-1"><Award size={16} className="text-violet-500" /> Critic: {movie.criticScore}</span>
+                <Link to={`/movies/library/${id}/reviews`} className="text-violet-400 hover:text-violet-300 transition text-sm">
+                  [View Reviews]
+                </Link>
             </div>
           </div>
           <div className="bg-[#111827] border border-slate-800 p-6 rounded-3xl text-right min-w-[250px]">

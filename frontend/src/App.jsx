@@ -19,6 +19,7 @@ import ReadyForRelease from "./pages/movies/ReadyForRelease";
 import ReleaseResult from "./pages/movies/ReleaseResult";
 import MovieLibrary from "./pages/movies/MovieLibrary";
 import ReleasedMovieDetail from "./pages/movies/ReleasedMovieDetail";
+import ReviewDashboard from "./pages/movies/ReviewDashboard";
 import ProductionQueue from "./pages/movies/ProductionQueue";
 import MovieComparison from "./pages/movies/MovieComparison";
 import StreamingDeals from "./pages/movies/StreamingDeals";
@@ -118,6 +119,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ReleasedMovieDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/movies/library/:id/reviews"
+          element={
+            <ProtectedRoute>
+              <ReviewDashboard />
             </ProtectedRoute>
           }
         />
