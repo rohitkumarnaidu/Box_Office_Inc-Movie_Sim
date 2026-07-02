@@ -105,7 +105,9 @@ const MovieLibrary = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {filteredAndSortedMovies.map((movie) => (
+                {filteredAndSortedMovies.map((movie) => {
+                  const totalProfit = (movie.profit || 0) + (movie.merchandiseRevenue || 0);
+                  return (
                   <tr key={movie._id} className="hover:bg-slate-800/30 transition">
                     <td className="px-4 py-4">
                         <div className="font-bold text-white">{movie.title}</div>
@@ -125,11 +127,13 @@ const MovieLibrary = () => {
                     <td className="px-4 py-4 text-white font-medium text-sm">
                         ₹{movie.worldwideGross?.toLocaleString()}
                     </td>
-                    <td className={`px-4 py-4 font-bold text-sm ${movie.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        ₹{movie.profit?.toLocaleString()}
+                    <td className={`px-4 py-4 font-bold text-sm ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        ₹{totalProfit.toLocaleString()}
+                        {movie.merchandiseRevenue > 0 && <div className="text-[10px] text-orange-500 font-normal">incl. Merch</div>}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

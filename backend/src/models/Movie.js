@@ -24,7 +24,9 @@ const movieSchema = new mongoose.Schema(
     criticScore: { type: Number, default: 0 },
     criticLabel: { type: String, default: "" },
     audienceScore: { type: Number, default: 0 },
-    audienceLabel: { type: String, default: "" },
+    audienceLabel: { type: String, default: "Mixed" },
+    merchandiseLevel: { type: Number, default: 0 },
+    merchandiseRevenue: { type: Number, default: 0 },
 
     boxOffice: { type: Number, default: 0 }, // Worldwide Gross
     openingWeekend: { type: Number, default: 0 },

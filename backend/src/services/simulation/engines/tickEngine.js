@@ -8,6 +8,7 @@ import { processMarketTrends } from "./trendEngine.js";
 import { generateRivalStudios, processRivalStudios } from "./rivalStudioEngine.js";
 import { processProductionEvents } from "./eventEngine.js";
 import { processRandomEvents } from "./eventEngine.js";
+import { processMerchandiseSales } from "./merchandiseEngine.js";
 import { generateNewsFromTrend, generateNewsFromEvent } from "./newsEngine.js";
 import { processStreamingPlatformGrowth } from "./streamingEngine.js";
 
@@ -122,6 +123,7 @@ export const processWeeklyTick = async (gameState, studio) => {
     }
   }
 
+  await processMerchandiseSales(gameState);
   await processStreamingPlatformGrowth(gameState);
 
   return { gameState, rivalReleases };

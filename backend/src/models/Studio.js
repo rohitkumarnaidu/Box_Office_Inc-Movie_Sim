@@ -78,6 +78,16 @@ const studioSchema = new mongoose.Schema(
         profit: Number,
         balance: Number
     }],
+
+    seasonStats: [{ type: Object }], // For leaderboard snapshotting
+    
+    merchandiseIncomeHistory: [
+      {
+        week: { type: Number, required: true },
+        amount: { type: Number, required: true },
+        reason: { type: String, default: "Weekly Merchandise Sales" },
+      }
+    ],
   },
   {
     timestamps: true,
