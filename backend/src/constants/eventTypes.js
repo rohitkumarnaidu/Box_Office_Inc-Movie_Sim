@@ -243,6 +243,30 @@ export const PRODUCTION_EVENT_DEFINITIONS = [
     budgetCost: 0,
     message: "Creative differences between the director and producers caused friction.",
   },
+  {
+    id: "test-screening-backlash",
+    label: "Test Screening Backlash",
+    category: "negative",
+    chance: 0.04,
+    delayWeeks: 2,
+    qualityDelta: -3,
+    hypeDelta: -7,
+    budgetCost: 200000,
+    message:
+      "A poorly received test screening forced reshoots and dented early buzz.",
+  },
+  {
+    id: "location-dispute",
+    label: "Location Permit Dispute",
+    category: "negative",
+    chance: 0.05,
+    delayWeeks: 2,
+    qualityDelta: 0,
+    hypeDelta: 0,
+    budgetCost: 150000,
+    message:
+      "A permit dispute shut down a key filming location, delaying the shoot.",
+  },
   // --- Positive / Opportunity ---
   {
     id: "viral-trailer",
@@ -276,6 +300,30 @@ export const PRODUCTION_EVENT_DEFINITIONS = [
     hypeDelta: 0,
     budgetCost: -300000, // Negative = money gained
     message: "The production qualified for a government film tax credit, saving costs!",
+  },
+  {
+    id: "vfx-breakthrough-movie",
+    label: "VFX Breakthrough",
+    category: "positive",
+    chance: 0.03,
+    delayWeeks: 0,
+    qualityDelta: 6,
+    hypeDelta: 4,
+    budgetCost: 0,
+    message:
+      "A breakthrough from the VFX team dramatically elevated the film's visual quality.",
+  },
+  {
+    id: "festival-buzz",
+    label: "Festival Sneak Peek",
+    category: "positive",
+    chance: 0.03,
+    delayWeeks: 0,
+    qualityDelta: 2,
+    hypeDelta: 12,
+    budgetCost: 0,
+    message:
+      "A surprise festival sneak peek earned rave reactions and major buzz.",
   },
 ];
 
