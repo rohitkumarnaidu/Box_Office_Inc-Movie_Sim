@@ -107,9 +107,21 @@ export const getMarketplaceTalent = (items, query = {}) => {
   const sortBy = query.sortBy || "popularity";
   const sortOrder = query.sortOrder === "asc" ? 1 : -1;
   filtered.sort((a, b) => {
-    const aVal = Number(a[sortBy] || 0);
-    const bVal = Number(b[sortBy] || 0);
-    return (aVal - bVal) * sortOrder;
+    const aRaw = a[sortBy];
+    const bRaw = b[sortBy];
+
+    // Numeric fields (popularity, salary, age) compare numerically; string
+    // fields (name, rarity) fall back to a locale-aware string compare so they
+    // sort correctly instead of coercing to NaN and silently no-oping.
+    if (typeof aRaw === "number" || typeof bRaw === "number") {
+      const aVal = Number(aRaw) || 0;
+      const bVal = Number(bRaw) || 0;
+      return (aVal - bVal) * sortOrder;
+    }
+
+    const aStr = String(aRaw ?? "");
+    const bStr = String(bRaw ?? "");
+    return aStr.localeCompare(bStr) * sortOrder;
   });
 
   // --- Paginate ---

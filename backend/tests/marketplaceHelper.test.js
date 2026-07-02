@@ -71,6 +71,34 @@ test('getMarketplaceTalent sorts ascending', () => {
   }
 });
 
+test('getMarketplaceTalent sorts by a string field (name) ascending and descending', () => {
+  const items = [
+    { name: 'Zara', popularity: 10 },
+    { name: 'Alice', popularity: 90 },
+    { name: 'Mike', popularity: 50 },
+  ];
+
+  const asc = getMarketplaceTalent(items, { sortBy: 'name', sortOrder: 'asc', limit: '200' });
+  assert.deepStrictEqual(asc.items.map((t) => t.name), ['Alice', 'Mike', 'Zara']);
+
+  const desc = getMarketplaceTalent(items, { sortBy: 'name', sortOrder: 'desc', limit: '200' });
+  assert.deepStrictEqual(desc.items.map((t) => t.name), ['Zara', 'Mike', 'Alice']);
+});
+
+test('getMarketplaceTalent still sorts numeric fields after the type-aware fix', () => {
+  const items = [
+    { name: 'A', popularity: 10 },
+    { name: 'B', popularity: 90 },
+    { name: 'C', popularity: 50 },
+  ];
+
+  const asc = getMarketplaceTalent(items, { sortBy: 'popularity', sortOrder: 'asc', limit: '200' });
+  assert.deepStrictEqual(asc.items.map((t) => t.popularity), [10, 50, 90]);
+
+  const desc = getMarketplaceTalent(items, { sortBy: 'popularity', sortOrder: 'desc', limit: '200' });
+  assert.deepStrictEqual(desc.items.map((t) => t.popularity), [90, 50, 10]);
+});
+
 test('getMarketplaceTalent caps limit at 100', () => {
   const items = makeTalent(200);
   const result = getMarketplaceTalent(items, { limit: '999' });
