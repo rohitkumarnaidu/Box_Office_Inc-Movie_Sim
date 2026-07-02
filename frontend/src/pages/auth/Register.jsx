@@ -40,6 +40,7 @@ const Register = () => {
       <AuthCard title="Create Studio">
         <form onSubmit={handleSubmit} className="space-y-4">
           <AuthInput
+            label="Username"
             placeholder="Username"
             onChange={(e) =>
               setForm({
@@ -50,6 +51,7 @@ const Register = () => {
           />
 
           <AuthInput
+            label="Email"
             placeholder="Email"
             onChange={(e) =>
               setForm({
@@ -60,6 +62,7 @@ const Register = () => {
           />
 
           <AuthInput
+            label="Password"
             type="password"
             placeholder="Password"
             onChange={(e) =>
@@ -71,6 +74,7 @@ const Register = () => {
           />
 
           <AuthInput
+            label="Studio Name"
             placeholder="Studio Name"
             onChange={(e) =>
               setForm({

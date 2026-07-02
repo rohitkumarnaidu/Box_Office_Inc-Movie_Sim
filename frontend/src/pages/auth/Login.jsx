@@ -39,12 +39,14 @@ const Login = () => {
       <AuthCard title="Welcome Back">
         <form onSubmit={handleSubmit} className="space-y-4">
           <AuthInput
+            label="Email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <AuthInput
+            label="Password"
             type="password"
             placeholder="Password"
             value={password}
