@@ -70,8 +70,8 @@ Contributions made without assignment may not be accepted.
 ## 3. Fork & Clone the Repository
 
 ```bash
-git clone https://github.com/<owner>/<repository>.git
-cd <repository>
+git clone https://github.com/SRV30/Box_Office_Inc-Movie_Sim.git
+cd Box_Office_Inc-Movie_Sim
 ```
 
 ---
