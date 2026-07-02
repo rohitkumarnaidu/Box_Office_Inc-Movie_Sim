@@ -11,6 +11,7 @@ import {
   generateTitle,
 } from "../controllers/movieController.js";
 
+
 const router = express.Router();
 
 router.post("/", protect, validate(createMovieSchema), createMovie);

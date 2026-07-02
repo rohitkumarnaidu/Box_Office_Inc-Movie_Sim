@@ -11,7 +11,7 @@ import {
 
 import { protect } from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validationMiddleware.js";
-import { registerSchema, loginSchema } from "../validators/authValidator.js";
+import { registerSchema, loginSchema } from "../validators/authValidators.js";
 
 const router = express.Router();
 

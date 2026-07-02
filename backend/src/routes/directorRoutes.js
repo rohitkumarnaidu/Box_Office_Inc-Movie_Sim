@@ -12,6 +12,8 @@ import {
 } from "../controllers/directorController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
+import { validateRequest } from "../middleware/validationMiddleware.js";
+import { startDirectingProjectSchema, replaceDirectorSchema } from "../validators/talentValidators.js";
 
 const router = express.Router();
 
@@ -27,8 +29,8 @@ router.post("/hire/:index", protect, hireDirector);
 
 router.post("/fire/:index", protect, fireDirector);
 
-router.post("/start-directing", protect, startDirectingProject);
+router.post("/start-directing", protect, validateRequest(startDirectingProjectSchema), startDirectingProject);
 
-router.post("/replace-director", protect, replaceDirector);
+router.post("/replace-director", protect, validateRequest(replaceDirectorSchema), replaceDirector);
 
 export default router;
