@@ -40,6 +40,7 @@ import Toast from "./components/common/Toast";
 import RivalStudios from "./pages/rivals/RivalStudios";
 import TrophyRoom from "./pages/awards/TrophyRoom";
 import AwardsSeasonDashboard from "./pages/awards/AwardsSeasonDashboard";
+import StudioUpgrades from "./pages/studio/StudioUpgrades";
 
 function App() {
   return (
@@ -255,6 +256,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AwardsHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/studio/upgrades"
+          element={
+            <ProtectedRoute>
+              <StudioUpgrades />
             </ProtectedRoute>
           }
         />

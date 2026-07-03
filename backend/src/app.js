@@ -9,7 +9,8 @@ import env from "./config/env.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import scriptRoutes from "./routes/scriptRoutes.js";
-import writerRoutes from "./routes/writerRoutes.js";
+import writersRoutes from "./routes/writersRoutes.js";
+import upgradesRoutes from "./routes/upgradesRoutes.js";
 import directorRoutes from "./routes/directorRoutes.js";
 import actorRoutes from "./routes/actorRoutes.js";
 import crewRoutes from "./routes/crewRoutes.js";
@@ -51,7 +52,8 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/scripts", scriptRoutes);
-app.use("/api/writers", writerRoutes);
+app.use("/api/writers", writersRoutes);
+app.use("/api/upgrades", upgradesRoutes);
 app.use("/api/directors", directorRoutes);
 app.use("/api/actors", actorRoutes);
 app.use("/api/crew", crewRoutes);

@@ -126,6 +126,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: Trophy,
     },
     {
+      name: "Studio Upgrades",
+      path: "/studio/upgrades",
+      icon: Building2,
+    },
+    {
       name: "Franchises",
       path: "/studio/franchises",
       icon: Layers,
