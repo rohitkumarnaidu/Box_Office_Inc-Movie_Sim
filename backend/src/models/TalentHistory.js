@@ -12,7 +12,7 @@ const talentHistorySchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["CAREER", "SALARY", "AWARD"],
+    enum: ["CAREER", "SALARY", "AWARD", "PROGRESSION"],
     required: true,
   },
   data: {
