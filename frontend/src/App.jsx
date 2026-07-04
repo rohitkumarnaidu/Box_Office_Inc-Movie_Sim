@@ -15,6 +15,7 @@ import OwnedCrew from "./pages/crew/OwnedCrew";
 import ActiveMovies from "./pages/movies/ActiveMovies";
 import CreateMovie from "./pages/movies/CreateMovie";
 import MovieDetails from "./pages/movies/MovieDetails";
+import MarketingStrategies from "./pages/movies/MarketingStrategies";
 import ReadyForRelease from "./pages/movies/ReadyForRelease";
 import ReleaseResult from "./pages/movies/ReleaseResult";
 import MovieLibrary from "./pages/movies/MovieLibrary";
@@ -44,9 +45,10 @@ import NewsDetail from "./pages/news/NewsDetail";
 import Toast from "./components/common/Toast";
 import RivalStudios from "./pages/rivals/RivalStudios";
 import RivalIntelligence from "./pages/rivals/RivalIntelligence";
+import TalentAcademy from "./pages/talent/TalentAcademy";
 import TrophyRoom from "./pages/awards/TrophyRoom";
 import AwardsSeasonDashboard from "./pages/awards/AwardsSeasonDashboard";
-import AwardsCampaign from "./pages/awards/AwardsCampaign";
+import StudioUpgrades from "./pages/studio/StudioUpgrades";
 
 function App() {
   return (
@@ -93,6 +95,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MovieDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/movies/:id/marketing"
+          element={
+            <ProtectedRoute>
+              <MarketingStrategies />
             </ProtectedRoute>
           }
         />
@@ -232,6 +242,14 @@ function App() {
         />
 
         <Route
+          path="/talent/academy"
+          element={
+            <ProtectedRoute>
+              <TalentAcademy />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/talent/:type/:id"
           element={
             <ProtectedRoute>
@@ -302,6 +320,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AwardsHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/studio/upgrades"
+          element={
+            <ProtectedRoute>
+              <StudioUpgrades />
             </ProtectedRoute>
           }
         />

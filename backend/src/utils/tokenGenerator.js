@@ -1,16 +1,22 @@
 import jwt from "jsonwebtoken";
 import env from "../config/env.js";
 
+/**
+ * Generates an Access Token for the user.
+ */
 export const generateAccessToken = (userId) => {
   return jwt.sign({ userId }, env.JWT_ACCESS_SECRET, {
     expiresIn: env.JWT_ACCESS_EXPIRE,
-    algorithm: "HS256", // Explicitly define algorithm
+    algorithm: "HS256",
   });
 };
 
+/**
+ * Generates a Refresh Token for the user.
+ */
 export const generateRefreshToken = (userId) => {
   return jwt.sign({ userId }, env.JWT_REFRESH_SECRET, {
     expiresIn: env.JWT_REFRESH_EXPIRE,
-    algorithm: "HS256", // Explicitly define algorithm
+    algorithm: "HS256",
   });
 };
