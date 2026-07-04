@@ -63,7 +63,10 @@ const ReleasedMovieDetail = () => {
           <div className="bg-[#111827] border border-slate-800 p-6 rounded-3xl text-right min-w-[250px]">
             <div className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Total Profit</div>
             <div className={`text-4xl font-black ${(movie.profit + (movie.merchandiseRevenue || 0)) >= 0 ? 'text-green-500' : 'text-red-500'}`}>₹{(movie.profit + (movie.merchandiseRevenue || 0))?.toLocaleString()}</div>
-            <div className="text-slate-400 text-sm font-bold mt-1">{(movie.roi * 100).toFixed(1)}% ROI</div>
+            <div className="text-slate-450 text-sm font-bold mt-1">{(movie.roi * 100).toFixed(1)}% ROI</div>
+            <Link to={`/awards/lobbying/${id}`} className="mt-4 block w-full bg-violet-650 hover:bg-violet-700 text-white font-bold py-2 rounded-xl text-center text-xs transition">
+              Launch Awards Campaign
+            </Link>
           </div>
         </div>
 

@@ -45,6 +45,7 @@ import RivalStudios from "./pages/rivals/RivalStudios";
 import RivalIntelligence from "./pages/rivals/RivalIntelligence";
 import TrophyRoom from "./pages/awards/TrophyRoom";
 import AwardsSeasonDashboard from "./pages/awards/AwardsSeasonDashboard";
+import AwardsCampaign from "./pages/awards/AwardsCampaign";
 
 function App() {
   return (
@@ -370,7 +371,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/awards/lobbying/:id"
+          element={
+            <ProtectedRoute>
+              <AwardsCampaign />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/awards/season"
           element={
