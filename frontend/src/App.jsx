@@ -397,14 +397,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/awards/lobbying/:id"
           element={
             <ProtectedRoute>
               <AwardsCampaign />
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/awards/season"
           element={

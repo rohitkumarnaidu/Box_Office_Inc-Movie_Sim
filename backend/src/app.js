@@ -7,7 +7,6 @@ import compression from "compression";
 
 import env from "./config/env.js";
 
-import merchRoutes from "./routes/merchRoutes.js";
 import marketingRoutes from "./routes/marketingRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import scriptRoutes from "./routes/scriptRoutes.js";
