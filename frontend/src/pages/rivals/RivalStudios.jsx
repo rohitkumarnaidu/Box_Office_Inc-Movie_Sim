@@ -8,6 +8,7 @@ import {
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { useSelector } from "react-redux";
+import SpyReportModal from "../../components/rivals/SpyReportModal";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -94,7 +95,20 @@ const RivalStudios = () => {
   const [rivals, setRivals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSpyModalOpen, setIsSpyModalOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
   const { user } = useSelector((state) => state.auth);
+
+  const handleBuyReport = async (rivalId) => {
+    try {
+      const res = await api.post(`/spy/${rivalId}`);
+      setSelectedReport(res.data.rival);
+      setIsSpyModalOpen(true);
+      alert(res.data.message);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to purchase espionage report.");
+    }
+  };
 
   const playerFans    = user?.studio?.fans    || 0;
   const playerPrestige= user?.studio?.prestige|| 0;
@@ -398,6 +412,16 @@ const RivalStudios = () => {
                           <p className="text-slate-600 text-xs italic">Gearing up for production…</p>
                         </div>
                       )}
+
+                      <div className="px-5 pb-5 pt-3 border-t border-slate-800/50 flex justify-between items-center bg-slate-900/10">
+                        <span className="text-[10px] text-rose-455 uppercase font-black tracking-wider">Espionage Dossier</span>
+                        <button
+                          onClick={() => handleBuyReport(rival.id)}
+                          className="bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 font-bold py-1.5 px-3 rounded-lg text-xs transition cursor-pointer"
+                        >
+                          Buy Intel Report (₹100k)
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -406,6 +430,12 @@ const RivalStudios = () => {
           </>
         )}
       </div>
+
+      <SpyReportModal
+        isOpen={isSpyModalOpen}
+        onClose={() => setIsSpyModalOpen(false)}
+        reportData={selectedReport}
+      />
     </DashboardLayout>
   );
 };
