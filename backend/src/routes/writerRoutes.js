@@ -14,6 +14,7 @@ import {
 import { protect } from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validationMiddleware.js";
 import { startWritingProjectSchema, replaceWriterSchema } from "../validators/talentValidators.js";
+import { checkNegativeBalance } from "../middleware/balanceMiddleware.js";
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ router.get("/owned", protect, getOwnedWriters);
 
 router.get("/:writerId/profile", protect, getWriterProfile);
 
-router.post("/hire/:index", protect, hireWriter);
+router.post("/hire/:index", protect, checkNegativeBalance, hireWriter);
 
 router.post("/fire/:index", protect, fireWriter);
 

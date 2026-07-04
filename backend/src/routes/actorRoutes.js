@@ -9,6 +9,7 @@ import {
 } from "../controllers/actorController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
+import { checkNegativeBalance } from "../middleware/balanceMiddleware.js";
 
 const router = express.Router();
 
@@ -18,7 +19,7 @@ router.get("/owned", protect, getOwnedActors);
 
 router.get("/:id/profile", protect, getActorProfile);
 
-router.post("/hire/:index", protect, hireActor);
+router.post("/hire/:index", protect, checkNegativeBalance, hireActor);
 
 router.post("/fire/:index", protect, fireActor);
 

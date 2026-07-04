@@ -14,6 +14,7 @@ import {
 import { protect } from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validationMiddleware.js";
 import { startDirectingProjectSchema, replaceDirectorSchema } from "../validators/talentValidators.js";
+import { checkNegativeBalance } from "../middleware/balanceMiddleware.js";
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ router.get("/projects", protect, getDirectingProjects);
 
 router.get("/:id", protect, getDirectorProfile);
 
-router.post("/hire/:index", protect, hireDirector);
+router.post("/hire/:index", protect, checkNegativeBalance, hireDirector);
 
 router.post("/fire/:index", protect, fireDirector);
 
