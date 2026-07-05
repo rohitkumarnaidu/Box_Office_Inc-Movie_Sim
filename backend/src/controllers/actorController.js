@@ -2,7 +2,7 @@ import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
 import { generateActors } from "../services/actor/actorGenerator.js";
 import { presentActors } from "../services/actor/actorPresenter.js";
-import { withTransaction } from "../utils/transactionHelper.js";
+import { withTransaction } from "../utils/financeTransactionHelper.js";
 import {
   calculateActorCompensation,
   calculateActorFanLoss,

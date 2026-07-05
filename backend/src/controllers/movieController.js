@@ -12,7 +12,7 @@ import { addNotification } from "../services/simulation/helpers/notificationHelp
 import { MARKETING_CAMPAIGNS, getEffectiveHypeBoost } from "../constants/marketingCampaigns.js";
 import { generateMovieTitle } from "../services/movie/movieService.js";
 import { generateNewsFromRelease } from "../services/simulation/engines/newsEngine.js";
-import { withTransaction } from "../utils/transactionHelper.js";
+import { withTransaction } from "../utils/financeTransactionHelper.js";
 import Notification from "../models/Notification.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
@@ -475,4 +475,63 @@ export const getMovieDetails = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
+};
+
+export const addMarketingCampaign = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { campaignId } = req.body;
+
+    const movie = await Movie.findById(id);
+    if (!movie) {
+      return res.status(404).json({ success: false, message: "Movie not found" });
+    }
+
+    if (movie.status === "RELEASED" || movie.status === "RELEASED_STREAMING") {
+      return res.status(400).json({ success: false, message: "Cannot add marketing to a released movie" });
+    }
+
+    const campaign = MARKETING_CAMPAIGNS.find(c => c.id === campaignId);
+    if (!campaign) {
+      return res.status(404).json({ success: false, message: "Campaign type not found" });
+    }
+
+    if (movie.marketingCampaigns.includes(campaignId)) {
+      return res.status(400).json({ success: false, message: "This campaign is already active for this movie" });
+    }
+
+    const studio = await Studio.findOne({ owner: req.user._id });
+    if (!studio) {
+      return res.status(404).json({ success: false, message: "Studio not found" });
+    }
+
+    if (studio.money < campaign.cost) {
+      return res.status(400).json({ success: false, message: "Insufficient funds for this campaign" });
+    }
+
+    const gameState = await GameState.findOne({ user: req.user._id });
+    const script = gameState?.ownedScripts?.find(s => s.id === movie.scriptId) || 
+                   gameState?.marketScripts?.find(s => s.id === movie.scriptId);
+    
+    const genres = script?.genres || [];
+    const effectiveHype = getEffectiveHypeBoost(campaign, genres);
+
+    movie.marketingCampaigns.push(campaignId);
+    movie.marketingBudget += campaign.cost;
+    movie.hype = Math.min(100, movie.hype + effectiveHype);
+
+    studio.money -= campaign.cost;
+
+    await movie.save();
+    await studio.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully launched ${campaign.name} for "${movie.title}"! Hype increased by +${effectiveHype}`,
+      movie,
+      studioMoney: studio.money
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };

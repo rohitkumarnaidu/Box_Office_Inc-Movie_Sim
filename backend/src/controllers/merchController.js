@@ -1,0 +1,96 @@
+import Movie from "../models/Movie.js";
+import Studio from "../models/Studio.js";
+import GameState from "../models/GameState.js";
+
+export const getMerchandiseStats = async (req, res) => {
+  try {
+    const gameState = await GameState.findOne({ user: req.user._id });
+    if (!gameState) {
+      return res.status(404).json({ message: "Game state not found" });
+    }
+
+    const studio = await Studio.findOne({ owner: req.user._id });
+    if (!studio) {
+      return res.status(404).json({ message: "Studio not found" });
+    }
+
+    const movies = await Movie.find({
+      studioId: studio._id,
+      status: "RELEASED"
+    });
+
+    const activeMerchMovies = movies.map(movie => {
+      const weeksSinceRelease = Math.max(1, gameState.currentWeek - (movie.releaseWeek || gameState.currentWeek));
+      const decay = Math.pow(0.9, weeksSinceRelease);
+      const potential = (movie.totalGross || movie.boxOffice || 0) * 0.001;
+      
+      let modifier = (movie.hype || 50) / 100;
+      if (movie.verdict === "Blockbuster" || movie.verdict === "All-Time Blockbuster") {
+        modifier *= 1.5;
+      } else if (movie.verdict === "Hit") {
+        modifier *= 1.2;
+      } else if (movie.verdict === "Flop" || movie.verdict === "Disaster") {
+        modifier *= 0.2;
+      }
+
+      // Add merchandise level multiplier
+      const levelMultiplier = 1 + (movie.merchandiseLevel || 0) * 0.25;
+      const weeklyProj = Math.round(potential * modifier * decay * levelMultiplier);
+
+      return {
+        id: movie._id,
+        title: movie.title,
+        totalGross: movie.totalGross || movie.boxOffice || 0,
+        verdict: movie.verdict,
+        hype: movie.hype,
+        weeksSinceRelease,
+        decayFactor: decay.toFixed(2),
+        merchandiseLevel: movie.merchandiseLevel || 0,
+        merchandiseRevenue: movie.merchandiseRevenue || 0,
+        weeklyProjection: weeklyProj
+      };
+    });
+
+    res.status(200).json({
+      activeMovies: activeMerchMovies,
+      merchandiseIncomeHistory: studio.merchandiseIncomeHistory || [],
+      totalMerchandiseRevenue: activeMerchMovies.reduce((sum, m) => sum + m.merchandiseRevenue, 0)
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const boostMerchandiseLevel = async (req, res) => {
+  try {
+    const { movieId } = req.params;
+    const studio = await Studio.findOne({ owner: req.user._id });
+    if (!studio) {
+      return res.status(404).json({ message: "Studio not found" });
+    }
+
+    const movie = await Movie.findOne({ _id: movieId, studioId: studio._id });
+    if (!movie) {
+      return res.status(404).json({ message: "Movie not found or unauthorized" });
+    }
+
+    const cost = 2500000; // 2.5 million rupees
+    if (studio.money < cost) {
+      return res.status(400).json({ message: "Insufficient funds to upgrade merchandising campaign" });
+    }
+
+    movie.merchandiseLevel = (movie.merchandiseLevel || 0) + 1;
+    studio.money -= cost;
+
+    await movie.save();
+    await studio.save();
+
+    res.status(200).json({
+      message: `Successfully upgraded ${movie.title} merchandise campaign to Level ${movie.merchandiseLevel}`,
+      movie,
+      studioMoney: studio.money
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

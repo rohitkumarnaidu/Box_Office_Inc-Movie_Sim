@@ -32,3 +32,15 @@ export const getNews = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const getNewsDetail = async (req, res) => {
+  try {
+    const newsItem = await NewsItem.findById(req.params.id);
+    if (!newsItem) {
+      return res.status(404).json({ success: false, message: "News article not found" });
+    }
+    res.status(200).json({ success: true, newsItem });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

@@ -24,3 +24,16 @@ export const withTransaction = async (fn) => {
   
   return result;
 };
+
+/**
+ * Helper to compute profit margin percentage.
+ *
+ * @param {number} revenue
+ * @param {number} profit
+ * @returns {string} - Margins formatted as percentage
+ */
+export const getProfitMargin = (revenue, profit) => {
+  if (!revenue || revenue === 0) return "0.00%";
+  const margin = (profit / revenue) * 100;
+  return `${margin.toFixed(2)}%`;
+};

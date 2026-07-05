@@ -12,7 +12,7 @@ import {
   createDirectingProject,
   ensureScriptsProductionDefaults,
 } from "../services/director/directingProjectService.js";
-import { withTransaction } from "../utils/transactionHelper.js";
+import { withTransaction } from "../utils/financeTransactionHelper.js";
 import { calculateSigningFee } from "../services/talent/signingFeeService.js";
 import { getMarketplaceTalent, resolveTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 import Notification from "../models/Notification.js";

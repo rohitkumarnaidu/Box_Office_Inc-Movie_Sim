@@ -1,4 +1,4 @@
-import TVShow from "../models/TVShow.js";
+import TVShow from "../models/TVShowModel.js";
 import Studio from "../models/Studio.js";
 import GameState from "../models/GameState.js";
 

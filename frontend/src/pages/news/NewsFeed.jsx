@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import NewsTrendIndicator from "../../components/news/NewsTrendIndicator";
 
 const NewsFeed = () => {
   const [news, setNews] = useState([]);
@@ -98,41 +100,49 @@ const NewsFeed = () => {
           </div>
         </div>
 
-        <div className="space-y-4">
-          {loading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 animate-pulse">
-                  <div className="h-4 bg-slate-800 rounded w-1/4 mb-3"></div>
-                  <div className="h-6 bg-slate-800 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-slate-800 rounded w-5/6"></div>
-                </div>
-              ))}
-            </div>
-          ) : news.length === 0 ? (
-            <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-16 text-center">
-              <h2 className="text-2xl font-bold text-white mb-2">No News Available</h2>
-              <p className="text-slate-400">Run some weekly simulation ticks to populate the industry wire.</p>
-            </div>
-          ) : (
-            news.map((item) => (
-              <div
-                key={item._id}
-                className="bg-slate-950/60 backdrop-blur-xl border border-slate-800/60 rounded-2xl p-6 hover:border-slate-700/80 transition-all duration-300 hover:translate-y-[-2px] group"
-              >
-                <div className="flex items-center justify-between gap-4 mb-3">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getBadgeColor(item.type)}`}>
-                    {getTypeLabel(item.type)}
-                  </span>
-                  <span className="text-xs text-slate-500 font-medium">Week {item.week}</span>
-                </div>
-                <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors duration-200">
-                  {item.headline}
-                </h3>
-                <p className="mt-3 text-slate-400 leading-relaxed text-sm md:text-base">{item.body}</p>
+        {/* Grid layout containing news list and trends sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 animate-pulse">
+                    <div className="h-4 bg-slate-800 rounded w-1/4 mb-3"></div>
+                    <div className="h-6 bg-slate-800 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-slate-800 rounded w-5/6"></div>
+                  </div>
+                ))}
               </div>
-            ))
-          )}
+            ) : news.length === 0 ? (
+              <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-16 text-center">
+                <h2 className="text-2xl font-bold text-white mb-2">No News Available</h2>
+                <p className="text-slate-400">Run some weekly simulation ticks to populate the industry wire.</p>
+              </div>
+            ) : (
+              news.map((item) => (
+                <Link
+                  key={item._id}
+                  to={`/news/${item._id}`}
+                  className="block bg-slate-950/60 backdrop-blur-xl border border-slate-800/60 rounded-2xl p-6 hover:border-slate-700/80 transition-all duration-300 hover:translate-y-[-2px] group cursor-pointer"
+                >
+                  <div className="flex items-center justify-between gap-4 mb-3">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getBadgeColor(item.type)}`}>
+                      {getTypeLabel(item.type)}
+                    </span>
+                    <span className="text-xs text-slate-500 font-medium">Week {item.week}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors duration-200">
+                    {item.headline}
+                  </h3>
+                  <p className="mt-3 text-slate-400 leading-relaxed text-sm md:text-base">{item.body}</p>
+                </Link>
+              ))
+            )}
+          </div>
+
+          <div className="lg:col-span-1">
+            <NewsTrendIndicator newsItems={news} />
+          </div>
         </div>
 
         {totalPages > 1 && (

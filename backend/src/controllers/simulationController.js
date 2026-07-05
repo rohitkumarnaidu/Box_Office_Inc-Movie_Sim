@@ -4,7 +4,7 @@ import { runWeeklySimulation } from "../services/simulation/runWeeklySimulation.
 import Notification from "../models/Notification.js";
 import TalentHistory from "../models/TalentHistory.js";
 
-import { withTransaction } from "../utils/transactionHelper.js";
+import { withTransaction } from "../utils/financeTransactionHelper.js";
 
 export const simulateWeek = async (req, res) => {
   try {

@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import ReportModal from "../../components/studio/ReportModal";
 import {
   ArrowUpCircle,
   TrendingUp,
@@ -23,6 +24,7 @@ import {
   Film,
   BarChart3,
   Trophy,
+  FileSpreadsheet,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -171,6 +173,7 @@ const FinancialHistory = () => {
   const [granularity, setGranularity] = useState("weekly");
   const [movies, setMovies] = useState([]);
   const [moviesLoading, setMoviesLoading] = useState(true);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   // Chronological (oldest -> newest) for charts.
   const weekly = useMemo(
@@ -248,9 +251,19 @@ const FinancialHistory = () => {
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto space-y-8 pb-20">
-        <div>
-          <h1 className="text-4xl font-black text-white uppercase italic tracking-tighter">Ledger &amp; Financials</h1>
-          <p className="text-slate-400 mt-2">Performance insights and historical logs for {studio?.name}.</p>
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <div>
+            <h1 className="text-4xl font-black text-white uppercase italic tracking-tighter">Ledger &amp; Financials</h1>
+            <p className="text-slate-400 mt-2">Performance insights and historical logs for {studio?.name}.</p>
+          </div>
+          {hasHistory && (
+            <button
+              onClick={() => setIsExportOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-xl transition flex items-center gap-2 cursor-pointer text-sm"
+            >
+              <FileSpreadsheet size={18} /> Export Audit Report
+            </button>
+          )}
         </div>
 
         {!hasHistory ? (
@@ -463,6 +476,13 @@ const FinancialHistory = () => {
           </div>
         ) : null}
       </div>
+
+      <ReportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        history={studio?.financialHistory || []}
+        studioName={studio?.name || "Studio"}
+      />
     </DashboardLayout>
   );
 };

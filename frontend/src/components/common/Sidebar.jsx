@@ -66,6 +66,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: Layers,
     },
     {
+      name: "TV Production",
+      path: "/tv-shows",
+      icon: Layers,
+    },
+    {
       name: "Comparison",
       path: "/movies/comparison",
       icon: Scale,
@@ -111,6 +116,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: Users,
     },
     {
+      name: "Talent Academy",
+      path: "/talent/academy",
+      icon: Users,
+    },
+    {
       name: "Studio Stats",
       path: "/studio/stats",
       icon: Building2,
@@ -121,9 +131,19 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: IndianRupee,
     },
     {
+      name: "Merchandising",
+      path: "/studio/merchandise",
+      icon: TrendingUp,
+    },
+    {
       name: "Awards History",
       path: "/studio/awards",
       icon: Trophy,
+    },
+    {
+      name: "Studio Upgrades",
+      path: "/studio/upgrades",
+      icon: Building2,
     },
     {
       name: "Franchises",

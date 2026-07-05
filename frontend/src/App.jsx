@@ -15,6 +15,7 @@ import OwnedCrew from "./pages/crew/OwnedCrew";
 import ActiveMovies from "./pages/movies/ActiveMovies";
 import CreateMovie from "./pages/movies/CreateMovie";
 import MovieDetails from "./pages/movies/MovieDetails";
+import MarketingStrategies from "./pages/movies/MarketingStrategies";
 import ReadyForRelease from "./pages/movies/ReadyForRelease";
 import ReleaseResult from "./pages/movies/ReleaseResult";
 import MovieLibrary from "./pages/movies/MovieLibrary";
@@ -22,8 +23,11 @@ import ReleasedMovieDetail from "./pages/movies/ReleasedMovieDetail";
 import ProductionQueue from "./pages/movies/ProductionQueue";
 import MovieComparison from "./pages/movies/MovieComparison";
 import StreamingDeals from "./pages/movies/StreamingDeals";
+import TVShowsHub from "./pages/tvshows/TVShowsHub";
+import ProduceTVShow from "./pages/tvshows/ProduceTVShow";
 import StudioStats from "./pages/studio/StudioStats";
 import FinancialHistory from "./pages/studio/FinancialHistory";
+import MerchDashboard from "./pages/merch/MerchDashboard";
 import AwardsHistory from "./pages/studio/AwardsHistory";
 import MarketDashboard from "./pages/dashboard/MarketDashboard";
 import Franchises from "./pages/studio/Franchises";
@@ -36,10 +40,14 @@ import Notifications from "./pages/notifications/Notifications";
 import Settings from "./pages/settings/Settings";
 import AuthMonitoring from "./pages/auth/AuthMonitoring";
 import NewsFeed from "./pages/news/NewsFeed";
+import NewsDetail from "./pages/news/NewsDetail";
 import Toast from "./components/common/Toast";
 import RivalStudios from "./pages/rivals/RivalStudios";
+import RivalIntelligence from "./pages/rivals/RivalIntelligence";
+import TalentAcademy from "./pages/talent/TalentAcademy";
 import TrophyRoom from "./pages/awards/TrophyRoom";
 import AwardsSeasonDashboard from "./pages/awards/AwardsSeasonDashboard";
+import StudioUpgrades from "./pages/studio/StudioUpgrades";
 
 function App() {
   return (
@@ -66,6 +74,14 @@ function App() {
           }
         />
         <Route
+          path="/rivals/intelligence"
+          element={
+            <ProtectedRoute>
+              <RivalIntelligence />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/leaderboard"
           element={
             <ProtectedRoute>
@@ -78,6 +94,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MovieDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/movies/:id/marketing"
+          element={
+            <ProtectedRoute>
+              <MarketingStrategies />
             </ProtectedRoute>
           }
         />
@@ -209,6 +233,14 @@ function App() {
         />
 
         <Route
+          path="/talent/academy"
+          element={
+            <ProtectedRoute>
+              <TalentAcademy />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/talent/:type/:id"
           element={
             <ProtectedRoute>
@@ -233,6 +265,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/tv-shows"
+          element={
+            <ProtectedRoute>
+              <TVShowsHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tv-shows/commission"
+          element={
+            <ProtectedRoute>
+              <ProduceTVShow />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/studio/stats"
@@ -251,10 +299,26 @@ function App() {
           }
         />
         <Route
+          path="/studio/merchandise"
+          element={
+            <ProtectedRoute>
+              <MerchDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/studio/awards"
           element={
             <ProtectedRoute>
               <AwardsHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/studio/upgrades"
+          element={
+            <ProtectedRoute>
+              <StudioUpgrades />
             </ProtectedRoute>
           }
         />
@@ -300,6 +364,14 @@ function App() {
           }
         />
         <Route
+          path="/news/:id"
+          element={
+            <ProtectedRoute>
+              <NewsDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/auth-monitoring"
           element={
             <ProtectedRoute>
@@ -325,7 +397,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/awards/lobbying/:id"
+          element={
+            <ProtectedRoute>
+              <AwardsCampaign />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/awards/season"
           element={

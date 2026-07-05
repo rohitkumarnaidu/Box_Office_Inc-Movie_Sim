@@ -137,6 +137,14 @@ const MovieDetails = () => {
                     <div className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Projected Quality</div>
                     <div className="text-5xl font-black text-white">{movie.quality}</div>
                     <div className="text-violet-400 font-bold uppercase text-xs">Hype: {movie.hype}</div>
+                    {movie.status !== "RELEASED" && movie.status !== "RELEASED_STREAMING" && (
+                      <Link
+                        to={`/movies/${id}/marketing`}
+                        className="mt-4 block w-full bg-violet-600 hover:bg-violet-750 text-white font-bold py-2.5 rounded-xl text-center text-sm transition"
+                      >
+                        Launch Marketing Suite
+                      </Link>
+                    )}
                 </div>
             </div>
 
