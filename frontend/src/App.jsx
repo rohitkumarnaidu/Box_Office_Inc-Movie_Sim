@@ -30,6 +30,7 @@ import StudioStats from "./pages/studio/StudioStats";
 import FinancialHistory from "./pages/studio/FinancialHistory";
 import MerchDashboard from "./pages/merch/MerchDashboard";
 import AwardsHistory from "./pages/studio/AwardsHistory";
+import AwardsCampaign from "./pages/awards/AwardsCampaign";
 import MarketDashboard from "./pages/dashboard/MarketDashboard";
 import Franchises from "./pages/studio/Franchises";
 import FranchiseDetail from "./pages/studio/FranchiseDetail";

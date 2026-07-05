@@ -6,8 +6,6 @@ import { processDirectingProjects } from "./directingProjectEngine.js";
 import { processProduction } from "./productionEngine.js";
 import { processWriterPayroll } from "./payrollEngine.js";
 import { processWritingProjects } from "./writerEngine.js";
-import { processScheduledReleases } from "./clashEngine.js";
-import { processFestivalResults } from "./festivalEngine.js";
 import { processMarketTrends } from "./trendEngine.js";
 import { generateRivalStudios, processRivalStudios } from "./rivalStudioEngine.js";
 import { processProductionEvents } from "./eventEngine.js";
@@ -145,14 +143,9 @@ export const processWeeklyTick = async (gameState, studio) => {
   // after platform growth so royalties reflect this week's platform popularity.
   await processStreamingRevenue(gameState, studio);
 
-  // Auto-release movies whose scheduled release week has arrived (issue #191)
-  await processScheduledReleases(gameState.currentWeek);
-
-  // Process film festival results for this week (issue #190)
-  await processFestivalResults(gameState.currentWeek, studio);
-
   return { gameState, rivalReleases };
 };
 
 
+export default processWeeklyTick;
 

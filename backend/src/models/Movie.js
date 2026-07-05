@@ -71,28 +71,12 @@ const movieSchema = new mongoose.Schema(
     // Franchise and Sequel details
     franchiseId: { type: mongoose.Schema.Types.ObjectId, ref: "Franchise", default: null },
     sequelNumber: { type: Number, default: 1 },
-    // Awards tracking
+// Awards tracking
     awards: [{
       name: String,
       category: String,
       year: Number
     }],
-
-    // Film festival tracking (issue #190)
-    festivalSubmissions: [{
-      festivalId: String,   // e.g. "SUNDANCE"
-      festivalName: String,
-      submittedWeek: Number,
-      result: { type: String, enum: ["PENDING", "SELECTED", "REJECTED"], default: "PENDING" },
-      award: { type: String, default: null },
-      buzzBonus: { type: Number, default: 0 },
-    }],
-    distributionDeal: {
-      offered: { type: Boolean, default: false },
-      advance: { type: Number, default: 0 },        // $ advance paid
-      revenueShare: { type: Number, default: 0 },   // % of theatrical box office
-      accepted: { type: Boolean, default: false },
-    },
     // Production event tracking
     delayWeeks: { type: Number, default: 0 },
     events: [{
