@@ -53,6 +53,8 @@ const movieSchema = new mongoose.Schema(
 
     createdWeek: { type: Number, required: true },
     releaseWeek: { type: Number, default: null },
+    scheduledReleaseWeek: { type: Number, default: null }, // Planned future release week (issue #191)
+    clashPenaltyApplied: { type: Boolean, default: false },
     productionProgress: { type: Number, default: 0 },
     remainingWeeks: { type: Number, default: 0 },
 
