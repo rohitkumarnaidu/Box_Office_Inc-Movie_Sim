@@ -4,6 +4,7 @@ import Studio from "../models/Studio.js";
 import Franchise from "../models/Franchise.js";
 import { generateReviews } from "../services/simulation/engines/reviewEngine.js";
 import { generateBoxOffice } from "../services/simulation/engines/boxOfficeEngine.js";
+import { generateBoxOfficeProjection } from "../services/simulation/engines/analystProjectionEngine.js";
 import { getGenreMultiplier } from "../services/simulation/engines/trendEngine.js";
 import { processCareerImpact } from "../services/simulation/engines/careerImpactEngine.js";
 import { processStudioGrowth } from "../services/simulation/engines/studioGrowthEngine.js";
@@ -472,6 +473,32 @@ export const getMovieDetails = async (req, res) => {
         }
 
         res.status(200).json({ success: true, movie });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getMovieTracking = async (req, res) => {
+    try {
+        const movie = await Movie.findById(req.params.id).lean();
+        if (!movie) return res.status(404).json({ success: false, message: "Movie not found" });
+
+        const allowedStatuses = ["READY_FOR_RELEASE", "POST_PRODUCTION", "PRODUCTION"];
+        if (!allowedStatuses.includes(movie.status)) {
+            return res.status(400).json({ success: false, message: "Analyst projections are only available before release." });
+        }
+
+        const gameState = await GameState.findOne({ user: req.user._id }).lean();
+        const marketMultiplier = gameState?.marketTrends?.activeTrends
+            ? 1 // trendEngine.getGenreMultiplier not called here to keep this stateless
+            : 1;
+
+        const leadActor = gameState?.ownedActors?.find(a => a.id === movie.leadActorId) ||
+                          { popularity: 50 };
+
+        const projection = generateBoxOfficeProjection(movie, leadActor, marketMultiplier);
+
+        res.status(200).json({ success: true, projection });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
