@@ -23,6 +23,8 @@ import notificationsRoutes from "./routes/notificationsRoutes.js";
 import awardsCampaignRoutes from "./routes/awardsCampaignRoutes.js";
 import newsRoutes from "./routes/newsRoutes.js";
 import franchiseRoutes from "./routes/franchiseRoutes.js";
+import marketingRoutes from "./routes/marketingRoutes.js";
+import reviewDashboardRoutes from "./routes/reviewDashboardRoutes.js";
 import streamingRoutes from "./routes/streamingRoutes.js";
 import tvShowRoutes from "./routes/tvShowRoutes.js";
 import rivalsRoutes from "./routes/rivalsRoutes.js";
@@ -76,7 +78,7 @@ app.use("/api/rival-studios", rivalsRoutes);
 app.use("/api/spy", spyRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/studios", studioRoutes);
-app.use("/api/marketing", marketingRoutes);
+app.use("/api/reviews", reviewDashboardRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
