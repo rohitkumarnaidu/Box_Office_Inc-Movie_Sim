@@ -12,6 +12,7 @@ import { addNotification } from "../services/simulation/helpers/notificationHelp
 import { MARKETING_CAMPAIGNS, getEffectiveHypeBoost } from "../constants/marketingCampaigns.js";
 import { generateMovieTitle } from "../services/movie/movieService.js";
 import { generateNewsFromRelease } from "../services/simulation/engines/newsEngine.js";
+import { updateChemistryAfterRelease } from "../services/simulation/engines/chemistryEngine.js";
 import { withTransaction } from "../utils/transactionHelper.js";
 import Notification from "../models/Notification.js";
 
@@ -367,6 +368,15 @@ export const releaseMovie = async (req, res) => {
 
         // 4. Update Careers
         processCareerImpact(gameState, movie, writer, director, leadActor, crewTeam);
+
+        // 4b. Update chemistry relationships between director, actor, and writer
+        await updateChemistryAfterRelease(
+            gameState._id,
+            movie,
+            movie.directorId,
+            movie.leadActorId,
+            script?.writerId || null
+        );
 
         // 5. Release Talent (Set back to AVAILABLE)
         if (director) {

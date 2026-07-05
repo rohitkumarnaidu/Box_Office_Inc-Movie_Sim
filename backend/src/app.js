@@ -7,6 +7,8 @@ import compression from "compression";
 
 import env from "./config/env.js";
 
+import loanRoutes from "./routes/loanRoutes.js";
+import talentRoutes from "./routes/talentRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import scriptRoutes from "./routes/scriptRoutes.js";
 import writerRoutes from "./routes/writerRoutes.js";
@@ -65,6 +67,8 @@ app.use("/api/tv-shows", tvShowRoutes);
 app.use("/api/rival-studios", rivalStudioRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/studios", studioRoutes);
+app.use("/api/studios/loans", loanRoutes);
+app.use("/api/talent", talentRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
