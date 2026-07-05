@@ -23,6 +23,7 @@ import tvShowRoutes from "./routes/tvShowRoutes.js";
 import rivalStudioRoutes from "./routes/rivalStudioRoutes.js";
 import leaderboardRoutes from "./routes/leaderboardRoutes.js";
 import studioRoutes from "./routes/studioRoutes.js";
+import loanRoutes from "./routes/loanRoutes.js";
 
 import errorHandler from "./middleware/errorMiddleware.js";
 
@@ -65,6 +66,7 @@ app.use("/api/tv-shows", tvShowRoutes);
 app.use("/api/rival-studios", rivalStudioRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/studios", studioRoutes);
+app.use("/api/studios/loans", loanRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

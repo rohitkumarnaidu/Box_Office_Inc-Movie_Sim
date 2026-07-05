@@ -89,6 +89,19 @@ const studioSchema = new mongoose.Schema(
         reason: { type: String, default: "Weekly Merchandise Sales" },
       }
     ],
+
+    // Corporate Loans (issue #195)
+    loans: [
+      {
+        amount: { type: Number, required: true },
+        interestRate: { type: Number, required: true }, // annual rate e.g. 0.12 = 12%
+        weeklyRepayment: { type: Number, required: true },
+        weeksRemaining: { type: Number, required: true },
+        takenWeek: { type: Number, required: true },
+      }
+    ],
+    negativeCashWeeks: { type: Number, default: 0 },
+    isBankrupt: { type: Boolean, default: false },
   },
   {
     timestamps: true,
