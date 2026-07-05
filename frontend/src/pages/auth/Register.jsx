@@ -16,9 +16,11 @@ const Register = () => {
     password: "",
     studioName: "",
   });
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     try {
       const res = await api.post("/auth/register", form);
@@ -32,6 +34,9 @@ const Register = () => {
       navigate("/");
     } catch (error) {
       console.error(error);
+      setError(
+        error.response?.data?.message || "Something went wrong. Please try again."
+      );
     }
   };
 
@@ -83,6 +88,10 @@ const Register = () => {
               })
             }
           />
+
+          {error && (
+            <p className="text-red-400 text-sm text-center">{error}</p>
+          )}
 
           <button
             type="submit"

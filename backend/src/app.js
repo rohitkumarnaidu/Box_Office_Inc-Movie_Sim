@@ -29,7 +29,6 @@ import rivalsRoutes from "./routes/rivalsRoutes.js";
 import spyRoutes from "./routes/spyRoutes.js";
 import leaderboardRoutes from "./routes/leaderboardRoutes.js";
 import studioRoutes from "./routes/studioRoutes.js";
-import merchRoutes from "./routes/merchRoutes.js";
 
 import errorHandler from "./middleware/errorMiddleware.js";
 
