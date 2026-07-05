@@ -86,7 +86,7 @@ const getVerdict = (roi) => {
  *   verdict: string
  * }} Full box-office breakdown.
  */
-export const generateBoxOffice = (movie, leadActor, director, marketMultiplier = 1) => {
+export const generateBoxOffice = (movie, leadActor, director, marketMultiplier = 1, demographicMultiplier = 1) => {
   const qualityFactor = movie.quality / 100;
   const criticFactor = movie.criticScore / 100;
   const audienceFactor = movie.audienceScore / 100;
@@ -112,7 +112,7 @@ export const generateBoxOffice = (movie, leadActor, director, marketMultiplier =
   // movie's genre). Applied at the opening weekend so it propagates through
   // worldwide gross, profit, ROI, and verdict.
   const openingWeekend = Math.round(
-    (openingBase + starPower + marketingBoost) * (hypeFactor + 0.4) * (0.7 + Math.random() * 0.6) * marketMultiplier * franchiseMultiplier
+    (openingBase + starPower + marketingBoost) * (hypeFactor + 0.4) * (0.7 + Math.random() * 0.6) * marketMultiplier * franchiseMultiplier * demographicMultiplier
   );
 
   // Worldwide Gross influenced by Audience Score (legs) and Critic Score (prestige)
