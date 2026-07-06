@@ -10,8 +10,6 @@ import { processMarketTrends } from "./trendEngine.js";
 import { generateRivalStudios, processRivalStudios } from "./rivalStudioEngine.js";
 import { processProductionEvents } from "./eventEngine.js";
 import { processRandomEvents } from "./eventEngine.js";
-import { processHomeMediaSales } from "./homeMediaEngine.js";
-import { processScheduledReleases } from "./clashEngine.js";
 import { processMerchandiseSales } from "./merchandiseEngine.js";
 import { processAnnualAwards } from "./awardsEngine.js";
 import { generateNewsFromTrend, generateNewsFromEvent } from "./newsEngine.js";
@@ -86,9 +84,6 @@ export const processWeeklyTick = async (gameState, studio) => {
   processDirectingProjects(gameState, studio);
 
   await processProduction(gameState, studio);
-
-  // Auto-release movies whose scheduled release week has arrived (issue #191)
-  await processScheduledReleases(gameState.currentWeek);
 
   // Tick rival studios — collect their releases for the weekly summary
   const rivalReleases = processRivalStudios(gameState);

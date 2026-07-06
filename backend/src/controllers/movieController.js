@@ -479,41 +479,6 @@ export const getMovieDetails = async (req, res) => {
     }
 };
 
-export const scheduleRelease = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { releaseWeek } = req.body;
-
-        if (!releaseWeek || typeof releaseWeek !== "number") {
-            return res.status(400).json({ success: false, message: "releaseWeek (number) is required." });
-        }
-
-        const gameState = await GameState.findOne({ user: req.user._id });
-        if (!gameState) return res.status(404).json({ success: false, message: "Game state not found" });
-
-        if (releaseWeek <= gameState.currentWeek) {
-            return res.status(400).json({ success: false, message: "scheduledReleaseWeek must be in the future." });
-        }
-
-        const movie = await Movie.findById(id);
-        if (!movie) return res.status(404).json({ success: false, message: "Movie not found" });
-        if (movie.status !== "READY_FOR_RELEASE") {
-            return res.status(400).json({ success: false, message: "Only READY_FOR_RELEASE movies can be scheduled." });
-        }
-
-        movie.scheduledReleaseWeek = releaseWeek;
-        await movie.save();
-
-        res.status(200).json({
-            success: true,
-            message: `"${movie.title}" scheduled for release in week ${releaseWeek}.`,
-            scheduledReleaseWeek: releaseWeek,
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
 export const addMarketingCampaign = async (req, res) => {
   try {
     const { id } = req.params;

@@ -9,7 +9,6 @@ import {
   releaseMovie,
   getMovieDetails,
   generateTitle,
-  scheduleRelease,
 } from "../controllers/movieController.js";
 
 
@@ -20,7 +19,6 @@ router.get("/generate-title", protect, generateTitle);
 router.get("/active", protect, getActiveMovies);
 router.get("/released", protect, getReleasedMovies);
 router.post("/:id/release", protect, validate(releaseMovieSchema), releaseMovie);
-router.post("/:id/schedule", protect, scheduleRelease);
 router.get("/:id", protect, getMovieDetails);
 
 export default router;
