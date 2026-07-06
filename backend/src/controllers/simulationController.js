@@ -11,17 +11,6 @@ export const simulateWeek = async (req, res) => {
     const { weeks = 1 } = req.body;
     const numWeeks = Math.min(52, Math.max(1, Number(weeks)));
 
-    const gameState = await GameState.findOne({ user: req.user._id });
-    const studio = await Studio.findOne({ owner: req.user._id });
-
-    if (!gameState || !studio) {
-      return res.status(404).json({ message: "Game state or studio not found" });
-    }
-
-    const startWeek = gameState.currentWeek;
-    const startFans = studio.fans || 0;
-    const startPrestige = studio.prestige || 0;
-
     // Accumulate notifications generated during the simulation ticks
     let newNotifications = [];
     let newHistories = [];
@@ -29,7 +18,32 @@ export const simulateWeek = async (req, res) => {
     // Accumulate rival releases across all simulated weeks
     const allRivalReleases = [];
 
+    let gameState;
+    let studio;
+    let startWeek;
+    let startFans;
+    let startPrestige;
+
     await withTransaction(async (session) => {
+      // Load the documents *inside* the transaction and bind them to the
+      // session so the version this transaction commits is the version it
+      // read. Loading them outside the session (as before) left a window
+      // where another request could save the same Studio/GameState doc
+      // in between, causing the transactional save at the end to fail
+      // with a Mongoose VersionError against a now-stale in-memory copy.
+      gameState = await GameState.findOne({ user: req.user._id }).session(session);
+      studio = await Studio.findOne({ owner: req.user._id }).session(session);
+
+      if (!gameState || !studio) {
+        const notFoundError = new Error("Game state or studio not found");
+        notFoundError.statusCode = 404;
+        throw notFoundError;
+      }
+
+      startWeek = gameState.currentWeek;
+      startFans = studio.fans || 0;
+      startPrestige = studio.prestige || 0;
+
       // Run simulation multiple times
       for (let i = 0; i < numWeeks; i++) {
         const expectedWeek = startWeek + i;
@@ -106,6 +120,9 @@ export const simulateWeek = async (req, res) => {
       summary
     });
   } catch (error) {
+    if (error.statusCode === 404) {
+      return res.status(404).json({ message: error.message });
+    }
     console.error("Simulation Transaction Error:", error);
     res.status(500).json({ success: false, message: `Operation rolled back due to: ${error.message}` });
   }

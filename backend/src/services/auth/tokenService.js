@@ -2,7 +2,7 @@ import crypto from "crypto";
 
 import jwt from "jsonwebtoken";
 
-import env from "../../config/env.js";
+import env from "../../config/envConfig.js";
 import { generateAccessToken, generateRefreshToken } from "../../utils/tokenGenerator.js";
 
 export const REFRESH_COOKIE_NAME = "refreshToken";

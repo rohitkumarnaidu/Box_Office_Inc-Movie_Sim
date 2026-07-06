@@ -5,6 +5,7 @@ import Franchise from "../models/Franchise.js";
 import { generateReviews } from "../services/simulation/engines/reviewEngine.js";
 import { generateBoxOffice } from "../services/simulation/engines/boxOfficeEngine.js";
 import { getGenreMultiplier } from "../services/simulation/engines/trendEngine.js";
+import { getDemographicMultiplier } from "../services/simulation/engines/demographicsEngine.js";
 import { processCareerImpact } from "../services/simulation/engines/careerImpactEngine.js";
 import { processStudioGrowth } from "../services/simulation/engines/studioGrowthEngine.js";
 import { computeFranchiseProgress } from "../services/simulation/engines/franchiseEngine.js";
@@ -333,7 +334,8 @@ export const releaseMovie = async (req, res) => {
         // this movie's genres, its multiplier boosts or dampens the gross.
         const activeTrends = gameState.marketTrends?.activeTrends || [];
         const marketMultiplier = getGenreMultiplier(activeTrends, script?.genres);
-        const boxOffice = generateBoxOffice(movie, leadActor, director, marketMultiplier);
+        const demographicMultiplier = getDemographicMultiplier(script?.genres, movie.marketingCampaigns);
+        const boxOffice = generateBoxOffice(movie, leadActor, director, marketMultiplier, demographicMultiplier);
         Object.assign(movie, boxOffice);
 
         // Franchise reputation (read): load the franchise's accumulated shared

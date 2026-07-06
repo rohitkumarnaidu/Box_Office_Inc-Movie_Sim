@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import env from "../config/env.js";
+import env from "../config/envConfig.js";
 import User from "../models/User.js";
 import {
   AUTH_EVENTS,

@@ -20,6 +20,7 @@ import ReadyForRelease from "./pages/movies/ReadyForRelease";
 import ReleaseResult from "./pages/movies/ReleaseResult";
 import MovieLibrary from "./pages/movies/MovieLibrary";
 import ReleasedMovieDetail from "./pages/movies/ReleasedMovieDetail";
+import ReviewDashboard from "./pages/movies/ReviewDashboard";
 import ProductionQueue from "./pages/movies/ProductionQueue";
 import MovieComparison from "./pages/movies/MovieComparison";
 import StreamingDeals from "./pages/movies/StreamingDeals";
@@ -29,6 +30,7 @@ import StudioStats from "./pages/studio/StudioStats";
 import FinancialHistory from "./pages/studio/FinancialHistory";
 import MerchDashboard from "./pages/merch/MerchDashboard";
 import AwardsHistory from "./pages/studio/AwardsHistory";
+import AwardsCampaign from "./pages/awards/AwardsCampaign";
 import MarketDashboard from "./pages/dashboard/MarketDashboard";
 import Franchises from "./pages/studio/Franchises";
 import FranchiseDetail from "./pages/studio/FranchiseDetail";
@@ -142,6 +144,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ReleasedMovieDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/movies/library/:id/reviews"
+          element={
+            <ProtectedRoute>
+              <ReviewDashboard />
             </ProtectedRoute>
           }
         />
@@ -397,14 +407,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/awards/lobbying/:id"
           element={
             <ProtectedRoute>
               <AwardsCampaign />
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/awards/season"
           element={

@@ -41,3 +41,34 @@ body {
     line-height: 2rem !important;
   }
 }
+
+/* target the light theme containers */
+
+.light .bg-slate-900,
+.light .bg-gray-900,
+.light .bg-slate-800 {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+.light .text-slate-400,
+.light .text-gray-400 {
+  color: #64748b !important;
+}
+
+.light .text-white {
+  color: #0f172a !important;
+}
+
+/* Maintain brightness for primary colored hero banners like "Build Your Dream Studio" */
+.light .bg-purple-600,
+.light .bg-indigo-600 {
+  background-color: #9333ea !important;
+}
+
+.light .bg-purple-600 .text-white,
+.light .bg-indigo-600 .text-white {
+  color: #ffffff !important;
+}

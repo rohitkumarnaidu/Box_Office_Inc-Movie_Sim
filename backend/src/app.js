@@ -5,9 +5,8 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 
-import env from "./config/env.js";
+import env from "./config/envConfig.js";
 
-import merchRoutes from "./routes/merchRoutes.js";
 import marketingRoutes from "./routes/marketingRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import scriptRoutes from "./routes/scriptRoutes.js";
@@ -23,6 +22,7 @@ import notificationsRoutes from "./routes/notificationsRoutes.js";
 import awardsCampaignRoutes from "./routes/awardsCampaignRoutes.js";
 import newsRoutes from "./routes/newsRoutes.js";
 import franchiseRoutes from "./routes/franchiseRoutes.js";
+import reviewDashboardRoutes from "./routes/reviewDashboardRoutes.js";
 import streamingRoutes from "./routes/streamingRoutes.js";
 import tvShowRoutes from "./routes/tvShowRoutes.js";
 import rivalsRoutes from "./routes/rivalsRoutes.js";
@@ -79,6 +79,7 @@ app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/studios", studioRoutes);
 app.use("/api/studios/loans", loanRoutes);
 app.use("/api/marketing", marketingRoutes);
+app.use("/api/reviews", reviewDashboardRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

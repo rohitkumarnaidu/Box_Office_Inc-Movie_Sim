@@ -21,10 +21,19 @@ const CACHE_TTL_MS = 5_000; // 5 seconds
  * @param {string} key
  */
 const cacheGet = (key) => {
-  const entry = _cache.get(key);
+  const underscoreIdx = key.indexOf('_');
+  const userId = underscoreIdx !== -1 ? key.slice(0, underscoreIdx) : key;
+  const subKey = underscoreIdx !== -1 ? key.slice(underscoreIdx + 1) : 'default';
+  
+  const userCache = _cache.get(userId);
+  if (!userCache) return undefined;
+  
+  const entry = userCache.get(subKey);
   if (!entry) return undefined;
+
   if (Date.now() - entry.ts > CACHE_TTL_MS) {
-    _cache.delete(key);
+    userCache.delete(subKey);
+    if (userCache.size === 0) _cache.delete(userId);
     return undefined;
   }
   return entry.value;
@@ -36,21 +45,25 @@ const cacheGet = (key) => {
  * @param {*} value
  */
 const cacheSet = (key, value) => {
-  _cache.set(key, { value, ts: Date.now() });
+  const underscoreIdx = key.indexOf('_');
+  const userId = underscoreIdx !== -1 ? key.slice(0, underscoreIdx) : key;
+  const subKey = underscoreIdx !== -1 ? key.slice(underscoreIdx + 1) : 'default';
+
+  if (!_cache.has(userId)) {
+    _cache.set(userId, new Map());
+  }
+  _cache.get(userId).set(subKey, { value, ts: Date.now() });
 };
 
 /**
- * Invalidates all cache entries for a given user.
+ * Invalidates all cache entries for a given user instantly O(1).
  * Call this after any mutation (hire / fire).
  * @param {string} userId
  */
 export const invalidateUserCache = (userId) => {
-  for (const key of _cache.keys()) {
-    if (key.startsWith(userId)) {
-      _cache.delete(key);
-    }
-  }
+  _cache.delete(userId);
 };
+
 
 // ---------------------------------------------------------------------------
 // Filter / Sort / Paginate
