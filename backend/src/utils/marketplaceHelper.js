@@ -53,6 +53,15 @@ const cacheSet = (key, value) => {
     _cache.set(userId, new Map());
   }
   _cache.get(userId).set(subKey, { value, ts: Date.now() });
+
+  // Active cleanup to prevent memory leak
+  setTimeout(() => {
+    const userCache = _cache.get(userId);
+    if (userCache && userCache.has(subKey)) {
+      userCache.delete(subKey);
+      if (userCache.size === 0) _cache.delete(userId);
+    }
+  }, CACHE_TTL_MS);
 };
 
 /**
