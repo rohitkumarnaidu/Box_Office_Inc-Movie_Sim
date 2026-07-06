@@ -3,8 +3,7 @@ import Studio from "../../../models/Studio.js";
 
 // Merchandise sales generated based on movie's hype and existing popularity.
 // Only movies with a threshold of success or hype will start generating sales.
-export const processMerchandiseSales = async (gameState) => {
-    const studio = await Studio.findOne({ owner: gameState.user });
+export const processMerchandiseSales = async (gameState, studio) => {
     if (!studio) return;
 
     const movies = await Movie.find({
@@ -68,7 +67,5 @@ export const processMerchandiseSales = async (gameState) => {
                 createdAt: new Date()
             });
         }
-        
-        await studio.save();
     }
 };

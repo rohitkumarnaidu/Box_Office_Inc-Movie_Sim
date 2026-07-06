@@ -10,7 +10,6 @@ export const initializeStreamingPlatforms = async (gameState) => {
       { id: "primescreen", name: "PrimeScreen", popularity: 60, contentBudget: 2000000000, subscribers: 40000000, exclusiveMovies: [] },
       { id: "cinemax", name: "CineMax+", popularity: 40, contentBudget: 500000000, subscribers: 20000000, exclusiveMovies: [] }
     ];
-    await gameState.save();
   }
 };
 
