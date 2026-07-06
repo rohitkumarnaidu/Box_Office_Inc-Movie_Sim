@@ -2,6 +2,7 @@ import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validationMiddleware.js";
 import { createMovieSchema, releaseMovieSchema } from "../validators/movieValidator.js";
+import { checkNegativeBalance } from "../middleware/balanceMiddleware.js";
 import {
   createMovie,
   getActiveMovies,
@@ -15,7 +16,7 @@ import {
 
 const router = express.Router();
 
-router.post("/", protect, validate(createMovieSchema), createMovie);
+router.post("/", protect, checkNegativeBalance, validate(createMovieSchema), createMovie);
 router.get("/generate-title", protect, generateTitle);
 router.get("/active", protect, getActiveMovies);
 router.get("/released", protect, getReleasedMovies);
