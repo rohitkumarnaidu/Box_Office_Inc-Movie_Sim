@@ -2,7 +2,7 @@ import Movie from "../../../models/Movie.js";
 import Studio from "../../../models/Studio.js";
 
 // Awards run annually at Week 52.
-export const processAnnualAwards = async (gameState) => {
+export const processAnnualAwards = async (gameState, studio) => {
     // We run awards once every 52 weeks (so when week % 52 === 0).
     // The tickEngine should call this exactly on week 52, 104, etc.
 
@@ -44,16 +44,15 @@ export const processAnnualAwards = async (gameState) => {
     gameState.pastAwards.push(awardRecord);
 
     // Notify the user if their studio won
-    const userStudio = await Studio.findOne({ owner: gameState.user });
-    if (userStudio) {
+    if (studio) {
         let won = false;
         let messages = [];
 
-        if (bestPicture.studioId.toString() === userStudio._id.toString()) {
+        if (bestPicture.studioId.toString() === studio._id.toString()) {
             won = true;
             messages.push(`Best Picture (${bestPicture.title})`);
-            userStudio.stats.awardsWon = (userStudio.stats.awardsWon || 0) + 1;
-            userStudio.prestige += 500;
+            studio.stats.awardsWon = (studio.stats.awardsWon || 0) + 1;
+            studio.prestige += 500;
         }
 
         if (won) {
@@ -61,7 +60,6 @@ export const processAnnualAwards = async (gameState) => {
                 message: `🏆 Annual Awards! Your studio won: ${messages.join(", ")}! You gained massive prestige!`,
                 createdAt: new Date()
             });
-            await userStudio.save();
         } else {
             gameState.notifications.push({
                 message: `🏆 Annual Awards Year ${year}: Best Picture goes to '${bestPicture.title}'.`,

@@ -132,11 +132,11 @@ export const processWeeklyTick = async (gameState, studio) => {
     }
   }
 
-  await processMerchandiseSales(gameState);
+  await processMerchandiseSales(gameState, studio);
   await processStreamingPlatformGrowth(gameState);
 
   if (gameState.currentWeek > 0 && gameState.currentWeek % 52 === 0) {
-    await processAnnualAwards(gameState);
+    await processAnnualAwards(gameState, studio);
   }
 
   // Recurring weekly streaming revenue for accepted deals (issue #41) — runs
