@@ -310,82 +310,6 @@ const gameStateSchema = new mongoose.Schema(
       },
     ],
 
-    marketDirectors: [
-      {
-        id: String,
-
-        name: String,
-
-        avatarSeed: String,
-
-        age: Number,
-
-        creativity: Number,
-
-        reliability: Number,
-
-        leadership: Number,
-
-        reputation: Number,
-
-        morale: Number,
-
-        salary: Number,
-
-        marketValue: {
-          type: Number,
-          default: 0,
-        },
-
-        rarity: String,
-
-        genreExpertise: [String],
-
-        status: {
-          type: String,
-          default: "AVAILABLE",
-        },
-
-        busyUntilWeek: Number,
-
-        contractYears: Number,
-
-        moviesDirected: {
-          type: Number,
-          default: 0,
-        },
-
-        hitMovies: {
-          type: Number,
-          default: 0,
-        },
-
-        flopMovies: {
-          type: Number,
-          default: 0,
-        },
-
-        awards: {
-          type: Number,
-          default: 0,
-        },
-
-        totalEarnings: {
-          type: Number,
-          default: 0,
-        },
-
-        studiosWorkedWith: [String],
-
-        ratings: [Number],
-
-        discovered: {
-          type: Number,
-          default: 0,
-        },
-      },
-    ],
-
     ownedDirectors: [
       {
         id: String,
@@ -464,92 +388,6 @@ const gameStateSchema = new mongoose.Schema(
       },
     ],
 
-
-    marketActors: [
-      {
-        id: String,
-
-        name: String,
-
-        avatarSeed: String,
-
-        age: Number,
-
-        popularity: Number,
-
-        actingSkill: Number,
-
-        reliability: Number,
-
-        fanbase: Number,
-
-        morale: Number,
-
-        salary: Number,
-
-        rarity: String,
-
-        hiddenPotential: Number,
-
-        status: {
-          type: String,
-          default: "AVAILABLE",
-        },
-
-        busyUntilWeek: Number,
-
-        contractYears: Number,
-
-        movies: {
-          type: Number,
-          default: 0,
-        },
-
-        leadRoles: {
-          type: Number,
-          default: 0,
-        },
-
-        supportingRoles: {
-          type: Number,
-          default: 0,
-        },
-
-        hitMovies: {
-          type: Number,
-          default: 0,
-        },
-
-        flopMovies: {
-          type: Number,
-          default: 0,
-        },
-
-        awards: {
-          type: Number,
-          default: 0,
-        },
-
-        boxOfficeTotal: {
-          type: Number,
-          default: 0,
-        },
-
-        careerEarnings: {
-          type: Number,
-          default: 0,
-        },
-
-        studiosWorkedWith: [String],
-
-        discovered: {
-          type: Number,
-          default: 0,
-        },
-
-        hiredAt: Date,
-      },
-    ],
 
     ownedActors: [
       {
@@ -634,33 +472,6 @@ const gameStateSchema = new mongoose.Schema(
         },
 
         hiredAt: Date,
-      },
-    ],
-
-    marketCrewTeams: [
-      {
-        id: String,
-        name: String,
-        technicalQuality: Number,
-        musicQuality: Number,
-        vfxQuality: Number,
-        creativity: Number,
-        reliability: Number,
-        reputation: Number,
-        morale: Number,
-        salary: Number,
-        rarity: String,
-        age: Number,
-        discovery: Number,
-        status: {
-          type: String,
-          enum: ["AVAILABLE", "BUSY"],
-          default: "AVAILABLE",
-        },
-        busyUntilWeek: Number,
-        hiredAt: Date,
-        contractYears: Number,
-        careerTier: { type: String, default: "Rookie" },
       },
     ],
 

@@ -4,20 +4,22 @@ import { generateCrewTeams } from "../services/crew/crewGenerator.js";
 import { getMarketplaceTalent, invalidateUserCache } from "../utils/marketplaceHelper.js";
 import Notification from "../models/Notification.js";
 import { calculateSigningFee } from "../services/talent/signingFeeService.js";
+import MarketCrewTeam from "../models/MarketCrewTeam.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
 export const getMarketCrewTeams = async (req, res) => {
   try {
-    const gameState = await findGameState(req.user._id);
-    if (!gameState) return res.status(404).json({ success: false, message: "Game state not found" });
+    const count = await MarketCrewTeam.countDocuments({ userId: req.user._id });
 
-    if (!gameState.marketCrewTeams || gameState.marketCrewTeams.length === 0) {
-      gameState.marketCrewTeams = generateCrewTeams(50);
-      await gameState.save();
+    if (count === 0) {
+      const teams = generateCrewTeams(50);
+      const enriched = teams.map((t) => ({ ...t, userId: req.user._id }));
+      await MarketCrewTeam.insertMany(enriched);
     }
 
-    const result = getMarketplaceTalent(gameState.marketCrewTeams, req.query);
+    const marketDocs = await MarketCrewTeam.find({ userId: req.user._id }).lean();
+    const result = getMarketplaceTalent(marketDocs, req.query);
     res.status(200).json({
       success: true,
       crewTeams: result.items,
@@ -45,28 +47,27 @@ export const hireCrewTeam = async (req, res) => {
     const gameState = await findGameState(req.user._id);
     if (!gameState) return res.status(404).json({ success: false, message: "Game state not found" });
 
-    const index = gameState.marketCrewTeams.findIndex(c => c.id === id);
-    if (index === -1) return res.status(404).json({ success: false, message: "Crew team not found" });
-    const crewTeam = gameState.marketCrewTeams[index];
+    const marketDoc = await MarketCrewTeam.findOne({ id, userId: req.user._id }).lean();
+    if (!marketDoc) return res.status(404).json({ success: false, message: "Crew team not found" });
 
     const studio = await Studio.findOne({ owner: req.user._id });
     if (!studio) return res.status(404).json({ success: false, message: "Studio not found" });
 
-    const signingFee = calculateSigningFee(crewTeam);
+    const signingFee = calculateSigningFee(marketDoc);
     if (Number(studio.money || 0) < signingFee) {
       return res.status(400).json({
         success: false,
-        message: `Insufficient funds: hiring ${crewTeam.name} requires a signing fee of ${signingFee}, but the studio has ${studio.money}.`,
+        message: `Insufficient funds: hiring ${marketDoc.name} requires a signing fee of ${signingFee}, but the studio has ${studio.money}.`,
         signingFee,
         studioMoney: studio.money,
       });
     }
 
-    const hiredCrew = crewTeam.toObject ? crewTeam.toObject() : { ...crewTeam };
+    const hiredCrew = { ...marketDoc };
     hiredCrew.hiredAt = new Date();
     hiredCrew.status = "AVAILABLE";
 
-    gameState.marketCrewTeams.splice(index, 1);
+    await MarketCrewTeam.deleteOne({ _id: marketDoc._id });
     gameState.ownedCrewTeams = gameState.ownedCrewTeams || [];
     gameState.ownedCrewTeams.push(hiredCrew);
 
@@ -80,7 +81,9 @@ export const hireCrewTeam = async (req, res) => {
     studio.money = Math.max(0, Number(studio.money || 0) - signingFee);
     await studio.save();
     await gameState.save();
-    res.status(200).json({ success: true, message: "Crew team hired", crewTeam: hiredCrew, signingFee, remainingMoney: studio.money });
+
+    const updatedMarket = await MarketCrewTeam.find({ userId: req.user._id }).lean();
+    res.status(200).json({ success: true, message: "Crew team hired", crewTeam: hiredCrew, signingFee, remainingMoney: studio.money, marketCrewTeams: updatedMarket });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -92,9 +95,11 @@ export const getCrewProfile = async (req, res) => {
     const gameState = await findGameState(req.user._id);
     if (!gameState) return res.status(404).json({ success: false, message: "Game state not found" });
 
-    const crew =
-      gameState.ownedCrewTeams?.find((c) => c.id === id) ||
-      gameState.marketCrewTeams?.find((c) => c.id === id);
+    let crew = gameState.ownedCrewTeams?.find((c) => c.id === id);
+    if (!crew) {
+      const marketDoc = await MarketCrewTeam.findOne({ id, userId: req.user._id }).lean();
+      if (marketDoc) crew = marketDoc;
+    }
 
     if (!crew) return res.status(404).json({ success: false, message: "Crew team not found" });
 
@@ -124,7 +129,7 @@ export const fireCrewTeam = async (req, res) => {
     firedCrew.hiredAt = null;
 
     gameState.ownedCrewTeams.splice(index, 1);
-    gameState.marketCrewTeams.push(firedCrew);
+    await MarketCrewTeam.create([{ ...firedCrew, userId: req.user._id }]);
 
     await Notification.create({
       gameStateId: gameState._id,
@@ -134,7 +139,9 @@ export const fireCrewTeam = async (req, res) => {
 
     invalidateUserCache(String(req.user._id));
     await gameState.save();
-    res.status(200).json({ success: true, message: "Crew team fired" });
+
+    const updatedMarket = await MarketCrewTeam.find({ userId: req.user._id }).lean();
+    res.status(200).json({ success: true, message: "Crew team fired", marketCrewTeams: updatedMarket });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

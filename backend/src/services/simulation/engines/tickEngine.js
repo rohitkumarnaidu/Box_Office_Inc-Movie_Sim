@@ -18,6 +18,8 @@ import { processStreamingPlatformGrowth, processStreamingRevenue } from "./strea
 import { addNotification } from "../helpers/notificationHelper.js";
 import { processWriterAging } from "../helpers/agingHelper.js";
 import TalentHistory from "../../../models/TalentHistory.js";
+import MarketDirector from "../../../models/MarketDirector.js";
+import MarketActor from "../../../models/MarketActor.js";
 
 /**
  * @fileoverview Tick Engine — Weekly Simulation Orchestrator
@@ -52,6 +54,11 @@ import TalentHistory from "../../../models/TalentHistory.js";
  * Mutates `gameState` and `studio` in place across all sub-engines. The caller
  * (`runWeeklySimulation`) is responsible for persisting both documents after
  * this function resolves.
+ *
+ * Market talent (directors, actors) is now stored in separate collections to
+ * avoid unbounded GameState document growth (issue #188). Award processing
+ * temporarily attaches market directors/actors to the gameState object for
+ * backward compatibility with the awards services.
  *
  * @async
  * @param {object} gameState    - GameState mongoose document for the current studio.
@@ -90,7 +97,7 @@ export const processWeeklyTick = async (gameState, studio) => {
 
   processWriterAging(gameState);
 
-  processDirectorAging(gameState);
+  await processDirectorAging(gameState);
 
   const awardYear = Math.floor((Number(gameState.currentWeek || 1) - 1) / 52) + 1;
   const isAwardWeek = gameState.currentWeek % 52 === 0;
@@ -100,6 +107,12 @@ export const processWeeklyTick = async (gameState, studio) => {
   if (isAwardWeek && (!directorAlreadyProcessed || !actorAlreadyProcessed)) {
     const histories = await TalentHistory.find({ gameStateId: gameState._id }).lean();
 
+    // Fetch market talent from separate collections (issue #188) and attach
+    // them temporarily to gameState for award processing.
+    const userId = gameState.user;
+    const marketDirectors = await MarketDirector.find({ userId }).lean();
+    const marketActors = await MarketActor.find({ userId }).lean();
+
     const attachHistory = (talentList) => {
       if (!talentList) return;
       talentList.forEach((talent) => {
@@ -108,17 +121,72 @@ export const processWeeklyTick = async (gameState, studio) => {
       });
     };
 
-    attachHistory(gameState.marketDirectors);
+    // Temporarily attach market data for award services
+    gameState._marketDirectors = marketDirectors;
+    gameState._marketActors = marketActors;
+
+    attachHistory(gameState._marketDirectors);
     attachHistory(gameState.ownedDirectors);
     attachHistory(gameState.retiredDirectors);
-    attachHistory(gameState.marketActors);
+    attachHistory(gameState._marketActors);
     attachHistory(gameState.ownedActors);
     attachHistory(gameState.retiredActors);
   }
 
+  // Patch awards services to read from temporary _market arrays if available,
+  // falling back to the (now removed) embedded arrays for safety.
+  const origMarketDirectors = gameState.marketDirectors;
+  const origMarketActors = gameState.marketActors;
+  if (gameState._marketDirectors) gameState.marketDirectors = gameState._marketDirectors;
+  if (gameState._marketActors) gameState.marketActors = gameState._marketActors;
+
   processDirectorAwards(gameState, studio);
   processActorAwards(gameState, studio);
   processCrewProgression(gameState);
+
+  // Restore original state (market arrays no longer on gameState)
+  delete gameState.marketDirectors;
+  delete gameState.marketActors;
+  if (origMarketDirectors !== undefined) gameState.marketDirectors = origMarketDirectors;
+
+  // Persist award mutations back to MarketDirector/MarketActor collections
+  if (gameState._marketDirectors) {
+    for (const director of gameState._marketDirectors) {
+      if (director._id) {
+        await MarketDirector.updateOne(
+          { _id: director._id },
+          {
+            $set: {
+              awards: director.awards,
+              reputation: director.reputation,
+              salary: director.salary,
+              marketValue: director.marketValue,
+            },
+          }
+        );
+      }
+    }
+  }
+  if (gameState._marketActors) {
+    for (const actor of gameState._marketActors) {
+      if (actor._id) {
+        await MarketActor.updateOne(
+          { _id: actor._id },
+          {
+            $set: {
+              awards: actor.awards,
+              popularity: actor.popularity,
+              salary: actor.salary,
+              fanbase: actor.fanbase,
+            },
+          }
+        );
+      }
+    }
+  }
+
+  delete gameState._marketDirectors;
+  delete gameState._marketActors;
 
   // 9. Production events — movie-level crises & opportunities.
   await processProductionEvents(gameState, studio);
@@ -148,4 +216,3 @@ export const processWeeklyTick = async (gameState, studio) => {
 
 
 export default processWeeklyTick;
-

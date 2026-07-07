@@ -1,6 +1,9 @@
 import User from "../models/User.js";
 import Studio from "../models/Studio.js";
 import GameState from "../models/GameState.js";
+import MarketDirector from "../models/MarketDirector.js";
+import MarketActor from "../models/MarketActor.js";
+import MarketCrewTeam from "../models/MarketCrewTeam.js";
 
 import { hashPassword, comparePassword } from "../services/auth/authService.js";
 import { generateDirectors } from "../services/director/directorGenerator.js";
@@ -102,10 +105,18 @@ export const register = async (req, res) => {
 
     await GameState.create({
       user: user._id,
-      marketDirectors: generateDirectors(50),
-      marketActors: generateActors(100),
-      marketCrewTeams: generateCrewTeams(25),
     });
+
+    // Populate separate market talent collections (issue #188)
+    await MarketDirector.insertMany(
+      generateDirectors(50).map((d) => ({ ...d, userId: user._id }))
+    );
+    await MarketActor.insertMany(
+      generateActors(100).map((a) => ({ ...a, userId: user._id }))
+    );
+    await MarketCrewTeam.insertMany(
+      generateCrewTeams(25).map((c) => ({ ...c, userId: user._id }))
+    );
 
     user.studio = studio._id;
     await user.save();

@@ -1,6 +1,6 @@
+import MarketDirector from "../../../models/MarketDirector.js";
 import {
   createReplacementDirector,
-  retireDirector,
 } from "../../director/directorRetirementService.js";
 
 /**
@@ -10,16 +10,20 @@ import {
  * the public market pool. Runs once per simulated year (every 52 weeks) to keep
  * the director economy realistic.
  *
- * ## Lifecycle
- * 1. Age increments by +1 for every non-retired director.
- * 2. Directors reaching `RETIREMENT_AGE` (90) are retired:
- *    - Owned directors: any active directing projects are flagged
- *      `NEEDS_DIRECTOR_REPLACEMENT` so the player can reassign them.
- *    - Market directors: simply removed from the pool.
- * 3. For every director that retires (from either pool), one fresh replacement
- *    director is generated and added to the market — keeping total market supply stable.
- * 4. Directors who were already in "RETIRED" status are preserved in
- *    `gameState.retiredDirectors` for historical tracking.
+ * ## Lifecycle (Market Directors — stored in separate MarketDirector collection)
+ * 1. Fetch all market directors for this game from the MarketDirector collection.
+ * 2. Age increments by +1 for every non-retired director.
+ * 3. Directors reaching `RETIREMENT_AGE` (90) are retired:
+ *    - Removed from the MarketDirector collection.
+ *    - Archived into `gameState.retiredDirectors`.
+ * 4. For every director that retires, one fresh replacement director is generated
+ *    and inserted into the MarketDirector collection — keeping total market supply stable.
+ *
+ * ## Lifecycle (Owned Directors — still embedded in GameState)
+ * 1. Same aging/retirement logic applied to `gameState.ownedDirectors`.
+ * 2. Retired owned directors have their active projects flagged for replacement.
+ * 3. Retired owned directors are moved to `gameState.retiredDirectors`.
+ * 4. A replacement is added to the market pool (MarketDirector collection).
  */
 
 /** Retirement age threshold. Directors at or above this age are retired. */
@@ -50,63 +54,51 @@ const markRetiredDirectorProjectsForReplacement = (gameState, director) => {
 };
 
 /**
- * Adds a director to `gameState.retiredDirectors` if not already present,
- * preserving a snapshot of their career data for auditing or future UI use.
+ * Archives a retiring director into `gameState.retiredDirectors`.
  *
- * @param {object} gameState                   - GameState document.
- * @param {Array}  [gameState.retiredDirectors=[]] - Accumulated retired directors.
- * @param {object} director                    - Director to archive.
- * @param {string} director.id                 - Director's unique ID.
+ * @param {object} gameState
+ * @param {object} directorData - Plain object representation of the director.
  * @returns {void}
  */
-const preserveAlreadyRetiredDirector = (gameState, director) => {
+const archiveRetiredDirector = (gameState, directorData) => {
   gameState.retiredDirectors = gameState.retiredDirectors || [];
 
   const alreadyPreserved = gameState.retiredDirectors.some(
-    (retiredDirector) => retiredDirector.id === director.id
+    (retired) => retired.id === directorData.id
   );
 
   if (!alreadyPreserved) {
-    const retiredDirector = director.toObject
-      ? director.toObject()
-      : { ...director };
-    retiredDirector.status = "RETIRED";
-    gameState.retiredDirectors.push(retiredDirector);
+    gameState.retiredDirectors.push({
+      ...directorData,
+      status: "RETIRED",
+      retiredAtWeek: gameState.currentWeek,
+    });
   }
 };
 
 /**
- * Ages a pool of directors by one year and retires those who have reached
- * `RETIREMENT_AGE`. Returns the directors who remain active.
+ * Processes a pool of market directors (from MarketDirector collection):
+ * ages them, retires those at the cap, and returns retirement count.
  *
  * @param {object}   params
- * @param {Array}    params.directors   - The pool of director objects to process.
- * @param {object}   params.gameState   - GameState document; used for project flagging
- *                                        and the retired archive.
- * @param {"owned"|"market"} params.source - Pool origin; "owned" directors get their
- *                                        in-progress projects flagged for replacement.
+ * @param {Array}    params.directors - Array of MarketDirector documents.
+ * @param {object}   params.gameState - GameState document for archiving.
  * @returns {{ activeDirectors: Array, retiredCount: number }}
- *   `activeDirectors` — directors who remain after aging.
- *   `retiredCount`    — number that retired this pass (used to spawn replacements).
  */
-const ageDirectorPool = ({ directors = [], gameState, source }) => {
+const ageMarketDirectorPool = ({ directors = [], gameState }) => {
   const activeDirectors = [];
   let retiredCount = 0;
 
   directors.forEach((director) => {
     if (director.status === "RETIRED") {
-      preserveAlreadyRetiredDirector(gameState, director);
+      archiveRetiredDirector(gameState, director);
       return;
     }
 
     director.age = Number(director.age || 0) + 1;
 
     if (director.age >= RETIREMENT_AGE) {
-      if (source === "owned") {
-        markRetiredDirectorProjectsForReplacement(gameState, director);
-      }
-
-      retireDirector({ director, gameState, source });
+      archiveRetiredDirector(gameState, director);
       retiredCount += 1;
       return;
     }
@@ -114,10 +106,41 @@ const ageDirectorPool = ({ directors = [], gameState, source }) => {
     activeDirectors.push(director);
   });
 
-  return {
-    activeDirectors,
-    retiredCount,
-  };
+  return { activeDirectors, retiredCount };
+};
+
+/**
+ * Processes a pool of owned directors (from gameState.ownedDirectors array):
+ * ages them, retires those at the cap, flags projects for replacement.
+ *
+ * @param {object}   params
+ * @param {Array}    params.directors - Array of owned director objects.
+ * @param {object}   params.gameState - GameState document.
+ * @returns {{ activeDirectors: Array, retiredCount: number }}
+ */
+const ageOwnedDirectorPool = ({ directors = [], gameState }) => {
+  const activeDirectors = [];
+  let retiredCount = 0;
+
+  directors.forEach((director) => {
+    if (director.status === "RETIRED") {
+      archiveRetiredDirector(gameState, director);
+      return;
+    }
+
+    director.age = Number(director.age || 0) + 1;
+
+    if (director.age >= RETIREMENT_AGE) {
+      markRetiredDirectorProjectsForReplacement(gameState, director);
+      archiveRetiredDirector(gameState, director);
+      retiredCount += 1;
+      return;
+    }
+
+    activeDirectors.push(director);
+  });
+
+  return { activeDirectors, retiredCount };
 };
 
 /**
@@ -125,38 +148,76 @@ const ageDirectorPool = ({ directors = [], gameState, source }) => {
  * the market and owned pools, retires eligible ones, and replenishes the
  * market with an equal number of freshly-generated replacements.
  *
+ * Market directors are stored in the `MarketDirector` collection (separate from
+ * GameState to avoid unbounded document growth — issue #188).
+ * Owned directors remain in `gameState.ownedDirectors` (bounded by player hires).
+ *
  * This function is a no-op for every week that is not a year boundary
  * (`currentWeek % 52 !== 0`), keeping it cheap to call every tick.
  *
+ * @async
  * @param {object} gameState                   - GameState document (mutated in place).
  * @param {number} gameState.currentWeek       - Current simulation week.
- * @param {Array}  [gameState.marketDirectors=[]] - Public market director pool.
- * @param {Array}  [gameState.ownedDirectors=[]]  - Player-owned director roster.
- * @returns {void}
+ * @param {string} gameState.user              - User ID to scope MarketDirector queries.
+ * @returns {Promise<void>}
  */
-export const processDirectorAging = (gameState) => {
+export const processDirectorAging = async (gameState) => {
   if (gameState.currentWeek % WEEKS_PER_YEAR !== 0) {
     return;
   }
 
-  const marketResult = ageDirectorPool({
-    directors: gameState.marketDirectors || [],
+  const userId = gameState.user;
+
+  // -----------------------------------------------------------------------
+  // 1. Market directors (MarketDirector collection)
+  // -----------------------------------------------------------------------
+  const marketDirectors = await MarketDirector.find({ userId }).lean();
+
+  const marketResult = ageMarketDirectorPool({
+    directors: marketDirectors,
     gameState,
-    source: "market",
   });
 
-  const ownedResult = ageDirectorPool({
+  // Bulk-write updates: delete retired directors, update surviving ones
+  const retiredIds = marketDirectors
+    .slice(marketResult.activeDirectors.length)
+    .map((d) => d._id);
+
+  if (retiredIds.length > 0) {
+    await MarketDirector.deleteMany({ _id: { $in: retiredIds } });
+  }
+
+  // Update surviving active directors
+  for (const director of marketResult.activeDirectors) {
+    await MarketDirector.updateOne(
+      { _id: director._id },
+      { $set: { age: director.age } }
+    );
+  }
+
+  // -----------------------------------------------------------------------
+  // 2. Owned directors (gameState.ownedDirectors)
+  // -----------------------------------------------------------------------
+  const ownedResult = ageOwnedDirectorPool({
     directors: gameState.ownedDirectors || [],
     gameState,
-    source: "owned",
   });
 
-  gameState.marketDirectors = marketResult.activeDirectors;
   gameState.ownedDirectors = ownedResult.activeDirectors;
 
+  // -----------------------------------------------------------------------
+  // 3. Replenish market with replacements
+  // -----------------------------------------------------------------------
   const totalRetirements = marketResult.retiredCount + ownedResult.retiredCount;
 
-  for (let index = 0; index < totalRetirements; index += 1) {
-    gameState.marketDirectors.push(createReplacementDirector());
+  if (totalRetirements > 0) {
+    const replacements = [];
+    for (let index = 0; index < totalRetirements; index += 1) {
+      replacements.push({
+        ...createReplacementDirector(),
+        userId,
+      });
+    }
+    await MarketDirector.insertMany(replacements);
   }
 };
