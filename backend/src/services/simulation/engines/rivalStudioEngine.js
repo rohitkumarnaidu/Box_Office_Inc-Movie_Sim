@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------
 
 import { addNotification } from "../helpers/notificationHelper.js";
-import { VERDICTS } from "../../../constants/verdicts.js";
+import { VERDICTS, getVerdict } from "../../../constants/verdicts.js";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -100,15 +100,6 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 const generateMovieTitle = () =>
   `${pick(TITLE_PREFIXES)} ${pick(TITLE_NOUNS)}`;
-
-const getRivalVerdict = (roi) => {
-  if (roi < -0.4) return VERDICTS.DISASTER;
-  if (roi < 0)    return VERDICTS.FLOP;
-  if (roi <= 0.3) return VERDICTS.AVERAGE;
-  if (roi <= 1.0) return VERDICTS.HIT;
-  if (roi <= 3.0) return VERDICTS.BLOCKBUSTER;
-  return VERDICTS.ALL_TIME_BLOCKBUSTER;
-};
 
 // ---------------------------------------------------------------------------
 // 1. Generate rival studios (called once per game)
@@ -243,7 +234,7 @@ const _releaseRivalMovie = (rival, movie, currentWeek) => {
   const boxOffice = Math.round(movie.budget * Math.max(0.1, multiplier));
   const profit = boxOffice - movie.budget;
   const roi = movie.budget > 0 ? profit / movie.budget : 0;
-  const verdict = getRivalVerdict(roi);
+  const verdict = getVerdict(roi);
 
   // Fan gain: proportional to box office and quality
   const fanGain = Math.round((boxOffice / 1000) * qualityFactor);
