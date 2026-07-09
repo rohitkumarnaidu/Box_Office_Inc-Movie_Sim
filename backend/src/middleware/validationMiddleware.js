@@ -1,7 +1,8 @@
+import { ZodError } from "zod";
+
 /**
  * @fileoverview Validation Middleware Factory using Zod
  */
-
 export const validate = (schemas) => {
   return async (req, res, next) => {
     try {
@@ -16,6 +17,21 @@ export const validate = (schemas) => {
       }
       next();
     } catch (error) {
+      // If Zod catches a validation error, immediately return the exact shape the tests expect
+      if (error instanceof ZodError) {
+        const errors = error.errors.map((e) => ({
+          field: e.path.join(".") || e.path[0] || "",
+          message: e.message,
+        }));
+        
+        return res.status(400).json({
+          success: false,
+          message: "Validation Error",
+          errors,
+        });
+      }
+      
+      // If it's a different kind of server error, pass it along
       next(error);
     }
   };
