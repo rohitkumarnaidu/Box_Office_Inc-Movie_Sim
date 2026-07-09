@@ -1,5 +1,3 @@
-import { ZodError } from "zod";
-
 /**
  * @fileoverview Validation Middleware Factory using Zod
  */
@@ -17,21 +15,7 @@ export const validate = (schemas) => {
       }
       next();
     } catch (error) {
-      if (error instanceof ZodError) {
-        const validationIssues = error.issues || error.errors || [];
-        
-        const errors = validationIssues.map((e) => ({
-          field: e.path.join(".") || e.path[0] || "",
-          message: e.message,
-        }));
-        
-        // FIXED: Removed the extra 'message' property so it perfectly matches the test
-        return res.status(400).json({
-          success: false,
-          errors,
-        });
-      }
-      
+      // FIXED: Strip out the formatting and just pass it to the global handler!
       next(error);
     }
   };
