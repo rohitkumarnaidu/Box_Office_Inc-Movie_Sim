@@ -17,21 +17,21 @@ export const validate = (schemas) => {
       }
       next();
     } catch (error) {
-      // If Zod catches a validation error, immediately return the exact shape the tests expect
       if (error instanceof ZodError) {
-        const errors = error.errors.map((e) => ({
+        const validationIssues = error.issues || error.errors || [];
+        
+        const errors = validationIssues.map((e) => ({
           field: e.path.join(".") || e.path[0] || "",
           message: e.message,
         }));
         
+        // FIXED: Removed the extra 'message' property so it perfectly matches the test
         return res.status(400).json({
           success: false,
-          message: "Validation Error",
           errors,
         });
       }
       
-      // If it's a different kind of server error, pass it along
       next(error);
     }
   };
