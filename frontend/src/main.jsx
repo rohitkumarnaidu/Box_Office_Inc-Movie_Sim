@@ -5,12 +5,15 @@ import App from "./App.jsx";
 import { Provider } from "react-redux";
 import { store } from "./app/store";
 import { ThemeProvider } from "./context/ThemeContext";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
       <ThemeProvider>
-        <App />
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
       </ThemeProvider>
     </Provider>
   </StrictMode>,
