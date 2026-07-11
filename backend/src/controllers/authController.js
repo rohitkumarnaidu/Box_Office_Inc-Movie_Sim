@@ -4,7 +4,6 @@ import GameState from "../models/GameState.js";
 import MarketDirector from "../models/MarketDirector.js";
 import MarketActor from "../models/MarketActor.js";
 import MarketCrewTeam from "../models/MarketCrewTeam.js";
-
 import { hashPassword, comparePassword } from "../services/auth/authService.js";
 import { generateDirectors } from "../services/director/directorGenerator.js";
 import { generateActors } from "../services/actor/actorGenerator.js";
@@ -25,7 +24,9 @@ import {
   setRefreshTokenCookie,
   verifyRefreshToken,
 } from "../services/auth/tokenService.js";
+import { OAuth2Client } from 'google-auth-library';
 
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const isJwtRefreshError = (error) =>
   error.name === "TokenExpiredError" || error.name === "JsonWebTokenError";
 
@@ -96,6 +97,7 @@ export const register = async (req, res) => {
       username,
       email,
       password: hashedPassword,
+
     });
 
     const studio = await Studio.create({
@@ -415,6 +417,122 @@ export const getMe = async (req, res) => {
   }
 };
 
+export const googleAuth = async (req, res) => {
+  try {
+    const { token, studioName } = req.body;
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const { email, name, sub: googleId } = ticket.getPayload();
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      if (user.isDisabled) {
+        await recordAuthEvent(req, {
+          user: user._id,
+          eventType: AUTH_EVENTS.LOGIN_FAILURE,
+          reason: "ACCOUNT_DISABLED",
+          identifier: email,
+        });
+        return res.status(403).json({
+          success: false,
+          code: "ACCOUNT_DISABLED",
+          message: "Account disabled",
+        });
+      }
+
+      const tokenBundle = await issueAuthTokens(res, user);
+      const populatedUser = await User.findById(user._id)
+        .select("-password -refreshTokens")
+        .populate("studio")
+        .lean();
+
+      const gameState = await GameState.findOne({ user: user._id }).select("currentWeek").lean();
+      if (populatedUser && gameState) {
+          populatedUser.currentWeek = gameState.currentWeek;
+      }
+
+      await recordAuthEvent(req, {
+        user: user._id,
+        eventType: AUTH_EVENTS.LOGIN_SUCCESS,
+        reason: "GOOGLE_LOGIN",
+        identifier: email,
+      });
+
+      return res.status(200).json({
+        success: true,
+        token: tokenBundle.token,
+        accessTokenExpiresAt: tokenBundle.accessTokenExpiresAt,
+        user: populatedUser,
+      }); 
+      
+    } else {
+      if (!studioName) {
+        return res.status(202).json({ 
+          requiresStudio: true, 
+          message: "Please provide a studio name to complete registration." 
+        });
+      }
+
+      user = await User.create({
+        username: name || email.split('@')[0], 
+        email,
+        password: Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10),
+        googleId,
+        authProvider: 'google'
+      });
+
+      const studio = await Studio.create({
+        owner: user._id,
+        name: studioName,
+      });
+
+      await GameState.create({
+        user: user._id,
+      });
+
+      await MarketDirector.insertMany(
+        generateDirectors(50).map((d) => ({ ...d, userId: user._id }))
+      );
+      await MarketActor.insertMany(
+        generateActors(100).map((a) => ({ ...a, userId: user._id }))
+      );
+      await MarketCrewTeam.insertMany(
+        generateCrewTeams(25).map((c) => ({ ...c, userId: user._id }))
+      );
+
+      user.studio = studio._id;
+      await user.save();
+
+      const tokenBundle = await issueAuthTokens(res, user);
+
+      await recordAuthEvent(req, {
+        user: user._id,
+        eventType: AUTH_EVENTS.LOGIN_SUCCESS,
+        reason: "GOOGLE_REGISTER",
+        identifier: email,
+      });
+
+      return res.status(201).json({
+        success: true,
+        token: tokenBundle.token,
+        accessTokenExpiresAt: tokenBundle.accessTokenExpiresAt,
+        user: sanitizeUser(user),
+        studio,
+      });
+    }
+  } catch (error) {
+    console.error("Google Auth Error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Authentication failed. Token may be invalid." 
+    });
+  }
+};
 
 export const getAuthDiagnostics = async (req, res) => {
   try {

@@ -1,4 +1,5 @@
 import GameState from "../models/GameState.js";
+import logger from "../utils/logger.js";
 
 /**
  * GET /api/rival-studios
@@ -20,7 +21,7 @@ export const getRivalStudios = async (req, res) => {
       currentWeek: gameState.currentWeek || 1,
     });
   } catch (error) {
-    console.error("getRivalStudios error:", error);
+    logger.error("getRivalStudios error", { error: error.message });
     return res.status(500).json({ message: "Failed to fetch rival studios" });
   }
 };

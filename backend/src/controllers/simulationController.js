@@ -5,6 +5,7 @@ import Notification from "../models/Notification.js";
 import TalentHistory from "../models/TalentHistory.js";
 
 import { withTransaction } from "../utils/financeTransactionHelper.js";
+import logger from "../utils/logger.js";
 
 export const simulateWeek = async (req, res) => {
   try {
@@ -123,7 +124,7 @@ export const simulateWeek = async (req, res) => {
     if (error.statusCode === 404) {
       return res.status(404).json({ message: error.message });
     }
-    console.error("Simulation Transaction Error:", error);
+        logger.error("Simulation Transaction Error", { error: error.message });
     res.status(500).json({ success: false, message: `Operation rolled back due to: ${error.message}` });
   }
 };
@@ -140,7 +141,7 @@ export const getPastAwards = async (req, res) => {
       awards: gameState.pastAwards || []
     });
   } catch (error) {
-    console.error("Error fetching awards:", error);
+    logger.error("Error fetching awards", { error: error.message });
     res.status(500).json({ message: "Failed to fetch awards" });
   }
 };
@@ -158,7 +159,7 @@ export const getMarketIntelligence = async (req, res) => {
       randomEvents: gameState.randomEvents?.history?.slice(-10).reverse() || []
     });
   } catch (error) {
-    console.error("Error fetching market intelligence:", error);
+    logger.error("Error fetching market intelligence", { error: error.message });
     res.status(500).json({ message: "Failed to fetch market intelligence" });
   }
 };
