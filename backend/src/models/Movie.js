@@ -89,6 +89,13 @@ const movieSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+movieSchema.virtual("totalGross").get(function () {
+  return this.boxOffice;
+});
+
+movieSchema.set("toJSON", { virtuals: true });
+movieSchema.set("toObject", { virtuals: true });
+
 const Movie = mongoose.model("Movie", movieSchema);
 
 export default Movie;
