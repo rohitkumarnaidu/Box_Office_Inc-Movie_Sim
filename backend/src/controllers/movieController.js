@@ -16,6 +16,7 @@ import { generateMovieTitle } from "../services/movie/movieService.js";
 import { generateNewsFromRelease } from "../services/simulation/engines/newsEngine.js";
 import { withTransaction } from "../utils/financeTransactionHelper.js";
 import Notification from "../models/Notification.js";
+import logger from "../utils/logger.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
@@ -438,7 +439,7 @@ export const releaseMovie = async (req, res) => {
 
         res.status(200).json({ success: true, movie: result.movie, growth: result.growth });
     } catch (error) {
-        console.error("Release Movie Error:", error);
+        logger.error("Release Movie Error", { error: error.message, movieId: id });
         res.status(500).json({ success: false, message: `Operation rolled back due to: ${error.message}` });
     }
 };
