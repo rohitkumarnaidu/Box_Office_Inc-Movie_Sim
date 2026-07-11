@@ -1,7 +1,7 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validationMiddleware.js";
-import { createMovieSchema, releaseMovieSchema } from "../validators/movieValidator.js";
+import { createMovieSchema, releaseMovieParamsSchema } from "../validators/movieValidator.js";
 import { checkNegativeBalance } from "../middleware/balanceMiddleware.js";
 import {
   createMovie,
@@ -13,14 +13,16 @@ import {
   getMovieTracking,
 } from "../controllers/movieController.js";
 
-
 const router = express.Router();
 
-router.post("/", protect, checkNegativeBalance, validate(createMovieSchema), createMovie);
+// FIXED: Wrapped schemas in an object containing a 'body' property
+router.post("/", protect, checkNegativeBalance, validate({ body: createMovieSchema }), createMovie);
 router.get("/generate-title", protect, generateTitle);
 router.get("/active", protect, getActiveMovies);
 router.get("/released", protect, getReleasedMovies);
-router.post("/:id/release", protect, validate(releaseMovieSchema), releaseMovie);
+
+// FIXED: Wrapped schemas in an object containing a 'body' property
+router.post("/:id/release", protect, validate({ params: releaseMovieParamsSchema }), releaseMovie);
 router.get("/:id/tracking", protect, getMovieTracking);
 router.get("/:id", protect, getMovieDetails);
 

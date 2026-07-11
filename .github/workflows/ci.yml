@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [elusoc, main]
+    branches: [ecsoc, elusoc, main]
   pull_request:
-    branches: [elusoc, main]
+    branches: [ecsoc, elusoc, main]
 
 jobs:
   backend-tests:
@@ -41,3 +41,31 @@ jobs:
         # mongodb-memory-server, which downloads a mongod binary here (the CI
         # runner has network access).
         run: npm test
+
+  frontend-build:
+    name: Frontend build verification
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint check
+        run: npm run lint
+
+      - name: Build check
+        run: npm run build
+        env:
+          VITE_BACKEND_API_URL: http://localhost:5000/api

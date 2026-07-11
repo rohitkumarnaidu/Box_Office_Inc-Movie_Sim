@@ -1,10 +1,10 @@
 import Movie from "../models/Movie.js";
 import Studio from "../models/Studio.js";
+import { AWARDS_CAMPAIGN_COST, AWARDS_CAMPAIGN_PRESTIGE_GAIN } from "../constants/gameConstants.js";
 
 export const startAwardsCampaign = async (req, res) => {
   try {
     const { movieId, categoryId } = req.body;
-    const CAMPAIGN_COST = 1000000; // ₹1,000,000
 
     const movie = await Movie.findById(movieId);
     if (!movie) {
@@ -39,8 +39,8 @@ export const startAwardsCampaign = async (req, res) => {
       year: movie.releaseWeek ? Math.floor(movie.releaseWeek / 52) + 2026 : 2026
     });
 
-    studio.money -= CAMPAIGN_COST;
-    studio.prestige += 15; // Boost prestige by +15 for lobbying active campaign
+    studio.money -= AWARDS_CAMPAIGN_COST;
+    studio.prestige += AWARDS_CAMPAIGN_PRESTIGE_GAIN;
 
     await movie.save();
     await studio.save();
