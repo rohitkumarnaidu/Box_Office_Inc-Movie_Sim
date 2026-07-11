@@ -1,6 +1,7 @@
 import Movie from "../models/Movie.js";
 import Studio from "../models/Studio.js";
 import GameState from "../models/GameState.js";
+import { MERCH_BOOST_COST } from "../constants/gameConstants.js";
 
 export const getMerchandiseStats = async (req, res) => {
   try {
@@ -74,13 +75,12 @@ export const boostMerchandiseLevel = async (req, res) => {
       return res.status(404).json({ message: "Movie not found or unauthorized" });
     }
 
-    const cost = 2500000; // 2.5 million rupees
-    if (studio.money < cost) {
+    if (studio.money < MERCH_BOOST_COST) {
       return res.status(400).json({ message: "Insufficient funds to upgrade merchandising campaign" });
     }
 
     movie.merchandiseLevel = (movie.merchandiseLevel || 0) + 1;
-    studio.money -= cost;
+    studio.money -= MERCH_BOOST_COST;
 
     await movie.save();
     await studio.save();

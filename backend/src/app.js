@@ -34,6 +34,7 @@ import loanRoutes from "./routes/loanRoutes.js";
 import merchRoutes from "./routes/merchRoutes.js";
 
 import errorHandler from "./middleware/errorMiddleware.js";
+import logger from "./utils/logger.js";
 
 const app = express();
 
