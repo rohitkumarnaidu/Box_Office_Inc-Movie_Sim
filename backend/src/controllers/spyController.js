@@ -1,10 +1,10 @@
 import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
+import { SPY_COST } from "../constants/gameConstants.js";
 
 export const getSpyReport = async (req, res) => {
   try {
     const { rivalId } = req.params;
-    const SPY_COST = 100000; // ₹100,000
 
     const studio = await Studio.findOne({ owner: req.user._id });
     if (!studio) {

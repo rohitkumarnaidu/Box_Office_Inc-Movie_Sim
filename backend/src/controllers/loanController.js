@@ -14,24 +14,7 @@
 
 import Studio from "../models/Studio.js";
 import GameState from "../models/GameState.js";
-
-const LOAN_TIERS = {
-  SMALL: {
-    amount: 500_000,
-    interestRate: 0.08,
-    weeks: 26,
-  },
-  MEDIUM: {
-    amount: 1_000_000,
-    interestRate: 0.12,
-    weeks: 52,
-  },
-  LARGE: {
-    amount: 2_000_000,
-    interestRate: 0.18,
-    weeks: 78,
-  },
-};
+import { LOAN_TIERS, MAX_ACTIVE_LOANS } from "../constants/gameConstants.js";
 
 /**
  * POST /api/studios/loans/take
@@ -56,8 +39,8 @@ export const takeLoan = async (req, res) => {
       return res.status(400).json({ success: false, message: "Bankrupt studios cannot take new loans." });
     }
 
-    // Limit: no more than 3 active loans at once
-    if ((studio.loans || []).length >= 3) {
+    // Limit: no more than MAX_ACTIVE_LOANS active loans at once
+    if ((studio.loans || []).length >= MAX_ACTIVE_LOANS) {
       return res.status(400).json({ success: false, message: "Maximum of 3 active loans allowed at one time." });
     }
 

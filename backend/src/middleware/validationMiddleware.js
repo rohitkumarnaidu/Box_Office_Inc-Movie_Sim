@@ -1,7 +1,6 @@
 /**
  * @fileoverview Validation Middleware Factory using Zod
  */
-
 export const validate = (schemas) => {
   return async (req, res, next) => {
     try {
@@ -16,6 +15,7 @@ export const validate = (schemas) => {
       }
       next();
     } catch (error) {
+      // FIXED: Strip out the formatting and just pass it to the global handler!
       next(error);
     }
   };

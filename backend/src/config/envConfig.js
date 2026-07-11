@@ -33,6 +33,10 @@ const env = {
   JWT_REFRESH_EXPIRE: process.env.JWT_REFRESH_EXPIRE || "30d",
 
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:5173",
+
+  RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "60000", 10),
+  RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "200", 10),
+  AUTH_RATE_LIMIT_MAX: parseInt(process.env.AUTH_RATE_LIMIT_MAX || "20", 10),
 };
 
 export default env;
