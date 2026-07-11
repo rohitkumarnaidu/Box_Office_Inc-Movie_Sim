@@ -6,14 +6,15 @@ import App from "./App.jsx";
 import { Provider } from "react-redux";
 import { store } from "./app/store";
 import { ThemeProvider } from "./context/ThemeContext";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
       <ThemeProvider>
-        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+        <ErrorBoundary>
           <App />
-        </GoogleOAuthProvider>
+        </ErrorBoundary>
       </ThemeProvider>
     </Provider>
   </StrictMode>,
