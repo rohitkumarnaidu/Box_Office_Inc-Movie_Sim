@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { 
-  DollarSign, 
-  Star, 
-  Users, 
-  Building, 
-  Calendar, 
-  Film, 
-  TrendingUp, 
+import {
+  DollarSign,
+  Star,
+  Users,
+  Building,
+  Calendar,
+  Film,
+  TrendingUp,
   Trophy,
   Clock,
   Zap,
@@ -17,6 +17,7 @@ import {
 
 import api from "../../api/axios";
 import { setUser } from "../../features/auth/authSlice";
+import { setCurrentWeek } from "../../features/simulation/simulationSlice";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 import StatCard from "../../components/common/StatCard";
@@ -31,8 +32,9 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const { user } = useSelector((state) => state.auth);
 
-  const currentYear = Math.floor((user?.currentWeek || 1) / 52) + 1;
-  const currentWeekInYear = ((user?.currentWeek - 1) % 52) + 1;
+  const currentWeek = user?.currentWeek || 1;
+  const currentYear = Math.floor((currentWeek - 1) / 52) + 1;
+  const currentWeekInYear = ((currentWeek - 1) % 52) + 1;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -73,7 +75,8 @@ const Dashboard = () => {
       const notifRes = await api.get("/notifications");
       setNotifications(notifRes.data.notifications || []);
     } catch (error) {
-      alert(error?.response?.data?.message || "Simulation failed");
+      const msg = error?.message || error?.response?.data?.message || "Simulation failed";
+      alert(msg);
     } finally {
       setLoading(false);
     }
