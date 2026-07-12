@@ -33,6 +33,10 @@ const env = {
   JWT_REFRESH_EXPIRE: process.env.JWT_REFRESH_EXPIRE || "30d",
 
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:5173",
+
+  BANKRUPTCY_THRESHOLD_WEEKS: Number(process.env.BANKRUPTCY_THRESHOLD_WEEKS) || 4,
+
+  MAX_ACTIVE_LOANS: Number(process.env.MAX_ACTIVE_LOANS) || 3,
 };
 
 export default env;
