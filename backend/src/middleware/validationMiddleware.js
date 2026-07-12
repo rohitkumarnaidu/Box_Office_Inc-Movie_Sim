@@ -1,5 +1,8 @@
 /**
  * @fileoverview Validation Middleware Factory using Zod
+ *
+ * Validates request body, query, and params against Zod schemas.
+ * Passes ZodError to the global error handler for structured formatting.
  */
 
 export const validate = (schemas) => {
@@ -13,6 +16,9 @@ export const validate = (schemas) => {
       }
       if (schemas.params) {
         req.params = await schemas.params.parseAsync(req.params);
+      }
+      if (schemas.headers) {
+        req.headers = await schemas.headers.parseAsync(req.headers);
       }
       next();
     } catch (error) {
