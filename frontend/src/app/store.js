@@ -5,6 +5,10 @@ import toastReducer from "../features/ui/toastSlice";
 import talentReducer from "../features/talent/talentSlice";
 import { saveTalentFilters } from "../features/talent/talentFiltersStorage";
 import awardsReducer from "../features/awards/awardsSlice";
+import movieReducer from "../features/movie/movieSlice";
+import studioReducer from "../features/studio/studioSlice";
+import simulationReducer from "../features/simulation/simulationSlice";
+import notificationReducer from "../features/notification/notificationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +16,10 @@ export const store = configureStore({
     toast: toastReducer,
     talent: talentReducer,
     awards: awardsReducer,
+    movie: movieReducer,
+    studio: studioReducer,
+    simulation: simulationReducer,
+    notification: notificationReducer,
   },
 });
 
