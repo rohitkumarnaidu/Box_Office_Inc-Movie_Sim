@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import { DetailSkeleton } from "../../components/common/SkeletonGrid";
 import { User, Award, TrendingUp, IndianRupee, Star, ArrowLeft, Calendar, Briefcase } from "lucide-react";
 
 const TalentProfile = () => {
@@ -31,7 +32,7 @@ const TalentProfile = () => {
     fetchTalent();
   }, [fetchTalent]);
 
-  if (loading) return <DashboardLayout><div className="text-white text-center py-20">Loading Talent File...</div></DashboardLayout>;
+  if (loading) return <DashboardLayout><DetailSkeleton title="Loading talent profile..." /></DashboardLayout>;
   if (!talent) return <DashboardLayout><div className="text-white text-center py-20">Talent Not Found</div></DashboardLayout>;
 
   return (

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import { DetailSkeleton } from "../../components/common/SkeletonGrid";
 import { Film, Calendar, Users, Briefcase, IndianRupee, Clock, ArrowLeft, Star, TrendingUp, Award } from "lucide-react";
 
 const ReleasedMovieDetail = () => {
@@ -25,7 +26,7 @@ const ReleasedMovieDetail = () => {
     fetchMovieDetails();
   }, [fetchMovieDetails]);
 
-  if (loading) return <DashboardLayout><div className="text-white text-center py-20 font-bold tracking-widest uppercase">Loading Historical Archive...</div></DashboardLayout>;
+  if (loading) return <DashboardLayout><DetailSkeleton title="Loading movie archive..." /></DashboardLayout>;
   if (!movie) return <DashboardLayout><div className="text-white text-center py-20 font-bold">Movie Record Not Found</div></DashboardLayout>;
 
   const getVerdictColor = (verdict) => {
