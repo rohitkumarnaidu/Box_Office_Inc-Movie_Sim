@@ -18,7 +18,7 @@ if (missingEnvVars.length > 0) {
 }
 
 const env = {
-  PORT: process.env.PORT || 5000,
+  PORT: parseInt(process.env.PORT, 10) || 5000,
 
   NODE_ENV: process.env.NODE_ENV || "development",
 
@@ -32,7 +32,15 @@ const env = {
 
   JWT_REFRESH_EXPIRE: process.env.JWT_REFRESH_EXPIRE || "30d",
 
-  CLIENT_URL: process.env.CLIENT_URL || "http://localhost:5173",
+  CLIENT_URL: process.env.CLIENT_URL,
+
+  BANKRUPTCY_THRESHOLD_WEEKS: Math.max(1, parseInt(process.env.BANKRUPTCY_THRESHOLD_WEEKS, 10) || 4),
+
+  MAX_ACTIVE_LOANS: Math.max(1, parseInt(process.env.MAX_ACTIVE_LOANS, 10) || 3),
+
+  LOG_LEVEL: process.env.LOG_LEVEL || (process.env.NODE_ENV === "production" ? "combined" : "dev"),
+
+  REQUEST_TIMEOUT_MS: parseInt(process.env.REQUEST_TIMEOUT_MS, 10) || 30000,
 };
 
 export default env;

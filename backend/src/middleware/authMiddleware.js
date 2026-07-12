@@ -25,7 +25,8 @@ export const protect = async (req, res, next) => {
 
       return res.status(401).json({
         success: false,
-        message: "Not authorized",
+        code: "ACCESS_TOKEN_MISSING",
+        message: "Authentication required. Please log in.",
       });
     }
 
