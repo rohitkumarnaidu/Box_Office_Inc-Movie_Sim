@@ -97,6 +97,7 @@ app.use("/api/studios", apiRateLimiter, studioRoutes);
 app.use("/api/studios/loans", apiRateLimiter, loanRoutes);
 app.use("/api/marketing", apiRateLimiter, marketingRoutes);
 app.use("/api/reviews", apiRateLimiter, reviewDashboardRoutes);
+app.use("/api/merch", apiRateLimiter, merchRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
