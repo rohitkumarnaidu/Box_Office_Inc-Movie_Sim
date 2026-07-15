@@ -85,6 +85,9 @@ const movieSchema = new mongoose.Schema(
       message: String,
       week: Number,
     }],
+    // Co-productions and Distribution Partnerships (issue #287)
+    coProducerStudioId: { type: String, default: null },
+    coProducerShare: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
