@@ -102,6 +102,10 @@ const movieSchema = new mongoose.Schema(
     reReleaseWeek: { type: Number, default: null },
     directorCutQualityBoost: { type: Number, default: 0 },
     reReleaseRevenue: { type: Number, default: 0 },
+
+    // Test screenings & script doctoring (issue #288)
+    testScreeningScore: { type: Number, default: null },
+    reshoots: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

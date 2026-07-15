@@ -37,6 +37,7 @@ import unionRoutes from "./routes/unionRoutes.js";
 import spinoffRoutes from "./routes/spinoffRoutes.js";
 import prRoutes from "./routes/prRoutes.js";
 import contractRoutes from "./routes/contractRoutes.js";
+import testScreeningRoutes from "./routes/testScreeningRoutes.js";
 
 import errorHandler from "./middleware/errorMiddleware.js";
 import logger from "./utils/logger.js";
@@ -107,6 +108,7 @@ app.use("/api/studios/union", apiRateLimiter, unionRoutes);
 app.use("/api/franchises", apiRateLimiter, spinoffRoutes);
 app.use("/api/studios", apiRateLimiter, prRoutes);
 app.use("/api/contracts", apiRateLimiter, contractRoutes);
+app.use("/api/movies", apiRateLimiter, testScreeningRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
