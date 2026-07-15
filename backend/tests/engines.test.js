@@ -86,6 +86,21 @@ test("reviewEngine: missing talent defaults to neutral without throwing", () => 
   assert.strictEqual(result.audienceScore, 50);
 });
 
+test("reviewEngine: corrupt/string/null/missing crew values do not produce NaN", () => {
+  const result = generateReviews(
+    { quality: null },
+    { quality: "60", audienceAppeal: "" },
+    { creativity: null, reputation: undefined },
+    { actingSkill: "abc", popularity: 50 },
+    { technicalQuality: undefined }
+  );
+  assert.ok(!isNaN(result.criticScore));
+  assert.ok(!isNaN(result.audienceScore));
+  assert.strictEqual(typeof result.criticLabel, "string");
+  assert.strictEqual(typeof result.audienceLabel, "string");
+});
+
+
 // ---------------------------------------------------------------------------
 // careerImpactEngine.processCareerImpact — mutates talent objects in place
 // ---------------------------------------------------------------------------
