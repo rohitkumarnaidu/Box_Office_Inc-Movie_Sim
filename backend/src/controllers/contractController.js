@@ -1,6 +1,7 @@
 import GameState from "../models/GameState.js";
 import Notification from "../models/Notification.js";
-import { findGameState } from "../services/simulation/helpers/gameStateHelper.js";
+
+const findGameState = async (userId) => GameState.findOne({ user: userId });
 
 /**
  * Initiate a contract negotiation with a talent.
