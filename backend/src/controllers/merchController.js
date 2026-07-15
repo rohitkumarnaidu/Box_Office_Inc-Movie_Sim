@@ -1,17 +1,18 @@
 import Movie from "../models/Movie.js";
 import Studio from "../models/Studio.js";
 import GameState from "../models/GameState.js";
+import { MERCH_BOOST_COST } from "../constants/gameConstants.js";
 
 export const getMerchandiseStats = async (req, res) => {
   try {
     const gameState = await GameState.findOne({ user: req.user._id });
     if (!gameState) {
-      return res.status(404).json({ message: "Game state not found" });
+      return res.status(404).json({ success: false, message: "Game state not found" });
     }
 
     const studio = await Studio.findOne({ owner: req.user._id });
     if (!studio) {
-      return res.status(404).json({ message: "Studio not found" });
+      return res.status(404).json({ success: false, message: "Studio not found" });
     }
 
     const movies = await Movie.find({
@@ -22,7 +23,7 @@ export const getMerchandiseStats = async (req, res) => {
     const activeMerchMovies = movies.map(movie => {
       const weeksSinceRelease = Math.max(1, gameState.currentWeek - (movie.releaseWeek || gameState.currentWeek));
       const decay = Math.pow(0.9, weeksSinceRelease);
-      const potential = (movie.totalGross || movie.boxOffice || 0) * 0.001;
+      const potential = (movie.boxOffice || 0) * 0.001;
       
       let modifier = (movie.hype || 50) / 100;
       if (movie.verdict === "Blockbuster" || movie.verdict === "All-Time Blockbuster") {
@@ -40,7 +41,7 @@ export const getMerchandiseStats = async (req, res) => {
       return {
         id: movie._id,
         title: movie.title,
-        totalGross: movie.totalGross || movie.boxOffice || 0,
+        boxOffice: movie.boxOffice || 0,
         verdict: movie.verdict,
         hype: movie.hype,
         weeksSinceRelease,
@@ -66,21 +67,21 @@ export const boostMerchandiseLevel = async (req, res) => {
     const { movieId } = req.params;
     const studio = await Studio.findOne({ owner: req.user._id });
     if (!studio) {
-      return res.status(404).json({ message: "Studio not found" });
+      return res.status(404).json({ success: false, message: "Studio not found" });
     }
 
     const movie = await Movie.findOne({ _id: movieId, studioId: studio._id });
     if (!movie) {
-      return res.status(404).json({ message: "Movie not found or unauthorized" });
+      return res.status(404).json({ success: false, message: "Movie not found or unauthorized" });
     }
 
     const cost = 2500000; // 2.5 million rupees
     if (studio.money < cost) {
-      return res.status(400).json({ message: "Insufficient funds to upgrade merchandising campaign" });
+      return res.status(400).json({ success: false, message: "Insufficient funds to upgrade merchandising campaign" });
     }
 
     movie.merchandiseLevel = (movie.merchandiseLevel || 0) + 1;
-    studio.money -= cost;
+    studio.money -= MERCH_BOOST_COST;
 
     await movie.save();
     await studio.save();
@@ -91,6 +92,6 @@ export const boostMerchandiseLevel = async (req, res) => {
       studioMoney: studio.money
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };

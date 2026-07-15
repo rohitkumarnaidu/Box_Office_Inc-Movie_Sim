@@ -1,12 +1,7 @@
 import StudioUpgrade from "../models/StudioUpgrade.js";
 import Studio from "../models/Studio.js";
 import GameState from "../models/GameState.js";
-
-const UPGRADES = {
-  marketing_partnership: { name: "Marketing Partnership", cost: 2000000, description: "Establishes a permanent partnership with a leading agency. Hype and promotional effectiveness boosted permanently." },
-  advanced_cameras: { name: "Advanced Camera Gear", cost: 1500000, description: "Equip your director and crew with cutting-edge 8K cameras. Boosts future film quality." },
-  talent_access: { name: "Talent Agency Access", cost: 3000000, description: "Unlocks priority access to rare writers, directors, and actors." }
-};
+import { STUDIO_UPGRADES as UPGRADES } from "../constants/gameConstants.js";
 
 export const getUpgrades = async (req, res) => {
   try {

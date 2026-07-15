@@ -4,7 +4,6 @@
  * Validates request body, query, and params against Zod schemas.
  * Passes ZodError to the global error handler for structured formatting.
  */
-
 export const validate = (schemas) => {
   return async (req, res, next) => {
     try {
@@ -22,6 +21,7 @@ export const validate = (schemas) => {
       }
       next();
     } catch (error) {
+      // FIXED: Strip out the formatting and just pass it to the global handler!
       next(error);
     }
   };
