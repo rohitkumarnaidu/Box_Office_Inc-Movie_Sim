@@ -17,6 +17,7 @@ import { processStreamingPlatformGrowth, processStreamingRevenue } from "./strea
 import { processLoanRepayments } from "./loanRepaymentEngine.js";
 import { processFanClubTick } from "./fanClubEngine.js";
 import { processUnionSatisfaction } from "./unionEngine.js";
+import { processScandals } from "./prEngine.js";
 
 import { addNotification } from "../helpers/notificationHelper.js";
 import { processWriterAging } from "../helpers/agingHelper.js";
@@ -222,6 +223,10 @@ export const processWeeklyTick = async (gameState, studio) => {
   // Recurring weekly streaming revenue for accepted deals (issue #41) — runs
   // after platform growth so royalties reflect this week's platform popularity.
   await processStreamingRevenue(gameState, studio);
+
+  // 12. PR & Scandal events — roll for studio scandals and apply
+  //     reputation decay (issue #281).
+  processScandals(gameState, studio);
 
   return { gameState, rivalReleases };
 };
