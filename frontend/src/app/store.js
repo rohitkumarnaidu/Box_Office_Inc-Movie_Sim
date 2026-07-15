@@ -9,6 +9,7 @@ import movieReducer from "../features/movie/movieSlice";
 import studioReducer from "../features/studio/studioSlice";
 import simulationReducer from "../features/simulation/simulationSlice";
 import notificationReducer from "../features/notification/notificationSlice";
+import { authApi } from "../features/auth/authApi";
 
 export const store = configureStore({
   reducer: {
@@ -20,7 +21,10 @@ export const store = configureStore({
     studio: studioReducer,
     simulation: simulationReducer,
     notification: notificationReducer,
+    [authApi.reducerPath]: authApi.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(authApi.middleware),
 });
 
 // Persist talent filter selections so they survive navigation and reloads

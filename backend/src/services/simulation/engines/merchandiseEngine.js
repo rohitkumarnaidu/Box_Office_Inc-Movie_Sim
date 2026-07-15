@@ -21,9 +21,9 @@ export const processMerchandiseSales = async (gameState, studio) => {
         
         // Let's make it simpler.
         // A blockbuster generates long tail merchandise.
-        if (movie.totalGross > 100000000 || movie.hype > 70) {
+        if ((movie.boxOffice || 0) > 100000000 || movie.hype > 70) {
             // Base merchandise potential
-            const potential = (movie.totalGross || movie.boxOffice || 0) * 0.001; // 0.1% of box office per week as baseline
+            const potential = (movie.boxOffice || 0) * 0.001; // 0.1% of box office per week as baseline
             
             // Modifier based on hype and verdict
             let modifier = (movie.hype || 50) / 100;

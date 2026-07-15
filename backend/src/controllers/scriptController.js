@@ -3,6 +3,7 @@ import crypto from "crypto";
 import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
 import { generateScripts } from "../services/script/scriptGenerator.js";
+import logger from "../utils/logger.js";
 import { calculateFallbackScriptSellPrice } from "../services/script/scriptResalePricing.js";
 import { ensureScriptsProductionDefaults } from "../services/director/directingProjectService.js";
 
@@ -131,7 +132,7 @@ export const buyScript = async (req, res) => {
       sellPrice,
     });
   } catch (error) {
-    console.error("BUY SCRIPT ERROR:", error);
+    logger.error("Buy Script Error", { error: error.message });
 
     return res.status(500).json({
       success: false,
