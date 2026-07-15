@@ -12,11 +12,13 @@ import { processStudioGrowth } from "../services/simulation/engines/studioGrowth
 import { computeFranchiseProgress } from "../services/simulation/engines/franchiseEngine.js";
 import { addNotification } from "../services/simulation/helpers/notificationHelper.js";
 import { MARKETING_CAMPAIGNS, getEffectiveHypeBoost } from "../constants/marketingCampaigns.js";
+import { SOUNDTRACK_TIERS, getSoundtrackBoosts } from "../constants/soundtrackTiers.js";
 import { generateMovieTitle } from "../services/movie/movieService.js";
 import { generateNewsFromRelease } from "../services/simulation/engines/newsEngine.js";
 import { withTransaction } from "../utils/financeTransactionHelper.js";
 import Notification from "../models/Notification.js";
 import logger from "../utils/logger.js";
+import { addHistoricRecord } from "../services/simulation/helpers/historicRecordHelper.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
@@ -80,7 +82,7 @@ const lazyBackfillNames = async (movies, gameState) => {
 
 export const createMovie = async (req, res) => {
   try {
-    const { title, scriptId, directorId, leadActorId, supportingActorIds, marketingCampaignIds } = req.body;
+    const { title, scriptId, directorId, leadActorId, supportingActorIds, marketingCampaignIds, soundtrackTier, coProducerStudioId, coProducerShare } = req.body;
 
     if (!title || !scriptId || !directorId || !leadActorId || !req.body.crewTeamId) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
@@ -144,25 +146,44 @@ export const createMovie = async (req, res) => {
         });
     }
 
-    // Validate Studio Money for Marketing Budget
-    if (studio.money < (marketingBudget || 0)) {
+    // Validate Co-Production parameters
+    const share = Number(coProducerShare || 0);
+    if (share < 0 || share > 50) {
+        return res.status(400).json({ success: false, message: "Co-producer share must be between 0% and 50%" });
+    }
+
+    const playerMarketingBudget = (marketingBudget || 0) * (1 - share / 100);
+
+    // Validate Studio Money for Marketing Budget (player's share)
+    if (studio.money < playerMarketingBudget) {
         return res.status(400).json({ success: false, message: "Insufficient funds for marketing" });
     }
 
+    // Soundtrack selection
+    const soundtrackTierId = soundtrackTier || "PUBLIC_DOMAIN";
+    if (!SOUNDTRACK_TIERS[soundtrackTierId]) {
+        return res.status(400).json({ success: false, message: "Invalid soundtrack tier" });
+    }
+    const soundtrackConfig = SOUNDTRACK_TIERS[soundtrackTierId];
+    const soundtrackCost = soundtrackConfig.cost;
+    const { qualityBoost: stQualityBoost, hypeBoost: stHypeBoost } = getSoundtrackBoosts(soundtrackTierId, script.genres);
+
     // Formula Implementation
-    // quality = Script Quality → 35% + Director Creativity → 25% + Lead Actor Skill → 20% + Crew Technical Quality → 20%
+    // quality = Script Quality → 35% + Director Creativity → 25% + Lead Actor Skill → 20% + Crew Technical Quality → 20% + Soundtrack quality boost
     const quality = Math.round(
       (script.quality * 0.35) +
       (director.creativity * 0.25) +
       (leadActor.actingSkill * 0.20) +
-      (crewTeam.technicalQuality * 0.20)
+      (crewTeam.technicalQuality * 0.20) +
+      stQualityBoost
     );
 
-    // Hype = Lead Actor Popularity + Director Reputation + Marketing Budget influence
+    // Hype = Lead Actor Popularity + Director Reputation + Marketing Budget influence + Soundtrack hype boost
     const hype = Math.min(100, Math.round(
       (leadActor.popularity * 0.4) +
       (director.reputation * 0.3) +
-      marketingHypeBoost
+      marketingHypeBoost +
+      stHypeBoost
     ));
 
     const totalProductionWeeks = 20; // 4 + 10 + 6
@@ -179,7 +200,7 @@ export const createMovie = async (req, res) => {
         });
     }
 
-    const totalBudget = scriptCost + directorCost + leadActorCost + supportingActorCost + crewCost + marketingBudget;
+    const totalBudget = scriptCost + directorCost + leadActorCost + supportingActorCost + crewCost + marketingBudget + soundtrackCost;
 
     // Handle franchise / sequel logic
     let franchiseId = req.body.franchiseId || null;
@@ -219,7 +240,8 @@ export const createMovie = async (req, res) => {
         leadActorCost,
         supportingActorCost,
         crewCost,
-        marketingCost: marketingBudget
+        marketingCost: marketingBudget,
+        soundtrackCost,
       },
       marketingBudget,
       marketingCampaigns: selectedCampaigns,
@@ -231,6 +253,9 @@ export const createMovie = async (req, res) => {
       remainingWeeks: totalProductionWeeks,
       franchiseId,
       sequelNumber,
+      soundtrackTier: soundtrackTierId,
+      coProducerStudioId: coProducerStudioId || null,
+      coProducerShare: share,
     });
 
     // Add movie to franchise
@@ -255,8 +280,8 @@ export const createMovie = async (req, res) => {
     crewTeam.status = "BUSY";
     crewTeam.busyUntilWeek = gameState.currentWeek + 20;
 
-    // Deduct marketing budget
-    studio.money -= (marketingBudget || 0);
+    // Deduct marketing budget (player's share)
+    studio.money -= playerMarketingBudget;
 
     gameState.activeMovies.push(movie._id);
 
@@ -437,6 +462,22 @@ export const releaseMovie = async (req, res) => {
             return { movie, growth };
         });
 
+        // Add to historic records
+        try {
+            await addHistoricRecord({
+                title: result.movie.title,
+                studioId: result.movie.studioId.toString(),
+                studioName: studio.name,
+                worldwideGross: result.movie.worldwideGross,
+                openingWeekend: result.movie.openingWeekend,
+                roi: result.movie.roi,
+                releaseWeek: result.movie.releaseWeek,
+                isRival: false
+            });
+        } catch (recordErr) {
+            logger.error("Failed to save historic record for player", { error: recordErr.message });
+        }
+
         res.status(200).json({ success: true, movie: result.movie, growth: result.growth });
     } catch (error) {
         logger.error("Release Movie Error", { error: error.message, movieId: id });
@@ -512,48 +553,64 @@ export const addMarketingCampaign = async (req, res) => {
     const { id } = req.params;
     const { campaignId } = req.body;
 
-    const movie = await Movie.findById(id);
-    if (!movie) {
-      return res.status(404).json({ success: false, message: "Movie not found" });
-    }
-
-    if (movie.status === "RELEASED" || movie.status === "RELEASED_STREAMING") {
-      return res.status(400).json({ success: false, message: "Cannot add marketing to a released movie" });
-    }
-
     const campaign = MARKETING_CAMPAIGNS.find(c => c.id === campaignId);
     if (!campaign) {
       return res.status(404).json({ success: false, message: "Campaign type not found" });
     }
 
-    if (movie.marketingCampaigns.includes(campaignId)) {
-      return res.status(400).json({ success: false, message: "This campaign is already active for this movie" });
-    }
+    let movie;
+    let studio;
+    let effectiveHype = 0;
 
-    const studio = await Studio.findOne({ owner: req.user._id });
-    if (!studio) {
-      return res.status(404).json({ success: false, message: "Studio not found" });
-    }
+    await withTransaction(async (session) => {
+      movie = await Movie.findById(id).session(session);
+      if (!movie) {
+        const error = new Error("Movie not found");
+        error.statusCode = 404;
+        throw error;
+      }
 
-    if (studio.money < campaign.cost) {
-      return res.status(400).json({ success: false, message: "Insufficient funds for this campaign" });
-    }
+      if (movie.status === "RELEASED" || movie.status === "RELEASED_STREAMING") {
+        const error = new Error("Cannot add marketing to a released movie");
+        error.statusCode = 400;
+        throw error;
+      }
 
-    const gameState = await GameState.findOne({ user: req.user._id });
-    const script = gameState?.ownedScripts?.find(s => s.id === movie.scriptId) || 
-                   gameState?.marketScripts?.find(s => s.id === movie.scriptId);
-    
-    const genres = script?.genres || [];
-    const effectiveHype = getEffectiveHypeBoost(campaign, genres);
+      if (movie.marketingCampaigns.includes(campaignId)) {
+        const error = new Error("This campaign is already active for this movie");
+        error.statusCode = 400;
+        throw error;
+      }
 
-    movie.marketingCampaigns.push(campaignId);
-    movie.marketingBudget += campaign.cost;
-    movie.hype = Math.min(100, movie.hype + effectiveHype);
+      studio = await Studio.findOne({ owner: req.user._id }).session(session);
+      if (!studio) {
+        const error = new Error("Studio not found");
+        error.statusCode = 404;
+        throw error;
+      }
 
-    studio.money -= campaign.cost;
+      if (studio.money < campaign.cost) {
+        const error = new Error("Insufficient funds for this campaign");
+        error.statusCode = 400;
+        throw error;
+      }
 
-    await movie.save();
-    await studio.save();
+      const gameState = await GameState.findOne({ user: req.user._id }).session(session);
+      const script = gameState?.ownedScripts?.find(s => s.id === movie.scriptId) || 
+                     gameState?.marketScripts?.find(s => s.id === movie.scriptId);
+      
+      const genres = script?.genres || [];
+      effectiveHype = getEffectiveHypeBoost(campaign, genres);
+
+      movie.marketingCampaigns.push(campaignId);
+      movie.marketingBudget += campaign.cost;
+      movie.hype = Math.min(100, movie.hype + effectiveHype);
+
+      studio.money -= campaign.cost;
+
+      await movie.save({ session });
+      await studio.save({ session });
+    });
 
     res.status(200).json({
       success: true,
@@ -562,6 +619,122 @@ export const addMarketingCampaign = async (req, res) => {
       studioMoney: studio.money
     });
   } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ success: false, message: error.message });
+    }
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Re-release a movie in theaters or as a Director's Cut.
+ * POST /api/movies/:id/rerelease
+ *
+ * Requirements:
+ * - Movie must have status RELEASED
+ * - Must be at least 52 weeks since original release
+ * - Studio must have enough money for the fee
+ */
+export const reReleaseMovie = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isDirectorsCut } = req.body;
+
+    const movie = await Movie.findById(id);
+    if (!movie) {
+      return res.status(404).json({
+        success: false,
+        message: "Movie not found.",
+      });
+    }
+
+    if (movie.status !== "RELEASED" && movie.status !== "RELEASED_STREAMING") {
+      return res.status(400).json({
+        success: false,
+        message: "Only released movies can be re-released.",
+      });
+    }
+
+    const gameState = await GameState.findOne({ user: req.user._id });
+    if (!gameState) {
+      return res.status(404).json({
+        success: false,
+        message: "Game state not found.",
+      });
+    }
+
+    const weeksSinceRelease = (gameState.currentWeek || 0) - (movie.releaseWeek || 0);
+    if (weeksSinceRelease < 52) {
+      return res.status(400).json({
+        success: false,
+        message: `Movie must be at least 52 weeks old for re-release. Current age: ${weeksSinceRelease} weeks.`,
+      });
+    }
+
+    if (movie.isReRelease) {
+      return res.status(400).json({
+        success: false,
+        message: "This movie has already been re-released.",
+      });
+    }
+
+    const studio = await Studio.findOne({ owner: req.user._id });
+    if (!studio) {
+      return res.status(404).json({
+        success: false,
+        message: "Studio not found.",
+      });
+    }
+
+    // Re-release fee: 20% of original budget; Director's Cut costs 30%
+    const feeMultiplier = isDirectorsCut ? 0.3 : 0.2;
+    const fee = Math.round((movie.budget || 0) * feeMultiplier);
+
+    if (Number(studio.money || 0) < fee) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient funds. Re-release costs ₹${fee.toLocaleString()}.`,
+      });
+    }
+
+    // Calculate re-release box office (decaying factor of original)
+    const decayFactor = isDirectorsCut ? 0.35 : 0.2;
+    const qualityBoost = isDirectorsCut ? 10 : 0;
+    const reReleaseGross = Math.round((movie.worldwideGross || movie.boxOffice || 0) * decayFactor);
+
+    // Apply changes
+    studio.money = Number(studio.money || 0) - fee + reReleaseGross;
+    movie.isReRelease = true;
+    movie.reReleaseWeek = gameState.currentWeek;
+    movie.directorCutQualityBoost = qualityBoost;
+    movie.reReleaseRevenue = reReleaseGross;
+    movie.worldwideGross = (movie.worldwideGross || 0) + reReleaseGross;
+    movie.boxOffice = (movie.boxOffice || 0) + reReleaseGross;
+
+    await movie.save();
+    await studio.save();
+
+    addNotification(
+      gameState,
+      `"${movie.title}" ${isDirectorsCut ? "Director's Cut" : "Re-Release"} earned ₹${reReleaseGross.toLocaleString()} at the box office!`
+    );
+    await gameState.save();
+
+    res.status(200).json({
+      success: true,
+      message: `"${movie.title}" re-released successfully!`,
+      data: {
+        reReleaseRevenue: reReleaseGross,
+        fee,
+        qualityBoost,
+        newWorldwideGross: movie.worldwideGross,
+      },
+    });
+  } catch (error) {
+    console.error("Error re-releasing movie:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to re-release movie.",
+    });
   }
 };

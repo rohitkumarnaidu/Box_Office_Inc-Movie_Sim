@@ -3,6 +3,17 @@ import Studio from "../models/Studio.js";
 import { runWeeklySimulation } from "../services/simulation/runWeeklySimulation.js";
 import Notification from "../models/Notification.js";
 import TalentHistory from "../models/TalentHistory.js";
+import Movie from "../models/Movie.js";
+import Franchise from "../models/Franchise.js";
+import NewsItem from "../models/NewsItem.js";
+import TVShow from "../models/TVShowModel.js";
+import StudioUpgrade from "../models/StudioUpgrade.js";
+import MarketDirector from "../models/MarketDirector.js";
+import MarketActor from "../models/MarketActor.js";
+import MarketCrewTeam from "../models/MarketCrewTeam.js";
+import { generateDirectors } from "../services/director/directorGenerator.js";
+import { generateActors } from "../services/actor/actorGenerator.js";
+import { generateCrewTeams } from "../services/crew/crewGenerator.js";
 
 import { withTransaction } from "../utils/financeTransactionHelper.js";
 import logger from "../utils/logger.js";
@@ -161,5 +172,121 @@ export const getMarketIntelligence = async (req, res) => {
   } catch (error) {
     logger.error("Error fetching market intelligence", { error: error.message });
     res.status(500).json({ message: "Failed to fetch market intelligence" });
+  }
+};
+
+export const resetGame = async (req, res) => {
+  try {
+    let gameState;
+    let studio;
+
+    await withTransaction(async (session) => {
+      gameState = await GameState.findOne({ user: req.user._id }).session(session);
+      studio = await Studio.findOne({ owner: req.user._id }).session(session);
+
+      if (!gameState || !studio) {
+        const notFoundError = new Error("Game state or studio not found");
+        notFoundError.statusCode = 404;
+        throw notFoundError;
+      }
+
+      // Delete all user movies
+      await Movie.deleteMany({ studioId: studio._id }, { session });
+
+      // Delete all user franchises
+      await Franchise.deleteMany({ studioId: studio._id }, { session });
+
+      // Delete all notifications for this gameState
+      await Notification.deleteMany({ gameStateId: gameState._id }, { session });
+
+      // Delete all talent history for this gameState
+      await TalentHistory.deleteMany({ gameStateId: gameState._id }, { session });
+
+      // Delete news items for this studio
+      await NewsItem.deleteMany({ studioId: studio._id }, { session });
+
+      // Delete TV shows
+      await TVShow.deleteMany({ studioId: studio._id }, { session });
+
+      // Delete studio upgrades
+      await StudioUpgrade.deleteMany({ studioId: studio._id }, { session });
+
+      // Clear market talents
+      await MarketDirector.deleteMany({ userId: req.user._id }, { session });
+      await MarketActor.deleteMany({ userId: req.user._id }, { session });
+      await MarketCrewTeam.deleteMany({ userId: req.user._id }, { session });
+
+      // Regenerate market talents
+      const freshDirectors = generateDirectors(50).map((d) => ({ ...d, userId: req.user._id }));
+      const freshActors = generateActors(100).map((a) => ({ ...a, userId: req.user._id }));
+      const freshCrew = generateCrewTeams(25).map((c) => ({ ...c, userId: req.user._id }));
+
+      await MarketDirector.insertMany(freshDirectors, { session });
+      await MarketActor.insertMany(freshActors, { session });
+      await MarketCrewTeam.insertMany(freshCrew, { session });
+
+      // Reset GameState
+      gameState.currentWeek = 1;
+      gameState.lastSimulatedWeek = 0;
+      gameState.ownedDirectors = [];
+      gameState.ownedActors = [];
+      gameState.ownedCrewTeams = [];
+      gameState.ownedWriters = [];
+      gameState.marketWriters = [];
+      gameState.activeDirectorProjects = [];
+      gameState.activeActorProjects = [];
+      gameState.activeWritingProjects = [];
+      gameState.retiredDirectors = [];
+      gameState.retiredActors = [];
+      gameState.directorAwardYearsProcessed = [];
+      gameState.actorAwardYearsProcessed = [];
+      gameState.rivalStudiosInitialized = false;
+      gameState.rivalStudios = [];
+      // reset streaming platform exclusives
+      if (gameState.streamingPlatforms) {
+        gameState.streamingPlatforms.forEach((p) => {
+          p.exclusiveMovies = [];
+        });
+      }
+
+      // Reset Studio
+      studio.money = 10000000;
+      studio.prestige = 0;
+      studio.fans = 0;
+      studio.studioLevel = 1;
+      studio.highestGrossingMovie = undefined;
+      studio.mostProfitableMovie = undefined;
+      studio.bestReviewedMovie = undefined;
+      studio.financialHistory = [];
+      studio.stats = {
+        moviesReleased: 0,
+        hits: 0,
+        blockbusters: 0,
+        allTimeBlockbusters: 0,
+        flops: 0,
+        disasters: 0,
+        totalRevenue: 0,
+        totalProfit: 0,
+        avgCriticScore: 0,
+        avgAudienceScore: 0,
+        awardsWon: 0,
+      };
+
+      await gameState.save({ session });
+      await studio.save({ session });
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Game state reset successfully",
+      studio,
+      gameState,
+    });
+  } catch (error) {
+    if (error.statusCode === 404) {
+      return res.status(404).json({ message: error.message });
+    }
+    logger.error("Reset Transaction Error", { error: error.message });
+    res.status(500).json({ success: false, message: `Operation rolled back due to: ${error.message}` });
   }
 };

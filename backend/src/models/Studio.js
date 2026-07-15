@@ -24,6 +24,7 @@ const studioSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0,
+      index: true,
     },
 
     fans: {
@@ -102,6 +103,21 @@ const studioSchema = new mongoose.Schema(
     ],
     negativeCashWeeks: { type: Number, default: 0 },
     isBankrupt: { type: Boolean, default: false },
+
+    // Fan Club & Conventions (issue #284)
+    fanClub: {
+      weeklyBudget: { type: Number, default: 0 },
+      totalFans: { type: Number, default: 0 },
+      lastConventionWeek: { type: Number, default: null }
+    },
+    
+    // PR & Scandal Management (issue #281)
+    reputation: { type: Number, default: 100, min: 0, max: 100 },
+    activeScandals: [{
+      description: { type: String },
+      week: { type: Number },
+      reputationImpact: { type: Number },
+    }],
   },
   {
     timestamps: true,

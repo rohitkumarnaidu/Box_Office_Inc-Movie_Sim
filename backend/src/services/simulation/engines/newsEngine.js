@@ -4,39 +4,49 @@ import NewsItem from "../../../models/NewsItem.js";
  * Generate news article for a movie release.
  */
 export const generateNewsFromRelease = async (movie, studio, week) => {
-  let headline = "";
-  let body = "";
-  const type = "box_office";
+  try {
+    if (!movie || !studio) {
+      console.warn("generateNewsFromRelease skipped: movie or studio reference is missing");
+      return null;
+    }
 
-  const formattedGross = movie.worldwideGross ? movie.worldwideGross.toLocaleString() : "0";
-  const formattedBudget = movie.budget ? movie.budget.toLocaleString() : "0";
+    let headline = "";
+    let body = "";
+    const type = "box_office";
 
-  if (movie.verdict === "ALL_TIME_BLOCKBUSTER" || movie.verdict === "BLOCKBUSTER") {
-    headline = `HISTORIC RUN: "${movie.title}" Shatters Expectations!`;
-    body = `"${movie.title}", the latest blockbuster from ${studio.name}, has taken the industry by storm, grossing a massive ₹${formattedGross} worldwide. Analysts are calling it one of the most successful releases this season!`;
-  } else if (movie.verdict === "HIT") {
-    headline = `SUCCESS: "${movie.title}" Reels in Big Audiences`;
-    body = `With strong reviews and solid word of mouth, ${studio.name}'s "${movie.title}" secures a certified HIT verdict. The movie has grossed ₹${formattedGross} worldwide against a production budget of ₹${formattedBudget}.`;
-  } else if (movie.verdict === "AVERAGE") {
-    headline = `STEADY: "${movie.title}" Finds Moderate Success`;
-    body = `"${movie.title}" from ${studio.name} completes its theatrical run with an AVERAGE verdict. The movie grossed ₹${formattedGross} worldwide, managing to break even and satisfy its core audience.`;
-  } else if (movie.verdict === "FLOP") {
-    headline = `DISAPPOINTMENT: "${movie.title}" Underperforms at Box Office`;
-    body = `Despite high marketing efforts, "${movie.title}" from ${studio.name} finished its run as a FLOP. The movie failed to recapture its production costs, grossing only ₹${formattedGross}.`;
-  } else {
-    // DISASTER
-    headline = `BOX OFFICE DISASTER: "${movie.title}" Flops Spectacularly`;
-    body = `Industry analysts are shocked as ${studio.name}'s high-profile project "${movie.title}" collapses, grossing a mere ₹${formattedGross} worldwide. The film goes down as a complete disaster.`;
+    const formattedGross = movie.worldwideGross ? movie.worldwideGross.toLocaleString() : "0";
+    const formattedBudget = movie.budget ? movie.budget.toLocaleString() : "0";
+
+    if (movie.verdict === "ALL_TIME_BLOCKBUSTER" || movie.verdict === "BLOCKBUSTER") {
+      headline = `HISTORIC RUN: "${movie.title}" Shatters Expectations!`;
+      body = `"${movie.title}", the latest blockbuster from ${studio.name}, has taken the industry by storm, grossing a massive ₹${formattedGross} worldwide. Analysts are calling it one of the most successful releases this season!`;
+    } else if (movie.verdict === "HIT") {
+      headline = `SUCCESS: "${movie.title}" Reels in Big Audiences`;
+      body = `With strong reviews and solid word of mouth, ${studio.name}'s "${movie.title}" secures a certified HIT verdict. The movie has grossed ₹${formattedGross} worldwide against a production budget of ₹${formattedBudget}.`;
+    } else if (movie.verdict === "AVERAGE") {
+      headline = `STEADY: "${movie.title}" Finds Moderate Success`;
+      body = `"${movie.title}" from ${studio.name} completes its theatrical run with an AVERAGE verdict. The movie grossed ₹${formattedGross} worldwide, managing to break even and satisfy its core audience.`;
+    } else if (movie.verdict === "FLOP") {
+      headline = `DISAPPOINTMENT: "${movie.title}" Underperforms at Box Office`;
+      body = `Despite high marketing efforts, "${movie.title}" from ${studio.name} finished its run as a FLOP. The movie failed to recapture its production costs, grossing only ₹${formattedGross}.`;
+    } else {
+      // DISASTER
+      headline = `BOX OFFICE DISASTER: "${movie.title}" Flops Spectacularly`;
+      body = `Industry analysts are shocked as ${studio.name}'s high-profile project "${movie.title}" collapses, grossing a mere ₹${formattedGross} worldwide. The film goes down as a complete disaster.`;
+    }
+
+    return await NewsItem.create({
+      type,
+      headline,
+      body,
+      week,
+      studioId: studio._id,
+      movieId: movie._id,
+    });
+  } catch (error) {
+    console.error("Error generating news from release:", error);
+    return null;
   }
-
-  return await NewsItem.create({
-    type,
-    headline,
-    body,
-    week,
-    studioId: studio._id,
-    movieId: movie._id,
-  });
 };
 
 /**

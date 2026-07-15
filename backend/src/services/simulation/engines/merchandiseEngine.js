@@ -1,5 +1,6 @@
 import Movie from "../../../models/Movie.js";
 import Studio from "../../../models/Studio.js";
+import { SOUNDTRACK_TIERS } from "../../../constants/soundtrackTiers.js";
 
 // Merchandise sales generated based on movie's hype and existing popularity.
 // Only movies with a threshold of success or hype will start generating sales.
@@ -45,8 +46,25 @@ export const processMerchandiseSales = async (gameState, studio) => {
             if (weeklyMovieMerch > 0) {
                 movie.merchandiseRevenue = (movie.merchandiseRevenue || 0) + weeklyMovieMerch;
                 weeklyMerchRevenue += weeklyMovieMerch;
-                await movie.save();
             }
+        }
+
+        // Soundtrack weekly sales (issue #286)
+        const soundtrackTierId = movie.soundtrackTier || "PUBLIC_DOMAIN";
+        const soundtrackConfig = SOUNDTRACK_TIERS[soundtrackTierId];
+        if (soundtrackConfig && soundtrackConfig.baseWeeklyRevenue > 0) {
+            const weeksSinceRelease = Math.max(1, gameState.currentWeek - (movie.releaseWeek || gameState.currentWeek));
+            const decay = Math.pow(0.95, weeksSinceRelease);
+            const weeklyMovieSoundtrack = Math.round(soundtrackConfig.baseWeeklyRevenue * decay);
+
+            if (weeklyMovieSoundtrack > 0) {
+                movie.soundtrackRevenue = (movie.soundtrackRevenue || 0) + weeklyMovieSoundtrack;
+                weeklyMerchRevenue += weeklyMovieSoundtrack;
+            }
+        }
+
+        if (movie.isModified()) {
+            await movie.save();
         }
     }
 
