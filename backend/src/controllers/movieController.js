@@ -12,6 +12,7 @@ import { processStudioGrowth } from "../services/simulation/engines/studioGrowth
 import { computeFranchiseProgress } from "../services/simulation/engines/franchiseEngine.js";
 import { addNotification } from "../services/simulation/helpers/notificationHelper.js";
 import { MARKETING_CAMPAIGNS, getEffectiveHypeBoost } from "../constants/marketingCampaigns.js";
+import { SOUNDTRACK_TIERS, getSoundtrackBoosts } from "../constants/soundtrackTiers.js";
 import { generateMovieTitle } from "../services/movie/movieService.js";
 import { generateNewsFromRelease } from "../services/simulation/engines/newsEngine.js";
 import { withTransaction } from "../utils/financeTransactionHelper.js";
@@ -80,7 +81,7 @@ const lazyBackfillNames = async (movies, gameState) => {
 
 export const createMovie = async (req, res) => {
   try {
-    const { title, scriptId, directorId, leadActorId, supportingActorIds, marketingCampaignIds } = req.body;
+    const { title, scriptId, directorId, leadActorId, supportingActorIds, marketingCampaignIds, soundtrackTier } = req.body;
 
     if (!title || !scriptId || !directorId || !leadActorId || !req.body.crewTeamId) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
@@ -149,20 +150,31 @@ export const createMovie = async (req, res) => {
         return res.status(400).json({ success: false, message: "Insufficient funds for marketing" });
     }
 
+    // Soundtrack selection
+    const soundtrackTierId = soundtrackTier || "PUBLIC_DOMAIN";
+    if (!SOUNDTRACK_TIERS[soundtrackTierId]) {
+        return res.status(400).json({ success: false, message: "Invalid soundtrack tier" });
+    }
+    const soundtrackConfig = SOUNDTRACK_TIERS[soundtrackTierId];
+    const soundtrackCost = soundtrackConfig.cost;
+    const { qualityBoost: stQualityBoost, hypeBoost: stHypeBoost } = getSoundtrackBoosts(soundtrackTierId, script.genres);
+
     // Formula Implementation
-    // quality = Script Quality → 35% + Director Creativity → 25% + Lead Actor Skill → 20% + Crew Technical Quality → 20%
+    // quality = Script Quality → 35% + Director Creativity → 25% + Lead Actor Skill → 20% + Crew Technical Quality → 20% + Soundtrack quality boost
     const quality = Math.round(
       (script.quality * 0.35) +
       (director.creativity * 0.25) +
       (leadActor.actingSkill * 0.20) +
-      (crewTeam.technicalQuality * 0.20)
+      (crewTeam.technicalQuality * 0.20) +
+      stQualityBoost
     );
 
-    // Hype = Lead Actor Popularity + Director Reputation + Marketing Budget influence
+    // Hype = Lead Actor Popularity + Director Reputation + Marketing Budget influence + Soundtrack hype boost
     const hype = Math.min(100, Math.round(
       (leadActor.popularity * 0.4) +
       (director.reputation * 0.3) +
-      marketingHypeBoost
+      marketingHypeBoost +
+      stHypeBoost
     ));
 
     const totalProductionWeeks = 20; // 4 + 10 + 6
@@ -179,7 +191,7 @@ export const createMovie = async (req, res) => {
         });
     }
 
-    const totalBudget = scriptCost + directorCost + leadActorCost + supportingActorCost + crewCost + marketingBudget;
+    const totalBudget = scriptCost + directorCost + leadActorCost + supportingActorCost + crewCost + marketingBudget + soundtrackCost;
 
     // Handle franchise / sequel logic
     let franchiseId = req.body.franchiseId || null;
@@ -219,7 +231,8 @@ export const createMovie = async (req, res) => {
         leadActorCost,
         supportingActorCost,
         crewCost,
-        marketingCost: marketingBudget
+        marketingCost: marketingBudget,
+        soundtrackCost,
       },
       marketingBudget,
       marketingCampaigns: selectedCampaigns,
@@ -231,6 +244,7 @@ export const createMovie = async (req, res) => {
       remainingWeeks: totalProductionWeeks,
       franchiseId,
       sequelNumber,
+      soundtrackTier: soundtrackTierId,
     });
 
     // Add movie to franchise
