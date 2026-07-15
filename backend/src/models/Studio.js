@@ -102,6 +102,14 @@ const studioSchema = new mongoose.Schema(
     ],
     negativeCashWeeks: { type: Number, default: 0 },
     isBankrupt: { type: Boolean, default: false },
+
+    // PR & Scandal Management (issue #281)
+    reputation: { type: Number, default: 100, min: 0, max: 100 },
+    activeScandals: [{
+      description: { type: String },
+      week: { type: Number },
+      reputationImpact: { type: Number },
+    }],
   },
   {
     timestamps: true,
