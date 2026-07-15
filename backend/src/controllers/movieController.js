@@ -16,66 +16,19 @@ import { generateMovieTitle } from "../services/movie/movieService.js";
 import { generateNewsFromRelease } from "../services/simulation/engines/newsEngine.js";
 import { withTransaction } from "../utils/financeTransactionHelper.js";
 import Notification from "../models/Notification.js";
+import { backfillMovieNames } from "../services/movie/talentBackfillService.js";
+import {
+  validateScript,
+  validateDirector,
+  validateLeadActor,
+  validateSupportingActors,
+  validateCrewTeam,
+  validateMarketingBudget,
+  findScriptById,
+  ValidationError,
+} from "../services/movie/movieValidationService.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
-
-/**
- * Lazy backfill helper for older movie documents that lack human-readable names.
- * Ensures the UI can always display names without massive DB migrations.
- */
-const lazyBackfillNames = async (movies, gameState) => {
-    let anyUpdates = false;
-
-    // Create lookup maps only if there are movies missing names
-    let talentMap = null;
-    const getTalentMap = () => {
-        if (!talentMap) {
-            talentMap = new Map();
-            const addAll = (list) => {
-                if (list && Array.isArray(list)) {
-                    list.forEach(t => talentMap.set(t.id, t.name));
-                }
-            };
-            addAll(gameState.ownedDirectors);
-            addAll(gameState.retiredDirectors);
-            addAll(gameState.ownedActors);
-            addAll(gameState.retiredActors);
-            addAll(gameState.ownedCrewTeams);
-        }
-        return talentMap;
-    };
-
-    for (const movie of movies) {
-        let needsSave = false;
-        const updates = {};
-
-        if (!movie.directorName && movie.directorId) {
-            const name = getTalentMap().get(movie.directorId) || "Unknown Director";
-            movie.directorName = name;
-            updates.directorName = name;
-            needsSave = true;
-        }
-        if (!movie.leadActorName && movie.leadActorId) {
-            const name = getTalentMap().get(movie.leadActorId) || "Unknown Actor";
-            movie.leadActorName = name;
-            updates.leadActorName = name;
-            needsSave = true;
-        }
-        if (!movie.crewTeamName && movie.crewTeamId) {
-            const name = getTalentMap().get(movie.crewTeamId) || "Unknown Crew";
-            movie.crewTeamName = name;
-            updates.crewTeamName = name;
-            needsSave = true;
-        }
-
-        if (needsSave) {
-            // Persist the backfill to DB so it doesn't need to happen again
-            await Movie.updateOne({ _id: movie._id }, { $set: updates });
-            anyUpdates = true;
-        }
-    }
-    return anyUpdates;
-};
 
 export const createMovie = async (req, res) => {
   try {
@@ -92,37 +45,11 @@ export const createMovie = async (req, res) => {
       return res.status(404).json({ success: false, message: "Game state or studio not found" });
     }
 
-    // Validate Script
-    const scriptIndex = gameState.ownedScripts.findIndex(s => s.id === scriptId);
-    if (scriptIndex === -1) return res.status(404).json({ success: false, message: "Script not found" });
-    const script = gameState.ownedScripts[scriptIndex];
-    if (script.status !== "AVAILABLE") return res.status(400).json({ success: false, message: "Script is not available" });
-
-    // Validate Director
-    const director = gameState.ownedDirectors.find(d => d.id === directorId);
-    if (!director) return res.status(404).json({ success: false, message: "Director not found" });
-    if (director.status !== "AVAILABLE") return res.status(400).json({ success: false, message: "Director is busy" });
-
-    // Validate Lead Actor
-    const leadActor = gameState.ownedActors.find(a => a.id === leadActorId);
-    if (!leadActor) return res.status(404).json({ success: false, message: "Lead actor not found" });
-    if (leadActor.status !== "AVAILABLE") return res.status(400).json({ success: false, message: "Lead actor is busy" });
-
-    // Validate Supporting Actors
-    const supportingActors = [];
-    if (supportingActorIds && Array.isArray(supportingActorIds)) {
-        for (const actorId of supportingActorIds) {
-            const actor = gameState.ownedActors.find(a => a.id === actorId);
-            if (!actor) return res.status(404).json({ success: false, message: `Supporting actor ${actorId} not found` });
-            if (actor.status !== "AVAILABLE") return res.status(400).json({ success: false, message: `Supporting actor ${actor.name} is busy` });
-            supportingActors.push(actor);
-        }
-    }
-
-    // Validate Crew Team
-    const crewTeam = gameState.ownedCrewTeams.find(c => c.id === req.body.crewTeamId);
-    if (!crewTeam) return res.status(404).json({ success: false, message: "Crew team not found" });
-    if (crewTeam.status !== "AVAILABLE") return res.status(400).json({ success: false, message: "Crew team is busy" });
+    const { script } = validateScript(gameState, scriptId);
+    const director = validateDirector(gameState, directorId);
+    const leadActor = validateLeadActor(gameState, leadActorId);
+    const supportingActors = validateSupportingActors(gameState, supportingActorIds);
+    const crewTeam = validateCrewTeam(gameState, req.body.crewTeamId);
 
     // Calculate Marketing Budget and Hype Boost
     let marketingBudget = 0;
@@ -144,9 +71,7 @@ export const createMovie = async (req, res) => {
     }
 
     // Validate Studio Money for Marketing Budget
-    if (studio.money < (marketingBudget || 0)) {
-        return res.status(400).json({ success: false, message: "Insufficient funds for marketing" });
-    }
+    validateMarketingBudget(studio, marketingBudget, marketingCampaignIds);
 
     // Formula Implementation
     // quality = Script Quality → 35% + Director Creativity → 25% + Lead Actor Skill → 20% + Crew Technical Quality → 20%
@@ -281,7 +206,7 @@ export const getActiveMovies = async (req, res) => {
 
         const movies = await Movie.find({ _id: { $in: gameState.activeMovies } }).lean();
         
-        await lazyBackfillNames(movies, gameState);
+        await backfillMovieNames(movies, gameState);
 
         res.status(200).json({ success: true, movies });
     } catch (error) {
@@ -312,8 +237,7 @@ export const releaseMovie = async (req, res) => {
             const studio = await Studio.findOne({ owner: req.user._id });
 
         // Get all related talent/data for engines
-        const script = gameState.marketScripts.find(s => s.id === movie.scriptId) ||
-                       gameState.ownedScripts.find(s => s.id === movie.scriptId);
+        const script = findScriptById(gameState, movie.scriptId);
 
         // Find in owned talent
         const director = gameState.ownedDirectors.find(d => d.id === movie.directorId);
@@ -438,7 +362,7 @@ export const releaseMovie = async (req, res) => {
 
         res.status(200).json({ success: true, movie: result.movie, growth: result.growth });
     } catch (error) {
-        console.error("Release Movie Error:", error);
+        logger.error("Release Movie Error", { error: error.message, movieId: id });
         res.status(500).json({ success: false, message: `Operation rolled back due to: ${error.message}` });
     }
 };
@@ -455,7 +379,7 @@ export const getReleasedMovies = async (req, res) => {
             .lean();
 
         if (gameState) {
-            await lazyBackfillNames(movies, gameState);
+            await backfillMovieNames(movies, gameState);
         }
 
         res.status(200).json({ success: true, movies });
@@ -471,7 +395,7 @@ export const getMovieDetails = async (req, res) => {
 
         const gameState = await GameState.findOne({ user: req.user._id }).lean();
         if (gameState) {
-            await lazyBackfillNames([movie], gameState);
+            await backfillMovieNames([movie], gameState);
         }
 
         res.status(200).json({ success: true, movie });
@@ -539,8 +463,7 @@ export const addMarketingCampaign = async (req, res) => {
     }
 
     const gameState = await GameState.findOne({ user: req.user._id });
-    const script = gameState?.ownedScripts?.find(s => s.id === movie.scriptId) || 
-                   gameState?.marketScripts?.find(s => s.id === movie.scriptId);
+    const script = findScriptById(gameState, movie.scriptId);
     
     const genres = script?.genres || [];
     const effectiveHype = getEffectiveHypeBoost(campaign, genres);
