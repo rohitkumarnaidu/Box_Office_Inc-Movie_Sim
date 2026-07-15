@@ -737,6 +737,13 @@ const gameStateSchema = new mongoose.Schema(
         ],
       },
     ],
+
+    // Film Crew Unions and Strikes (issue #285)
+    crewUnion: {
+      satisfaction: { type: Number, default: 100, min: 0, max: 100 },
+      isStriking: { type: Boolean, default: false },
+      strikeStartWeek: { type: Number, default: null }
+    }
   },
   {
     timestamps: true,

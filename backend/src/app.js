@@ -33,6 +33,7 @@ import studioRoutes from "./routes/studioRoutes.js";
 import loanRoutes from "./routes/loanRoutes.js";
 import merchRoutes from "./routes/merchRoutes.js";
 import fanClubRoutes from "./routes/fanClubRoutes.js";
+import unionRoutes from "./routes/unionRoutes.js";
 
 import errorHandler from "./middleware/errorMiddleware.js";
 import logger from "./utils/logger.js";
@@ -99,6 +100,7 @@ app.use("/api/studios/loans", apiRateLimiter, loanRoutes);
 app.use("/api/marketing", apiRateLimiter, marketingRoutes);
 app.use("/api/reviews", apiRateLimiter, reviewDashboardRoutes);
 app.use("/api/studios/fanclub", apiRateLimiter, fanClubRoutes);
+app.use("/api/studios/union", apiRateLimiter, unionRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
