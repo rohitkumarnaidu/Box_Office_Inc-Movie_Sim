@@ -96,6 +96,12 @@ const movieSchema = new mongoose.Schema(
     // Co-productions and Distribution Partnerships (issue #287)
     coProducerStudioId: { type: String, default: null },
     coProducerShare: { type: Number, default: 0 },
+
+    // Re-release and Director's Cut support (issue #283)
+    isReRelease: { type: Boolean, default: false },
+    reReleaseWeek: { type: Number, default: null },
+    directorCutQualityBoost: { type: Number, default: 0 },
+    reReleaseRevenue: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

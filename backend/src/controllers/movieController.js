@@ -589,3 +589,116 @@ export const addMarketingCampaign = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+/**
+ * Re-release a movie in theaters or as a Director's Cut.
+ * POST /api/movies/:id/rerelease
+ *
+ * Requirements:
+ * - Movie must have status RELEASED
+ * - Must be at least 52 weeks since original release
+ * - Studio must have enough money for the fee
+ */
+export const reReleaseMovie = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isDirectorsCut } = req.body;
+
+    const movie = await Movie.findById(id);
+    if (!movie) {
+      return res.status(404).json({
+        success: false,
+        message: "Movie not found.",
+      });
+    }
+
+    if (movie.status !== "RELEASED" && movie.status !== "RELEASED_STREAMING") {
+      return res.status(400).json({
+        success: false,
+        message: "Only released movies can be re-released.",
+      });
+    }
+
+    const gameState = await GameState.findOne({ user: req.user._id });
+    if (!gameState) {
+      return res.status(404).json({
+        success: false,
+        message: "Game state not found.",
+      });
+    }
+
+    const weeksSinceRelease = (gameState.currentWeek || 0) - (movie.releaseWeek || 0);
+    if (weeksSinceRelease < 52) {
+      return res.status(400).json({
+        success: false,
+        message: `Movie must be at least 52 weeks old for re-release. Current age: ${weeksSinceRelease} weeks.`,
+      });
+    }
+
+    if (movie.isReRelease) {
+      return res.status(400).json({
+        success: false,
+        message: "This movie has already been re-released.",
+      });
+    }
+
+    const studio = await Studio.findOne({ owner: req.user._id });
+    if (!studio) {
+      return res.status(404).json({
+        success: false,
+        message: "Studio not found.",
+      });
+    }
+
+    // Re-release fee: 20% of original budget; Director's Cut costs 30%
+    const feeMultiplier = isDirectorsCut ? 0.3 : 0.2;
+    const fee = Math.round((movie.budget || 0) * feeMultiplier);
+
+    if (Number(studio.money || 0) < fee) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient funds. Re-release costs ₹${fee.toLocaleString()}.`,
+      });
+    }
+
+    // Calculate re-release box office (decaying factor of original)
+    const decayFactor = isDirectorsCut ? 0.35 : 0.2;
+    const qualityBoost = isDirectorsCut ? 10 : 0;
+    const reReleaseGross = Math.round((movie.worldwideGross || movie.boxOffice || 0) * decayFactor);
+
+    // Apply changes
+    studio.money = Number(studio.money || 0) - fee + reReleaseGross;
+    movie.isReRelease = true;
+    movie.reReleaseWeek = gameState.currentWeek;
+    movie.directorCutQualityBoost = qualityBoost;
+    movie.reReleaseRevenue = reReleaseGross;
+    movie.worldwideGross = (movie.worldwideGross || 0) + reReleaseGross;
+    movie.boxOffice = (movie.boxOffice || 0) + reReleaseGross;
+
+    await movie.save();
+    await studio.save();
+
+    addNotification(
+      gameState,
+      `"${movie.title}" ${isDirectorsCut ? "Director's Cut" : "Re-Release"} earned ₹${reReleaseGross.toLocaleString()} at the box office!`
+    );
+    await gameState.save();
+
+    res.status(200).json({
+      success: true,
+      message: `"${movie.title}" re-released successfully!`,
+      data: {
+        reReleaseRevenue: reReleaseGross,
+        fee,
+        qualityBoost,
+        newWorldwideGross: movie.worldwideGross,
+      },
+    });
+  } catch (error) {
+    console.error("Error re-releasing movie:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to re-release movie.",
+    });
+  }
+};
