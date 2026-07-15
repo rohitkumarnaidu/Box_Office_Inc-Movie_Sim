@@ -85,6 +85,11 @@ const movieSchema = new mongoose.Schema(
       message: String,
       week: Number,
     }],
+    // Re-release and Director's Cut support (issue #283)
+    isReRelease: { type: Boolean, default: false },
+    reReleaseWeek: { type: Number, default: null },
+    directorCutQualityBoost: { type: Number, default: 0 },
+    reReleaseRevenue: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
