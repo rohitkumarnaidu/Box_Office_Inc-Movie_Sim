@@ -85,6 +85,13 @@ const movieSchema = new mongoose.Schema(
       message: String,
       week: Number,
     }],
+    // Soundtracks and Music Licensing (issue #286)
+    soundtrackTier: {
+      type: String,
+      enum: ["PUBLIC_DOMAIN", "INDIE", "PREMIUM"],
+      default: "PUBLIC_DOMAIN",
+    },
+    soundtrackRevenue: { type: Number, default: 0 }
   },
   { timestamps: true }
 );
