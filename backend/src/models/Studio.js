@@ -102,6 +102,13 @@ const studioSchema = new mongoose.Schema(
     ],
     negativeCashWeeks: { type: Number, default: 0 },
     isBankrupt: { type: Boolean, default: false },
+
+    // Fan Club & Conventions (issue #284)
+    fanClub: {
+      weeklyBudget: { type: Number, default: 0 },
+      totalFans: { type: Number, default: 0 },
+      lastConventionWeek: { type: Number, default: null }
+    }
   },
   {
     timestamps: true,

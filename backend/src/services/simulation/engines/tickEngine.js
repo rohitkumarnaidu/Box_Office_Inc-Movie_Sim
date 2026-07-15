@@ -15,6 +15,7 @@ import { processAnnualAwards } from "./awardsEngine.js";
 import { generateNewsFromTrend, generateNewsFromEvent } from "./newsEngine.js";
 import { processStreamingPlatformGrowth, processStreamingRevenue } from "./streamingEngine.js";
 import { processLoanRepayments } from "./loanRepaymentEngine.js";
+import { processFanClubTick } from "./fanClubEngine.js";
 
 import { addNotification } from "../helpers/notificationHelper.js";
 import { processWriterAging } from "../helpers/agingHelper.js";
@@ -86,6 +87,9 @@ export const processWeeklyTick = async (gameState, studio) => {
   }
 
   processWriterPayroll(gameState, studio);
+
+  // Process weekly fan club updates (issue #284)
+  processFanClubTick(gameState, studio);
 
   // Process weekly loan repayments and bankruptcy tracking (issue #195)
   processLoanRepayments(studio, gameState, addNotification);
