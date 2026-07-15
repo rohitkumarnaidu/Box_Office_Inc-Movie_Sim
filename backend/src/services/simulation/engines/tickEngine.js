@@ -2,6 +2,7 @@ import { processDirectorAwards } from "../../director/directorAwardsService.js";
 import { processActorAwards } from "../../actor/actorAwardsService.js";
 import { processCrewProgression } from "../../crew/crewProgressionService.js";
 import { processDirectorAging } from "./directorEngine.js";
+import { processActorAging } from "./actorEngine.js";
 import { processDirectingProjects } from "./directingProjectEngine.js";
 import { processProduction } from "./productionEngine.js";
 import { processWriterPayroll } from "./payrollEngine.js";
@@ -102,6 +103,8 @@ export const processWeeklyTick = async (gameState, studio) => {
   processWriterAging(gameState);
 
   await processDirectorAging(gameState);
+
+  await processActorAging(gameState);
 
   const awardYear = Math.floor((Number(gameState.currentWeek || 1) - 1) / 52) + 1;
   const isAwardWeek = gameState.currentWeek % 52 === 0;
