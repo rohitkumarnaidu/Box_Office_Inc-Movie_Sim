@@ -81,7 +81,7 @@ const lazyBackfillNames = async (movies, gameState) => {
 
 export const createMovie = async (req, res) => {
   try {
-    const { title, scriptId, directorId, leadActorId, supportingActorIds, marketingCampaignIds, soundtrackTier } = req.body;
+    const { title, scriptId, directorId, leadActorId, supportingActorIds, marketingCampaignIds, soundtrackTier, coProducerStudioId, coProducerShare } = req.body;
 
     if (!title || !scriptId || !directorId || !leadActorId || !req.body.crewTeamId) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
@@ -145,8 +145,16 @@ export const createMovie = async (req, res) => {
         });
     }
 
-    // Validate Studio Money for Marketing Budget
-    if (studio.money < (marketingBudget || 0)) {
+    // Validate Co-Production parameters
+    const share = Number(coProducerShare || 0);
+    if (share < 0 || share > 50) {
+        return res.status(400).json({ success: false, message: "Co-producer share must be between 0% and 50%" });
+    }
+
+    const playerMarketingBudget = (marketingBudget || 0) * (1 - share / 100);
+
+    // Validate Studio Money for Marketing Budget (player's share)
+    if (studio.money < playerMarketingBudget) {
         return res.status(400).json({ success: false, message: "Insufficient funds for marketing" });
     }
 
@@ -245,6 +253,8 @@ export const createMovie = async (req, res) => {
       franchiseId,
       sequelNumber,
       soundtrackTier: soundtrackTierId,
+      coProducerStudioId: coProducerStudioId || null,
+      coProducerShare: share,
     });
 
     // Add movie to franchise
@@ -269,8 +279,8 @@ export const createMovie = async (req, res) => {
     crewTeam.status = "BUSY";
     crewTeam.busyUntilWeek = gameState.currentWeek + 20;
 
-    // Deduct marketing budget
-    studio.money -= (marketingBudget || 0);
+    // Deduct marketing budget (player's share)
+    studio.money -= playerMarketingBudget;
 
     gameState.activeMovies.push(movie._id);
 

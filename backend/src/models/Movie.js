@@ -91,7 +91,11 @@ const movieSchema = new mongoose.Schema(
       enum: ["PUBLIC_DOMAIN", "INDIE", "PREMIUM"],
       default: "PUBLIC_DOMAIN",
     },
-    soundtrackRevenue: { type: Number, default: 0 }
+    soundtrackRevenue: { type: Number, default: 0 },
+    
+    // Co-productions and Distribution Partnerships (issue #287)
+    coProducerStudioId: { type: String, default: null },
+    coProducerShare: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
