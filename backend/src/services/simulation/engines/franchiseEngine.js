@@ -89,3 +89,29 @@ export const computeFranchiseProgress = (franchise = {}, movie = {}) => {
 
   return { fanbaseMultiplier, prestigeBonus, totalRevenue };
 };
+
+/**
+ * Escapes regex special characters in a string.
+ *
+ * @param {string} string
+ * @returns {string} Escaped string
+ */
+export const escapeRegex = (string) => {
+  if (typeof string !== "string") return "";
+  return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+};
+
+/**
+ * Checks if a movie title matches the franchise name (case-insensitive).
+ * Escapes any special regex characters in the franchise name.
+ *
+ * @param {string} movieTitle
+ * @param {string} franchiseName
+ * @returns {boolean} True if matches
+ */
+export const matchFranchiseTitle = (movieTitle, franchiseName) => {
+  if (!movieTitle || !franchiseName) return false;
+  const escaped = escapeRegex(franchiseName);
+  const regex = new RegExp(`^${escaped}`, "i");
+  return regex.test(movieTitle);
+};
