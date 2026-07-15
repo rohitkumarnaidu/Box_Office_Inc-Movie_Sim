@@ -18,6 +18,7 @@ import { generateNewsFromRelease } from "../services/simulation/engines/newsEngi
 import { withTransaction } from "../utils/financeTransactionHelper.js";
 import Notification from "../models/Notification.js";
 import logger from "../utils/logger.js";
+import { addHistoricRecord } from "../services/simulation/helpers/historicRecordHelper.js";
 
 const findGameState = async (userId) => GameState.findOne({ user: userId });
 
@@ -460,6 +461,22 @@ export const releaseMovie = async (req, res) => {
 
             return { movie, growth };
         });
+
+        // Add to historic records
+        try {
+            await addHistoricRecord({
+                title: result.movie.title,
+                studioId: result.movie.studioId.toString(),
+                studioName: studio.name,
+                worldwideGross: result.movie.worldwideGross,
+                openingWeekend: result.movie.openingWeekend,
+                roi: result.movie.roi,
+                releaseWeek: result.movie.releaseWeek,
+                isRival: false
+            });
+        } catch (recordErr) {
+            logger.error("Failed to save historic record for player", { error: recordErr.message });
+        }
 
         res.status(200).json({ success: true, movie: result.movie, growth: result.growth });
     } catch (error) {
