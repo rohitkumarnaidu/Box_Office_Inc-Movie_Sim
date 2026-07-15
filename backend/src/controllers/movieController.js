@@ -536,48 +536,64 @@ export const addMarketingCampaign = async (req, res) => {
     const { id } = req.params;
     const { campaignId } = req.body;
 
-    const movie = await Movie.findById(id);
-    if (!movie) {
-      return res.status(404).json({ success: false, message: "Movie not found" });
-    }
-
-    if (movie.status === "RELEASED" || movie.status === "RELEASED_STREAMING") {
-      return res.status(400).json({ success: false, message: "Cannot add marketing to a released movie" });
-    }
-
     const campaign = MARKETING_CAMPAIGNS.find(c => c.id === campaignId);
     if (!campaign) {
       return res.status(404).json({ success: false, message: "Campaign type not found" });
     }
 
-    if (movie.marketingCampaigns.includes(campaignId)) {
-      return res.status(400).json({ success: false, message: "This campaign is already active for this movie" });
-    }
+    let movie;
+    let studio;
+    let effectiveHype = 0;
 
-    const studio = await Studio.findOne({ owner: req.user._id });
-    if (!studio) {
-      return res.status(404).json({ success: false, message: "Studio not found" });
-    }
+    await withTransaction(async (session) => {
+      movie = await Movie.findById(id).session(session);
+      if (!movie) {
+        const error = new Error("Movie not found");
+        error.statusCode = 404;
+        throw error;
+      }
 
-    if (studio.money < campaign.cost) {
-      return res.status(400).json({ success: false, message: "Insufficient funds for this campaign" });
-    }
+      if (movie.status === "RELEASED" || movie.status === "RELEASED_STREAMING") {
+        const error = new Error("Cannot add marketing to a released movie");
+        error.statusCode = 400;
+        throw error;
+      }
 
-    const gameState = await GameState.findOne({ user: req.user._id });
-    const script = gameState?.ownedScripts?.find(s => s.id === movie.scriptId) || 
-                   gameState?.marketScripts?.find(s => s.id === movie.scriptId);
-    
-    const genres = script?.genres || [];
-    const effectiveHype = getEffectiveHypeBoost(campaign, genres);
+      if (movie.marketingCampaigns.includes(campaignId)) {
+        const error = new Error("This campaign is already active for this movie");
+        error.statusCode = 400;
+        throw error;
+      }
 
-    movie.marketingCampaigns.push(campaignId);
-    movie.marketingBudget += campaign.cost;
-    movie.hype = Math.min(100, movie.hype + effectiveHype);
+      studio = await Studio.findOne({ owner: req.user._id }).session(session);
+      if (!studio) {
+        const error = new Error("Studio not found");
+        error.statusCode = 404;
+        throw error;
+      }
 
-    studio.money -= campaign.cost;
+      if (studio.money < campaign.cost) {
+        const error = new Error("Insufficient funds for this campaign");
+        error.statusCode = 400;
+        throw error;
+      }
 
-    await movie.save();
-    await studio.save();
+      const gameState = await GameState.findOne({ user: req.user._id }).session(session);
+      const script = gameState?.ownedScripts?.find(s => s.id === movie.scriptId) || 
+                     gameState?.marketScripts?.find(s => s.id === movie.scriptId);
+      
+      const genres = script?.genres || [];
+      effectiveHype = getEffectiveHypeBoost(campaign, genres);
+
+      movie.marketingCampaigns.push(campaignId);
+      movie.marketingBudget += campaign.cost;
+      movie.hype = Math.min(100, movie.hype + effectiveHype);
+
+      studio.money -= campaign.cost;
+
+      await movie.save({ session });
+      await studio.save({ session });
+    });
 
     res.status(200).json({
       success: true,
@@ -586,6 +602,9 @@ export const addMarketingCampaign = async (req, res) => {
       studioMoney: studio.money
     });
   } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ success: false, message: error.message });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
