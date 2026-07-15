@@ -15,6 +15,7 @@ import { processAnnualAwards } from "./awardsEngine.js";
 import { generateNewsFromTrend, generateNewsFromEvent } from "./newsEngine.js";
 import { processStreamingPlatformGrowth, processStreamingRevenue } from "./streamingEngine.js";
 import { processLoanRepayments } from "./loanRepaymentEngine.js";
+import { processUnionSatisfaction } from "./unionEngine.js";
 
 import { addNotification } from "../helpers/notificationHelper.js";
 import { processWriterAging } from "../helpers/agingHelper.js";
@@ -95,6 +96,9 @@ export const processWeeklyTick = async (gameState, studio) => {
   processDirectingProjects(gameState, studio);
 
   await processProduction(gameState, studio);
+
+  // Process crew union satisfaction and strike states (issue #285)
+  processUnionSatisfaction(gameState, studio);
 
   // Tick rival studios — collect their releases for the weekly summary
   const rivalReleases = processRivalStudios(gameState);
