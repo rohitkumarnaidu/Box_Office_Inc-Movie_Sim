@@ -20,7 +20,7 @@ const CACHE_TTL_MS = 5_000; // 5 seconds
  * Returns a cached value or `undefined` if not present / expired.
  * @param {string} key
  */
-const cacheGet = (key) => {
+export const cacheGet = (key) => {
   const underscoreIdx = key.indexOf('_');
   const userId = underscoreIdx !== -1 ? key.slice(0, underscoreIdx) : key;
   const subKey = underscoreIdx !== -1 ? key.slice(underscoreIdx + 1) : 'default';
@@ -44,7 +44,7 @@ const cacheGet = (key) => {
  * @param {string} key
  * @param {*} value
  */
-const cacheSet = (key, value) => {
+export const cacheSet = (key, value) => {
   const underscoreIdx = key.indexOf('_');
   const userId = underscoreIdx !== -1 ? key.slice(0, underscoreIdx) : key;
   const subKey = underscoreIdx !== -1 ? key.slice(underscoreIdx + 1) : 'default';
@@ -70,6 +70,7 @@ const cacheSet = (key, value) => {
  * @param {string} userId
  */
 export const invalidateUserCache = (userId) => {
+  // O(1) instantaneous removal of the user's cache map bucket
   _cache.delete(userId);
 };
 
@@ -132,9 +133,6 @@ export const getMarketplaceTalent = (items, query = {}) => {
     const aRaw = a[sortBy];
     const bRaw = b[sortBy];
 
-    // Numeric fields (popularity, salary, age) compare numerically; string
-    // fields (name, rarity) fall back to a locale-aware string compare so they
-    // sort correctly instead of coercing to NaN and silently no-oping.
     if (typeof aRaw === "number" || typeof bRaw === "number") {
       const aVal = Number(aRaw) || 0;
       const bVal = Number(bRaw) || 0;
