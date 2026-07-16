@@ -15,118 +15,148 @@ const sendGameStateNotFound = (res) =>
   });
 
 export const getNotifications = async (req, res) => {
-  const gameState = await findUserGameState(req.user._id);
+  try {
+    const gameState = await findUserGameState(req.user._id);
 
-  if (!gameState) {
-    return sendGameStateNotFound(res);
+    if (!gameState) {
+      return sendGameStateNotFound(res);
+    }
+
+    const notifications = await Notification.find({ gameStateId: gameState._id }).sort({ createdAt: -1 });
+    const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
+
+    res.json({
+      notifications,
+      unreadCount,
+    });
+  } catch (error) {
+    console.error("Error in getNotifications:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-
-  const notifications = await Notification.find({ gameStateId: gameState._id }).sort({ createdAt: -1 });
-  const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
-
-  res.json({
-    notifications,
-    unreadCount,
-  });
 };
 
 export const getUnreadNotificationCount = async (req, res) => {
-  const gameState = await findUserGameState(req.user._id);
+  try {
+    const gameState = await findUserGameState(req.user._id);
 
-  if (!gameState) {
-    return sendGameStateNotFound(res);
+    if (!gameState) {
+      return sendGameStateNotFound(res);
+    }
+
+    const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
+
+    res.json({
+      unreadCount,
+    });
+  } catch (error) {
+    console.error("Error in getUnreadNotificationCount:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-
-  const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
-
-  res.json({
-    unreadCount,
-  });
 };
 
 export const markNotificationRead = async (req, res) => {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-  const gameState = await findUserGameState(req.user._id);
+    const gameState = await findUserGameState(req.user._id);
 
-  if (!gameState) {
-    return sendGameStateNotFound(res);
-  }
+    if (!gameState) {
+      return sendGameStateNotFound(res);
+    }
 
-  const notification = await Notification.findOneAndUpdate(
-    { _id: id, gameStateId: gameState._id },
-    { read: true },
-    { new: true }
-  );
+    const notification = await Notification.findOneAndUpdate(
+      { _id: id, gameStateId: gameState._id },
+      { read: true },
+      { new: true }
+    );
 
-  if (!notification) {
-    return res.status(404).json({
-      message: "Notification not found",
+    if (!notification) {
+      return res.status(404).json({
+        message: "Notification not found",
+      });
+    }
+
+    const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
+
+    res.json({
+      message: "Notification marked as read",
+      unreadCount,
     });
+  } catch (error) {
+    console.error("Error in markNotificationRead:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-
-  const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
-
-  res.json({
-    message: "Notification marked as read",
-    unreadCount,
-  });
 };
 
 export const markAllNotificationsRead = async (req, res) => {
-  const gameState = await findUserGameState(req.user._id);
+  try {
+    const gameState = await findUserGameState(req.user._id);
 
-  if (!gameState) {
-    return sendGameStateNotFound(res);
+    if (!gameState) {
+      return sendGameStateNotFound(res);
+    }
+
+    await Notification.updateMany({ gameStateId: gameState._id }, { read: true });
+
+    const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
+
+    res.json({
+      message: "All notifications marked as read",
+      unreadCount,
+    });
+  } catch (error) {
+    console.error("Error in markAllNotificationsRead:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-
-  await Notification.updateMany({ gameStateId: gameState._id }, { read: true });
-
-  const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
-
-  res.json({
-    message: "All notifications marked as read",
-    unreadCount,
-  });
 };
 
 export const deleteNotification = async (req, res) => {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-  const gameState = await findUserGameState(req.user._id);
+    const gameState = await findUserGameState(req.user._id);
 
-  if (!gameState) {
-    return sendGameStateNotFound(res);
-  }
+    if (!gameState) {
+      return sendGameStateNotFound(res);
+    }
 
-  const notification = await Notification.findOneAndDelete({ _id: id, gameStateId: gameState._id });
+    const notification = await Notification.findOneAndDelete({ _id: id, gameStateId: gameState._id });
 
-  if (!notification) {
-    return res.status(404).json({
-      message: "Notification not found",
+    if (!notification) {
+      return res.status(404).json({
+        message: "Notification not found",
+      });
+    }
+
+    const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
+
+    res.json({
+      message: "Notification deleted",
+      unreadCount,
     });
+  } catch (error) {
+    console.error("Error in deleteNotification:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-
-  const unreadCount = await Notification.countDocuments({ gameStateId: gameState._id, read: false });
-
-  res.json({
-    message: "Notification deleted",
-    unreadCount,
-  });
 };
 
 export const deleteAllNotifications = async (req, res) => {
-  const gameState = await findUserGameState(req.user._id);
+  try {
+    const gameState = await findUserGameState(req.user._id);
 
-  if (!gameState) {
-    return sendGameStateNotFound(res);
+    if (!gameState) {
+      return sendGameStateNotFound(res);
+    }
+
+    const result = await Notification.deleteMany({ gameStateId: gameState._id });
+
+    res.json({
+      message: "All notifications deleted",
+      deletedCount: result.deletedCount,
+      unreadCount: 0,
+    });
+  } catch (error) {
+    console.error("Error in deleteAllNotifications:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-
-  const result = await Notification.deleteMany({ gameStateId: gameState._id });
-
-  res.json({
-    message: "All notifications deleted",
-    deletedCount: result.deletedCount,
-    unreadCount: 0,
-  });
 };
