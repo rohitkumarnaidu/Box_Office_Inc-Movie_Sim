@@ -34,9 +34,9 @@ const env = {
 
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:5173",
 
-  RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "60000", 10),
-  RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "200", 10),
-  AUTH_RATE_LIMIT_MAX: parseInt(process.env.AUTH_RATE_LIMIT_MAX || "20", 10),
+  BANKRUPTCY_THRESHOLD_WEEKS: Number(process.env.BANKRUPTCY_THRESHOLD_WEEKS) || 4,
+
+  MAX_ACTIVE_LOANS: Number(process.env.MAX_ACTIVE_LOANS) || 3,
 };
 
 export default env;

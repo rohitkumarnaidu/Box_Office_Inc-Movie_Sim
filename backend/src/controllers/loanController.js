@@ -14,7 +14,25 @@
 
 import Studio from "../models/Studio.js";
 import GameState from "../models/GameState.js";
-import { LOAN_TIERS, MAX_ACTIVE_LOANS } from "../constants/gameConstants.js";
+import env from "../config/envConfig.js";
+
+const LOAN_TIERS = {
+  SMALL: {
+    amount: 500_000,
+    interestRate: 0.08,
+    weeks: 26,
+  },
+  MEDIUM: {
+    amount: 1_000_000,
+    interestRate: 0.12,
+    weeks: 52,
+  },
+  LARGE: {
+    amount: 2_000_000,
+    interestRate: 0.18,
+    weeks: 78,
+  },
+};
 
 /**
  * POST /api/studios/loans/take
@@ -25,7 +43,15 @@ export const takeLoan = async (req, res) => {
   try {
     const { tier } = req.body;
 
-    if (!LOAN_TIERS[tier]) {
+    if (!tier || typeof tier !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Loan tier is required and must be a string.",
+      });
+    }
+
+    const normalizedTier = tier.toUpperCase();
+    if (!LOAN_TIERS[normalizedTier]) {
       return res.status(400).json({
         success: false,
         message: `Invalid loan tier. Choose one of: ${Object.keys(LOAN_TIERS).join(", ")}`,
@@ -39,18 +65,34 @@ export const takeLoan = async (req, res) => {
       return res.status(400).json({ success: false, message: "Bankrupt studios cannot take new loans." });
     }
 
-    // Limit: no more than MAX_ACTIVE_LOANS active loans at once
-    if ((studio.loans || []).length >= MAX_ACTIVE_LOANS) {
-      return res.status(400).json({ success: false, message: "Maximum of 3 active loans allowed at one time." });
+    if (studio.negativeCashWeeks >= 2) {
+      return res.status(400).json({
+        success: false,
+        message: `Studio has been in negative balance for ${studio.negativeCashWeeks} weeks. Resolve financial distress before taking new loans.`,
+      });
+    }
+
+    if ((studio.loans || []).length >= env.MAX_ACTIVE_LOANS) {
+      return res.status(400).json({ success: false, message: `Maximum of ${env.MAX_ACTIVE_LOANS} active loans allowed at one time.` });
     }
 
     const gameState = await GameState.findOne({ user: req.user._id });
     if (!gameState) return res.status(404).json({ success: false, message: "Game state not found" });
 
-    const loanConfig = LOAN_TIERS[tier];
+    const loanConfig = LOAN_TIERS[normalizedTier];
     const totalInterest = loanConfig.amount * loanConfig.interestRate * (loanConfig.weeks / 52);
     const totalRepayment = loanConfig.amount + totalInterest;
     const weeklyRepayment = Math.ceil(totalRepayment / loanConfig.weeks);
+
+    const totalWeeklyDebt = (studio.loans || []).reduce((sum, l) => sum + l.weeklyRepayment, 0);
+    const newTotalDebt = totalWeeklyDebt + weeklyRepayment;
+
+    if (newTotalDebt > studio.money * 0.5 && studio.money > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "This loan would make your weekly debt payments exceed 50% of current balance. Reduce existing loans first.",
+      });
+    }
 
     studio.loans.push({
       amount: loanConfig.amount,
@@ -65,7 +107,7 @@ export const takeLoan = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: `Loan of $${loanConfig.amount.toLocaleString()} approved at ${(loanConfig.interestRate * 100).toFixed(0)}% annual interest.`,
+      message: `Loan of $${loanConfig.amount.toLocaleString()} approved at ${(loanConfig.interestRate * 100).toFixed(0)}% annual interest. Weekly repayment: $${weeklyRepayment.toLocaleString()}.`,
       weeklyRepayment,
       weeksRemaining: loanConfig.weeks,
       newBalance: studio.money,
