@@ -3,7 +3,6 @@ import { Link, useParams } from "react-router-dom";
 
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
-import { DetailSkeleton } from "../../components/common/SkeletonGrid";
 
 const tabs = ["Overview", "Career", "Statistics", "Awards", "Filmography"];
 
@@ -51,7 +50,13 @@ const DirectorProfile = () => {
   }, [loadProfile]);
 
   if (loading) {
-    return <DashboardLayout><DetailSkeleton title="Loading director profile..." /></DashboardLayout>;
+    return (
+      <DashboardLayout>
+        <div className="rounded-2xl border border-slate-800 bg-[#111827] p-12 text-center">
+          <h2 className="text-2xl font-bold text-white">Loading director profile...</h2>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   if (error || !profile) {
