@@ -21,7 +21,16 @@ import logger from "../utils/logger.js";
 export const simulateWeek = async (req, res) => {
   try {
     const { weeks = 1 } = req.body;
-    const numWeeks = Math.min(52, Math.max(1, Number(weeks)));
+    const parsedWeeks = parseInt(weeks, 10);
+
+    if (isNaN(parsedWeeks) || parsedWeeks <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid input: numWeeks must be a positive number"
+      });
+    }
+
+    const numWeeks = Math.min(52, parsedWeeks);
 
     // Accumulate notifications generated during the simulation ticks
     let newNotifications = [];
