@@ -8,6 +8,11 @@ const franchiseSchema = new mongoose.Schema(
     totalRevenue: { type: Number, default: 0 },
     fanbaseMultiplier: { type: Number, default: 1.0 },
     prestigeBonus: { type: Number, default: 0 },
+    // Spin-off support: link to parent franchise
+    parentFranchiseId: { type: mongoose.Schema.Types.ObjectId, ref: "Franchise", default: null },
+    // Crossover support
+    isCrossover: { type: Boolean, default: false },
+    crossoverFranchiseIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "Franchise" }],
   },
   { timestamps: true }
 );

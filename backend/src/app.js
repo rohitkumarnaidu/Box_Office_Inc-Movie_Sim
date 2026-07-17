@@ -32,6 +32,13 @@ import leaderboardRoutes from "./routes/leaderboardRoutes.js";
 import studioRoutes from "./routes/studioRoutes.js";
 import loanRoutes from "./routes/loanRoutes.js";
 import merchRoutes from "./routes/merchRoutes.js";
+import fanClubRoutes from "./routes/fanClubRoutes.js";
+import unionRoutes from "./routes/unionRoutes.js";
+import spinoffRoutes from "./routes/spinoffRoutes.js";
+import prRoutes from "./routes/prRoutes.js";
+import contractRoutes from "./routes/contractRoutes.js";
+import testScreeningRoutes from "./routes/testScreeningRoutes.js";
+import recordsRoutes from "./routes/recordsRoutes.js";
 
 import errorHandler from "./middleware/errorMiddleware.js";
 import logger from "./utils/logger.js";
@@ -97,6 +104,13 @@ app.use("/api/studios", apiRateLimiter, studioRoutes);
 app.use("/api/studios/loans", apiRateLimiter, loanRoutes);
 app.use("/api/marketing", apiRateLimiter, marketingRoutes);
 app.use("/api/reviews", apiRateLimiter, reviewDashboardRoutes);
+app.use("/api/studios/fanclub", apiRateLimiter, fanClubRoutes);
+app.use("/api/studios/union", apiRateLimiter, unionRoutes);
+app.use("/api/franchises", apiRateLimiter, spinoffRoutes);
+app.use("/api/studios", apiRateLimiter, prRoutes);
+app.use("/api/contracts", apiRateLimiter, contractRoutes);
+app.use("/api/movies", apiRateLimiter, testScreeningRoutes);
+app.use("/api/records", apiRateLimiter, recordsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

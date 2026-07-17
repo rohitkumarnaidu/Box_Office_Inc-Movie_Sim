@@ -92,8 +92,10 @@ export const processStudioGrowth = (gameState, studio, movie, franchiseModifiers
     avgAudienceScore: 0
   };
 
-  // Money update (handled in controller but logic for record tracking)
-  studio.money += movie.profit;
+  // Money update (pro-rated if co-produced; issue #287)
+  const coShare = Number(movie.coProducerShare || 0);
+  const playerProfit = Math.round(movie.profit * (1 - coShare / 100));
+  studio.money += playerProfit;
 
   // Fan Growth: Audience Score, Box Office, Verdict
   const audienceScoreFactor = movie.audienceScore / 100;

@@ -549,6 +549,22 @@ export const replaceDirector = async (req, res) => {
       oldDirector.busyUntilWeek = null;
     }
 
+    // Sync busyUntilWeek for any actors whose activeActorProject is tied to
+    // this director project (matched via scriptId). Without this, actors can
+    // remain permanently BUSY if the replacement director has a different
+    // completionWeek than the original. (#275)
+    if (gameState.activeActorProjects) {
+      for (const actorProject of gameState.activeActorProjects) {
+        if (actorProject.movieId === project.scriptId || actorProject.scriptId === project.scriptId) {
+          actorProject.completionWeek = project.completionWeek;
+          const actor = gameState.ownedActors?.find(a => a.id === actorProject.actorId);
+          if (actor) {
+            actor.busyUntilWeek = project.completionWeek;
+          }
+        }
+      }
+    }
+
     await Notification.create({
       gameStateId: gameState._id,
       message: `${oldDirector?.name || "A director"} was replaced by ${newDirector.name} on ${project.movieName || "an active production"}. Movie quality -${penalty}.`,

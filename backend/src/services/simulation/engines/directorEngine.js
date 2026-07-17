@@ -112,13 +112,16 @@ const ageMarketDirectorPool = ({ directors = [], gameState }) => {
 /**
  * Processes a pool of owned directors (from gameState.ownedDirectors array):
  * ages them, retires those at the cap, flags projects for replacement.
+ * Directors currently assigned to active productions are skipped from
+ * retirement to prevent null reference crashes mid-production (#270).
  *
  * @param {object}   params
  * @param {Array}    params.directors - Array of owned director objects.
  * @param {object}   params.gameState - GameState document.
+ * @param {Set}      params.activeProductionDirectorIds - Set of director IDs in active movies.
  * @returns {{ activeDirectors: Array, retiredCount: number }}
  */
-const ageOwnedDirectorPool = ({ directors = [], gameState }) => {
+const ageOwnedDirectorPool = ({ directors = [], gameState, activeProductionDirectorIds = new Set() }) => {
   const activeDirectors = [];
   let retiredCount = 0;
 
@@ -131,6 +134,12 @@ const ageOwnedDirectorPool = ({ directors = [], gameState }) => {
     director.age = Number(director.age || 0) + 1;
 
     if (director.age >= RETIREMENT_AGE) {
+      // Do not retire a director who is currently assigned to an active production.
+      // Their retirement is deferred until the production completes.
+      if (activeProductionDirectorIds.has(director.id)) {
+        activeDirectors.push(director);
+        return;
+      }
       markRetiredDirectorProjectsForReplacement(gameState, director);
       archiveRetiredDirector(gameState, director);
       retiredCount += 1;
@@ -198,9 +207,20 @@ export const processDirectorAging = async (gameState) => {
   // -----------------------------------------------------------------------
   // 2. Owned directors (gameState.ownedDirectors)
   // -----------------------------------------------------------------------
+
+  // Collect director IDs who are currently assigned to active (non-released) movies
+  // so we can defer their retirement and prevent null-reference crashes (#270).
+  const activeProductionDirectorIds = new Set(
+    (gameState.activeMovies || [])
+      .filter((m) => !["RELEASED", "RELEASED_STREAMING"].includes(m.status))
+      .map((m) => m.directorId)
+      .filter(Boolean)
+  );
+
   const ownedResult = ageOwnedDirectorPool({
     directors: gameState.ownedDirectors || [],
     gameState,
+    activeProductionDirectorIds,
   });
 
   gameState.ownedDirectors = ownedResult.activeDirectors;

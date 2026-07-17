@@ -8,6 +8,41 @@ const MovieDetails = () => {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [screeningLoading, setScreeningLoading] = useState(false);
+  const [reshootLoading, setReshootLoading] = useState(false);
+
+  const handleHoldTestScreening = async () => {
+    try {
+      setScreeningLoading(true);
+      const res = await api.post(`/movies/${id}/test-screening`);
+      if (res.data.success) {
+        alert(`Test screening completed! Projected Score: ${res.data.projectedScore}`);
+        setMovie(res.data.movie);
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Failed to hold test screening");
+    } finally {
+      setScreeningLoading(false);
+    }
+  };
+
+  const handleOrderReshoots = async () => {
+    if (!window.confirm("Are you sure you want to order reshoots? This will extend post-production by 2 weeks and cost 15% of the movie budget.")) return;
+    try {
+      setReshootLoading(true);
+      const res = await api.post(`/movies/${id}/reshoots`);
+      if (res.data.success) {
+        alert(res.data.message);
+        setMovie(res.data.movie);
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Failed to order reshoots");
+    } finally {
+      setReshootLoading(false);
+    }
+  };
 
   const fetchMovieDetails = useCallback(async () => {
     try {
@@ -146,6 +181,44 @@ const MovieDetails = () => {
                       </Link>
                     )}
                 </div>
+
+                {movie.status === "POST_PRODUCTION" && (
+                  <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 space-y-4 text-left">
+                    <h3 className="text-lg font-bold text-white uppercase italic border-b border-slate-800 pb-4">
+                      Post-Production Suite
+                    </h3>
+                    
+                    <div className="space-y-2 text-sm text-slate-300">
+                      <div className="flex justify-between">
+                        <span>Test Screening Score:</span>
+                        <span className="font-bold text-white">
+                          {movie.testScreeningScore !== null && movie.testScreeningScore !== undefined ? `${movie.testScreeningScore}/100` : "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Reshoots Conducted:</span>
+                        <span className="font-bold text-white">{movie.reshoots || 0}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2">
+                      <button
+                        onClick={handleHoldTestScreening}
+                        disabled={screeningLoading}
+                        className="w-full bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white font-bold py-2.5 rounded-xl text-center text-xs transition cursor-pointer"
+                      >
+                        {screeningLoading ? "Conducting..." : "Hold Test Screening (₹50k)"}
+                      </button>
+                      <button
+                        onClick={handleOrderReshoots}
+                        disabled={reshootLoading}
+                        className="w-full bg-violet-600 hover:bg-violet-750 disabled:opacity-50 text-white font-bold py-2.5 rounded-xl text-center text-xs transition cursor-pointer"
+                      >
+                        {reshootLoading ? "Ordering..." : `Order Reshoots (₹${Math.max(200000, Math.round(movie.budget * 0.15)).toLocaleString()})`}
+                      </button>
+                    </div>
+                  </div>
+                )}
             </div>
 
             {/* Budget Breakdown */}

@@ -737,6 +737,28 @@ const gameStateSchema = new mongoose.Schema(
         ],
       },
     ],
+
+    // Film Crew Unions and Strikes (issue #285)
+    crewUnion: {
+      satisfaction: { type: Number, default: 100, min: 0, max: 100 },
+      isStriking: { type: Boolean, default: false },
+      strikeStartWeek: { type: Number, default: null }
+    },
+    
+    // Dynamic contract negotiation (issue #282)
+    pendingContracts: [{
+      talentId: { type: String, required: true },
+      talentType: { type: String, enum: ["ACTOR", "DIRECTOR", "WRITER"], required: true },
+      talentName: { type: String, default: "" },
+      offer: {
+        baseSalary: { type: Number, default: 0 },
+        backendPoints: { type: Number, default: 0 }, // percentage of profit
+        movieCount: { type: Number, default: 1 },    // multi-picture deal
+      },
+      patience: { type: Number, default: 3 },  // rounds before talent walks away
+      round: { type: Number, default: 0 },
+      status: { type: String, enum: ["PENDING", "ACCEPTED", "REJECTED", "EXPIRED"], default: "PENDING" },
+    }],
   },
   {
     timestamps: true,
