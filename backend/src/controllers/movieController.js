@@ -624,7 +624,7 @@ export const reReleaseMovie = async (req, res) => {
         message: `Insufficient funds. Re-release costs ₹${fee.toLocaleString()}.`,
       });
     }
-    const gameState = await GameState.findOne({ user: req.user._id });
+  
     const script = findScriptById(gameState, movie.scriptId);
     
     const genres = script?.genres || [];
