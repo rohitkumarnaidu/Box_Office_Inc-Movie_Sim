@@ -17,10 +17,8 @@ import {
 
 import api from "../../api/axios";
 import { setUser } from "../../features/auth/authSlice";
-import { setCurrentWeek } from "../../features/simulation/simulationSlice";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
-import StatCard from "../../components/common/StatCard";
 import SimulationSummaryModal from "../../components/simulation/SimulationSummaryModal";
 
 const Dashboard = () => {
@@ -242,7 +240,7 @@ const Dashboard = () => {
           </h2>
           
           <div className="space-y-4">
-            {recentEvents.map((event, index) => (
+            {recentEvents.map((event) => (
               <div 
                 key={event._id} 
                 className="flex gap-4 items-start hover:bg-slate-900/30 p-3 rounded-xl transition cursor-pointer"

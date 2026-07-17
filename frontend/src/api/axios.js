@@ -44,7 +44,7 @@ const decodeAccessTokenExpiresAt = (token) => {
   try {
     const decodedPayload = JSON.parse(window.atob(paddedPayload));
     return decodedPayload?.exp ? decodedPayload.exp * 1000 : null;
-  } catch (_error) {
+  } catch {
     return null;
   }
 };
