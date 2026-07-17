@@ -6,6 +6,7 @@ import { processCareerImpact } from "../src/services/simulation/engines/careerIm
 import { processWriterPayroll } from "../src/services/simulation/engines/payrollEngine.js";
 import { processStudioGrowth } from "../src/services/simulation/engines/studioGrowthEngine.js";
 import { VERDICTS } from "../src/constants/verdicts.js";
+import { escapeRegex, matchFranchiseTitle } from "../src/services/simulation/engines/franchiseEngine.js";
 
 // ---------------------------------------------------------------------------
 // reviewEngine.generateReviews — pure, no side effects
@@ -85,6 +86,21 @@ test("reviewEngine: missing talent defaults to neutral without throwing", () => 
   assert.strictEqual(result.criticScore, 50);
   assert.strictEqual(result.audienceScore, 50);
 });
+
+test("reviewEngine: corrupt/string/null/missing crew values do not produce NaN", () => {
+  const result = generateReviews(
+    { quality: null },
+    { quality: "60", audienceAppeal: "" },
+    { creativity: null, reputation: undefined },
+    { actingSkill: "abc", popularity: 50 },
+    { technicalQuality: undefined }
+  );
+  assert.ok(!isNaN(result.criticScore));
+  assert.ok(!isNaN(result.audienceScore));
+  assert.strictEqual(typeof result.criticLabel, "string");
+  assert.strictEqual(typeof result.audienceLabel, "string");
+});
+
 
 // ---------------------------------------------------------------------------
 // careerImpactEngine.processCareerImpact — mutates talent objects in place
@@ -329,4 +345,20 @@ test("studioGrowthEngine: crossing the fan threshold levels the studio up", () =
       gameState._pendingNotifications.some((n) => /leveled up/i.test(n.message)),
     "a level-up notification should be queued"
   );
+});
+
+// ---------------------------------------------------------------------------
+// franchiseEngine.escapeRegex & matchFranchiseTitle — escaping special characters
+// ---------------------------------------------------------------------------
+
+test("franchiseEngine: escapeRegex escapes special characters correctly", () => {
+  assert.strictEqual(escapeRegex("Marvel [MCU]"), "Marvel \\[MCU\\]");
+  assert.strictEqual(escapeRegex("Star Wars (Saga)"), "Star Wars \\(Saga\\)");
+  assert.strictEqual(escapeRegex("James Bond 007?"), "James Bond 007\\?");
+});
+
+test("franchiseEngine: matchFranchiseTitle matches titles containing special characters", () => {
+  assert.ok(matchFranchiseTitle("Marvel [MCU]: Iron Man", "Marvel [MCU]"));
+  assert.ok(matchFranchiseTitle("Star Wars (Saga): A New Hope", "Star Wars (Saga)"));
+  assert.ok(!matchFranchiseTitle("Star Trek: Nemesis", "Star Wars (Saga)"));
 });

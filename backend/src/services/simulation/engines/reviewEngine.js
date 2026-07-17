@@ -29,6 +29,12 @@ const getReviewLabel = (score) => {
   return "Excellent";
 };
 
+const parseStat = (val) => {
+  if (val === undefined || val === null || val === "") return 50;
+  const parsed = Number(val);
+  return isNaN(parsed) ? 50 : parsed;
+};
+
 /**
  * Generates critic and audience review scores for a movie.
  *
@@ -74,15 +80,19 @@ const getReviewLabel = (score) => {
  * }} Review scores and labels, both capped at 100.
  */
 export const generateReviews = (movie, script, director, leadActor, crewTeam) => {
-  // Defensive checks to prevent crashes if data is missing
-  const scriptQuality = script?.quality ?? 50;
-  const scriptAudienceAppeal = script?.audienceAppeal ?? 50;
-  const directorCreativity = director?.creativity ?? 50;
-  const directorReputation = director?.reputation ?? 50;
-  const crewTechnicalQuality = crewTeam?.technicalQuality ?? 50;
-  const actorActingSkill = leadActor?.actingSkill ?? 50;
-  const actorPopularity = leadActor?.popularity ?? 50;
-  const movieQuality = movie?.quality ?? 50;
+  // Defensive checks to prevent crashes if data is missing.
+  // Number() coercions guard against stored empty-strings or null values that
+  // would propagate as NaN through the arithmetic. (#277)
+  const safeCrewTeam = crewTeam ?? { technicalQuality: 50 };
+  const scriptQuality = parseStat(script?.quality);
+  const scriptAudienceAppeal = parseStat(script?.audienceAppeal);
+  const directorCreativity = parseStat(director?.creativity);
+  const directorReputation = parseStat(director?.reputation);
+  const crewTechnicalQuality = parseStat(safeCrewTeam?.technicalQuality);
+  const actorActingSkill = parseStat(leadActor?.actingSkill);
+  const actorPopularity = parseStat(leadActor?.popularity);
+  const movieQuality = parseStat(movie?.quality);
+
 
   // Critic Score Formula:
   // Script Quality → 40%

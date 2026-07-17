@@ -35,6 +35,7 @@ import MarketDashboard from "./pages/dashboard/MarketDashboard";
 import Franchises from "./pages/studio/Franchises";
 import FranchiseDetail from "./pages/studio/FranchiseDetail";
 import Leaderboard from "./pages/studio/Leaderboard";
+import HistoricRecords from "./pages/studio/HistoricRecords";
 import TalentProfile from "./pages/talent/TalentProfile";
 import DirectorProfile from "./pages/directors/DirectorProfile";
 import WriterProfile from "./pages/writers/WriterProfile";
@@ -88,6 +89,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Leaderboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/records"
+          element={
+            <ProtectedRoute>
+              <HistoricRecords />
             </ProtectedRoute>
           }
         />

@@ -1,16 +1,79 @@
-# React + Vite
+# CineVerse Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React-based frontend for the Box Office Inc - Movie Studio Simulator. Built with React 19, Vite, TailwindCSS 4, Redux Toolkit, and Recharts.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Dependency | Version | Purpose |
+|---|---|---|
+| React | ^19.2.6 | UI framework |
+| Vite | ^8.0.12 | Build tool |
+| Redux Toolkit | ^2.12.0 | State management |
+| React Router DOM | ^7.16.0 | Client-side routing |
+| TailwindCSS | ^4.3.0 | Utility-first CSS |
+| Axios | ^1.16.1 | HTTP client |
+| Recharts | ^3.9.1 | Charts and analytics |
+| Lucide React | ^1.17.0 | Icon library |
 
-## React Compiler
+## Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js 18+
+- Backend server running on port 5000 (or configured `VITE_BACKEND_API_URL`)
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+# Install dependencies
+npm install
+
+# Copy environment configuration
+cp .env.example .env
+
+# Start development server (default: http://localhost:5173)
+npm run dev
+
+# Create a production build
+npm run build
+
+# Preview the production build
+npm run preview
+```
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `VITE_BACKEND_API_URL` | Yes | `http://localhost:5000/api` | Backend API base URL |
+
+Copy `.env.example` to `.env` and update the values.
+
+## Project Structure
+
+```
+src/
+├── api/            # Axios instance with auth interceptors
+├── app/            # Redux store configuration
+├── components/     # Reusable UI components
+│   ├── common/     # Shared components (Sidebar, Toast, etc.)
+│   ├── ui/         # Primitive UI components (Skeleton, etc.)
+│   └── ...         # Feature-specific components
+├── features/       # Redux slices (auth, movie, studio, etc.)
+├── layouts/        # Page layouts (DashboardLayout, AuthLayout)
+├── pages/          # Route page components
+├── routes/         # Route configuration and guards
+└── utils/          # Utility modules
+```
+
+## Scripts
+
+- `npm run dev` - Start development server with HMR
+- `npm run build` - Create production build
+- `npm run preview` - Preview production build locally
+- `npm run lint` - Run ESLint
+
+## Architecture
+
+- **State Management**: Redux Toolkit with slices for auth, movie, studio, simulation, notification, talent, awards, and UI toast state
+- **Routing**: React Router v7 with `ProtectedRoute` guard for authenticated pages
+- **API Layer**: Axios instance with automatic token refresh, retry logic, and error normalization
+- **Styling**: TailwindCSS v4 with CSS variables for theme support (dark/light mode via `ThemeContext`)

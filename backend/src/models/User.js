@@ -42,6 +42,7 @@ const userSchema = new mongoose.Schema(
         tokenHash: {
           type: String,
           required: true,
+          index: true,
         },
         createdAt: {
           type: Date,

@@ -11,6 +11,7 @@
 
 import { addNotification } from "../helpers/notificationHelper.js";
 import { VERDICTS, getVerdict } from "../../../constants/verdicts.js";
+import { addHistoricRecord } from "../helpers/historicRecordHelper.js";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -286,6 +287,21 @@ const _releaseRivalMovie = (rival, movie, currentWeek) => {
   rival.movieHistory = rival.movieHistory || [];
   rival.movieHistory.push(historyEntry);
   if (rival.movieHistory.length > 20) rival.movieHistory.shift();
+
+  // Add to historic records
+  const rivalOpeningWeekend = Math.round(boxOffice * (0.3 + Math.random() * 0.1));
+  addHistoricRecord({
+    title: movie.title,
+    studioId: rival.id,
+    studioName: rival.name,
+    worldwideGross: boxOffice,
+    openingWeekend: rivalOpeningWeekend,
+    roi,
+    releaseWeek: currentWeek,
+    isRival: true
+  }).catch((recordErr) => {
+    console.error("Failed to save historic record for rival:", recordErr.message);
+  });
 
   return { boxOffice, profit, verdict, title: movie.title, genre: movie.genre };
 };

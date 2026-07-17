@@ -6,6 +6,14 @@ import {
   recordAuthEvent,
 } from "../services/auth/authMonitoringService.js";
 
+const authError = (res, status, code, message, req) =>
+  res.status(status).json({
+    success: false,
+    code,
+    message,
+    requestId: req.requestId,
+  });
+
 export const protect = async (req, res, next) => {
   try {
     let token;
@@ -43,10 +51,7 @@ export const protect = async (req, res, next) => {
         reason: "ACCESS_USER_NOT_FOUND",
       });
 
-      return res.status(401).json({
-        success: false,
-        message: "User not found",
-      });
+      return authError(res, 401, "ACCESS_USER_NOT_FOUND", "User account not found.", req);
     }
 
     if (user.isDisabled) {
@@ -56,11 +61,7 @@ export const protect = async (req, res, next) => {
         reason: "ACCOUNT_DISABLED",
       });
 
-      return res.status(403).json({
-        success: false,
-        code: "ACCOUNT_DISABLED",
-        message: "Account disabled",
-      });
+      return authError(res, 403, "ACCOUNT_DISABLED", "This account has been disabled.", req);
     }
 
     req.user = user;
@@ -75,9 +76,13 @@ export const protect = async (req, res, next) => {
       reason: error.name || "ACCESS_TOKEN_INVALID",
     });
 
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token",
-    });
+    const isExpired = error.name === "TokenExpiredError";
+    return authError(
+      res,
+      401,
+      isExpired ? "TOKEN_EXPIRED" : "TOKEN_INVALID",
+      isExpired ? "Your session has expired. Please log in again." : "Invalid or malformed authentication token.",
+      req,
+    );
   }
 };
