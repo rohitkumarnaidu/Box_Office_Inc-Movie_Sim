@@ -6,7 +6,8 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 
 import env from "./config/envConfig.js";
-import { apiRateLimiter, authRateLimiter, simulationRateLimiter } from "./middleware/rateLimiter.js";
+import requestIdMiddleware from "./middleware/requestIdMiddleware.js";
+import errorHandler from "./middleware/errorMiddleware.js";
 
 import marketingRoutes from "./routes/marketingRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -40,23 +41,27 @@ import contractRoutes from "./routes/contractRoutes.js";
 import testScreeningRoutes from "./routes/testScreeningRoutes.js";
 import recordsRoutes from "./routes/recordsRoutes.js";
 
-import errorHandler from "./middleware/errorMiddleware.js";
-import logger from "./utils/logger.js";
-
 const app = express();
+
+const corsOrigins = env.CLIENT_URL
+  ? env.CLIENT_URL.split(",").map((s) => s.trim())
+  : [];
 
 app.use(
   cors({
-    origin: [env.CLIENT_URL, "http://localhost:5173", "http://localhost:3000"],
+    origin: corsOrigins.length > 0 ? corsOrigins : false,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+app.use(requestIdMiddleware);
 app.use(helmet());
-app.use(morgan("dev"));
+app.use(morgan(env.LOG_LEVEL));
 app.use(compression());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
 import rateLimit from "express-rate-limit";
 
@@ -78,6 +83,7 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
     message: "Box-Office-Inc API Running",
+    requestId: req.requestId,
   });
 });
 
@@ -115,7 +121,9 @@ app.use("/api/records", apiRateLimiter, recordsRoutes);
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: "Route Not Found",
+    code: "ROUTE_NOT_FOUND",
+    message: `Route ${req.method} ${req.originalUrl} not found`,
+    requestId: req.requestId,
   });
 });
 
