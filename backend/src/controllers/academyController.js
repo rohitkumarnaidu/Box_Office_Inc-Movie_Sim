@@ -1,12 +1,6 @@
 import GameState from "../models/GameState.js";
 import Studio from "../models/Studio.js";
-
-const BOOTCAMPS = {
-  acting_masterclass: { name: "Acting Masterclass", cost: 500000, stat: "actingSkill", boost: 5, target: "actor" },
-  media_training: { name: "Media Training", cost: 200000, stat: "reputation", boost: 5, target: "any" },
-  directing_workshop: { name: "Directing Workshop", cost: 500000, stat: "creativity", boost: 5, target: "director" },
-  leadership_bootcamp: { name: "Leadership Bootcamp", cost: 300000, stat: "leadership", boost: 5, target: "director" }
-};
+import { BOOTCAMPS } from "../constants/gameConstants.js";
 
 export const trainTalent = async (req, res) => {
   try {

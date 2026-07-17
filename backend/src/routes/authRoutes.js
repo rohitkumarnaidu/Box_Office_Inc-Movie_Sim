@@ -7,6 +7,7 @@ import {
   logout,
   getMe,
   getAuthDiagnostics,
+  googleAuth
 } from "../controllers/authController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -15,9 +16,10 @@ import { registerSchema, loginSchema } from "../validators/authValidators.js";
 
 const router = express.Router();
 
-router.post("/register", validate(registerSchema), register);
+// FIXED: Wrapped the schemas in an object with a 'body' property so the middleware catches them!
+router.post("/register", validate({ body: registerSchema }), register);
 
-router.post("/login", validate(loginSchema), login);
+router.post("/login", validate({ body: loginSchema }), login);
 
 router.post("/refresh", refreshSession);
 
@@ -26,5 +28,7 @@ router.post("/logout", logout);
 router.get("/diagnostics", protect, getAuthDiagnostics);
 
 router.get("/me", protect, getMe);
+
+router.post('/google', googleAuth);
 
 export default router;

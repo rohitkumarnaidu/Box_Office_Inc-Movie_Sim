@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import { isRefreshSessionRejected, refreshAuthSession } from "../api/axios";
 import { logout } from "../features/auth/authSlice";
 import api from "../api/axios";
+import ErrorBoundary from "../components/common/ErrorBoundary";
 
 const ProtectedRoute = ({ children }) => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const { token } = useSelector((state) => state.auth);
   const [checkingSession, setCheckingSession] = useState(!token);
   const [sessionRecoveryError, setSessionRecoveryError] = useState(false);
@@ -121,7 +123,11 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return children;
+  return (
+    <ErrorBoundary fallbackTitle="Page crashed" key={location.pathname}>
+      {children}
+    </ErrorBoundary>
+  );
 };
 
 export default ProtectedRoute;

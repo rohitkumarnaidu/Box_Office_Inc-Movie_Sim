@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 
 import env from "./config/envConfig.js";
+import { apiRateLimiter, authRateLimiter, simulationRateLimiter } from "./middleware/rateLimiter.js";
 
 import marketingRoutes from "./routes/marketingRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -33,6 +34,7 @@ import loanRoutes from "./routes/loanRoutes.js";
 import merchRoutes from "./routes/merchRoutes.js";
 
 import errorHandler from "./middleware/errorMiddleware.js";
+import logger from "./utils/logger.js";
 
 const app = express();
 
@@ -49,6 +51,21 @@ app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+import rateLimit from "express-rate-limit";
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: "Too many requests, please try again later."
+  }
+});
+
+// FIXED: Actually apply the limiter to the API, but skip it during testing so the CI doesn't crash!
+if (process.env.NODE_ENV !== "test") {
+  app.use("/api", limiter);
+}
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
@@ -57,29 +74,29 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/scripts", scriptRoutes);
-app.use("/api/writers", writersRoutes);
-app.use("/api/upgrades", upgradesRoutes);
-app.use("/api/directors", directorRoutes);
-app.use("/api/actors", actorsRoutes);
-app.use("/api/academy", academyRoutes);
-app.use("/api/crew", crewRoutes);
-app.use("/api/movies", movieRoutes);
-app.use("/api/simulation", simulationRoutes);
-app.use("/api/notifications", notificationsRoutes);
-app.use("/api/awards-campaign", awardsCampaignRoutes);
-app.use("/api/news", newsRoutes);
-app.use("/api/franchises", franchiseRoutes);
-app.use("/api/streaming", streamingRoutes);
-app.use("/api/tv-shows", tvShowRoutes);
-app.use("/api/rival-studios", rivalsRoutes);
-app.use("/api/spy", spyRoutes);
-app.use("/api/leaderboard", leaderboardRoutes);
-app.use("/api/studios", studioRoutes);
-app.use("/api/studios/loans", loanRoutes);
-app.use("/api/marketing", marketingRoutes);
-app.use("/api/reviews", reviewDashboardRoutes);
+app.use("/api/auth", authRateLimiter, authRoutes);
+app.use("/api/scripts", apiRateLimiter, scriptRoutes);
+app.use("/api/writers", apiRateLimiter, writersRoutes);
+app.use("/api/upgrades", apiRateLimiter, upgradesRoutes);
+app.use("/api/directors", apiRateLimiter, directorRoutes);
+app.use("/api/actors", apiRateLimiter, actorsRoutes);
+app.use("/api/academy", apiRateLimiter, academyRoutes);
+app.use("/api/crew", apiRateLimiter, crewRoutes);
+app.use("/api/movies", apiRateLimiter, movieRoutes);
+app.use("/api/simulation", simulationRateLimiter, simulationRoutes);
+app.use("/api/notifications", apiRateLimiter, notificationsRoutes);
+app.use("/api/awards-campaign", apiRateLimiter, awardsCampaignRoutes);
+app.use("/api/news", apiRateLimiter, newsRoutes);
+app.use("/api/franchises", apiRateLimiter, franchiseRoutes);
+app.use("/api/streaming", apiRateLimiter, streamingRoutes);
+app.use("/api/tv-shows", apiRateLimiter, tvShowRoutes);
+app.use("/api/rival-studios", apiRateLimiter, rivalsRoutes);
+app.use("/api/spy", apiRateLimiter, spyRoutes);
+app.use("/api/leaderboard", apiRateLimiter, leaderboardRoutes);
+app.use("/api/studios", apiRateLimiter, studioRoutes);
+app.use("/api/studios/loans", apiRateLimiter, loanRoutes);
+app.use("/api/marketing", apiRateLimiter, marketingRoutes);
+app.use("/api/reviews", apiRateLimiter, reviewDashboardRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
