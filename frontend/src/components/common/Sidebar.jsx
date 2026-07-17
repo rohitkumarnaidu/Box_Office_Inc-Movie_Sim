@@ -46,6 +46,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: Trophy,
     },
     {
+      name: "Historic Records",
+      path: "/records",
+      icon: Trophy,
+    },
+    {
       name: "Movies",
       path: "/movies",
       icon: Film,

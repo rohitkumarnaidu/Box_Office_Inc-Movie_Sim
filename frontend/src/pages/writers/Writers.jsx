@@ -427,12 +427,12 @@ const Writers = () => {
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search writer name..."
-            className="bg-slate-800 border border-slate-700 rounded-xl p-3 text-white placeholder:text-slate-500 outline-none focus:border-violet-500"
+            className="col-span-2 sm:col-span-1 bg-slate-800 border border-slate-700 rounded-xl p-3 text-white placeholder:text-slate-500 outline-none focus:border-violet-500"
           />
 
           <select

@@ -25,3 +25,12 @@ export const createMovieSchema = z.object({
 export const releaseMovieParamsSchema = z.object({
   id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Movie ID format"),
 });
+
+export const addMarketingCampaignSchema = {
+  body: z.object({
+    campaignId: z.string().trim().min(1, "Campaign ID is required"),
+  }),
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Movie ID format"),
+  }),
+};

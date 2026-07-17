@@ -96,10 +96,13 @@ test("errorHandler formats ZodError correctly", () => {
   assert.equal(resStatus, 400);
   assert.deepEqual(resJson, {
     success: false,
+    code: "VALIDATION_ERROR",
+    message: "Request validation failed",
     errors: [
       {
         field: "age",
         message: "Expected number, received string",
+        code: "invalid_type",
       },
     ],
   });

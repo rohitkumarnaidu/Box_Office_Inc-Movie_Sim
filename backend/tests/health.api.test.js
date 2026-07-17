@@ -42,7 +42,7 @@ test("an unknown route returns the 404 JSON envelope", async () => {
   assert.strictEqual(res.status, 404);
   const body = await res.json();
   assert.strictEqual(body.success, false);
-  assert.match(body.message, /Route Not Found/);
+  assert.match(body.message, /not found/i);
 });
 
 test("security middleware (helmet) sets X-Content-Type-Options: nosniff", async () => {

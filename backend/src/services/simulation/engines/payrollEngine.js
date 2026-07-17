@@ -15,6 +15,9 @@ import { addNotification } from "../helpers/notificationHelper.js";
  * Assumptions:
  * - Payroll fires every week regardless of project status (bench cost model).
  * - Studio money is floored at 0; it can never go negative from payroll alone.
+ * - When the studio balance is already at or below 0 the run is skipped entirely
+ *   and a bankruptcy-risk warning is emitted instead, preventing further
+ *   deductions from compounding on an already-insolvent studio (#276).
  * - `talent.salary` is treated as a weekly figure.
  */
 
@@ -64,6 +67,17 @@ export const processWriterPayroll = (gameState, studio) => {
   }
 
   const availableMoney = Number(studio.money || 0);
+
+  // Issue #276: do not run further deductions when the studio is already insolvent.
+  // A warning is emitted so the player knows payroll was skipped.
+  if (availableMoney <= 0) {
+    addNotification(
+      gameState,
+      `Studio is insolvent (balance ₹0). Weekly payroll of ₹${totalPayroll.toLocaleString()} was skipped. Resolve your debt to resume salary payments.`
+    );
+    studio.bankruptcyWarning = true;
+    return;
+  }
 
   if (availableMoney < totalPayroll) {
     addNotification(

@@ -11,6 +11,7 @@ import {
   getMovieDetails,
   generateTitle,
   getMovieTracking,
+  reReleaseMovie,
 } from "../controllers/movieController.js";
 
 const router = express.Router();
@@ -24,6 +25,7 @@ router.get("/released", protect, getReleasedMovies);
 // FIXED: Wrapped schemas in an object containing a 'body' property
 router.post("/:id/release", protect, validate({ params: releaseMovieParamsSchema }), releaseMovie);
 router.get("/:id/tracking", protect, getMovieTracking);
+router.post("/:id/rerelease", protect, reReleaseMovie);
 router.get("/:id", protect, getMovieDetails);
 
 export default router;
