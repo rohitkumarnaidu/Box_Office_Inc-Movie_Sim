@@ -17,6 +17,12 @@ const variantConfig = {
     showTags: false,
     rows: 4,
   },
+  detail: {
+    minHeight: "min-h-[480px]",
+    showAvatar: false,
+    showTags: false,
+    rows: 6,
+  },
 };
 
 const SkeletonLine = ({ className = "" }) => (
@@ -68,6 +74,54 @@ const SkeletonCard = ({ variant = "default" }) => {
     </div>
   );
 };
+
+export const PageSkeleton = ({ title = "Loading..." }) => (
+  <div className="animate-pulse space-y-6 p-6" role="status" aria-label={title}>
+    <div className="flex items-center gap-4">
+      <SkeletonLine className="h-10 w-10 rounded-xl" />
+      <div className="space-y-2">
+        <SkeletonLine className="h-6 w-48 rounded-lg" />
+        <SkeletonLine className="h-4 w-32 rounded-lg" />
+      </div>
+    </div>
+    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex h-40 animate-pulse flex-col rounded-2xl border border-slate-800 bg-[#111827] p-5"
+        >
+          <SkeletonLine className="h-4 w-24 rounded-lg" />
+          <SkeletonLine className="mt-3 h-8 w-20 rounded-lg" />
+          <SkeletonLine className="mt-auto h-4 w-32 rounded-lg" />
+        </div>
+      ))}
+    </div>
+    <SkeletonLine className="h-64 w-full rounded-2xl" />
+  </div>
+);
+
+export const DetailSkeleton = ({ title = "Loading details..." }) => (
+  <div className="animate-pulse space-y-6" role="status" aria-label={title}>
+    <div className="flex flex-col items-center space-y-4 py-8">
+      <SkeletonLine className="h-28 w-28 rounded-full" />
+      <SkeletonLine className="h-8 w-56 rounded-lg" />
+      <SkeletonLine className="h-4 w-32 rounded-lg" />
+    </div>
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-[#111827] p-4"
+        >
+          <SkeletonLine className="h-3 w-20 rounded-lg" />
+          <SkeletonLine className="h-6 w-16 rounded-lg" />
+        </div>
+      ))}
+    </div>
+    <SkeletonLine className="h-48 w-full rounded-2xl" />
+    <SkeletonLine className="h-48 w-full rounded-2xl" />
+  </div>
+);
 
 export const SkeletonGrid = ({ count = 6, variant = "default" }) => {
   return (

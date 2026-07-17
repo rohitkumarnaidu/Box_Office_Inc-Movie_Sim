@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import { DetailSkeleton } from "../../components/common/SkeletonGrid";
 import { Film, Calendar, Users, Briefcase, IndianRupee, Clock, ArrowLeft, CheckCircle2 } from "lucide-react";
 
 const MovieDetails = () => {
@@ -60,7 +61,7 @@ const MovieDetails = () => {
     fetchMovieDetails();
   }, [fetchMovieDetails]);
 
-  if (loading) return <DashboardLayout><div className="text-white text-center py-20 font-bold">Loading Production Data...</div></DashboardLayout>;
+  if (loading) return <DashboardLayout><DetailSkeleton title="Loading movie details..." /></DashboardLayout>;
   if (!movie) return <DashboardLayout><div className="text-white text-center py-20 font-bold">Movie Not Found</div></DashboardLayout>;
 
   const stages = [

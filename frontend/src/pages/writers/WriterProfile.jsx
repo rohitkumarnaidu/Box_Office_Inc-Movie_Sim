@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 
 import api from "../../api/axios";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import { DetailSkeleton } from "../../components/common/SkeletonGrid";
 
 const formatCurrency = (value) => `₹${Number(value || 0).toLocaleString()}`;
 
@@ -33,13 +34,7 @@ const WriterProfile = () => {
   }, [loadProfile]);
 
   if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="bg-[#111827] border border-slate-800 rounded-2xl p-12 text-center">
-          <h2 className="text-2xl font-bold text-white">Loading profile...</h2>
-        </div>
-      </DashboardLayout>
-    );
+    return <DashboardLayout><DetailSkeleton title="Loading writer profile..." /></DashboardLayout>;
   }
 
   if (error || !profile) {
