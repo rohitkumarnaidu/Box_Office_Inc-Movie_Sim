@@ -19,11 +19,14 @@ export const rateLimiter = (options = {}) => {
       entry = { windowStart: now, count: 0 };
       requestCounts.set(key, entry);
 
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         if (requestCounts.get(key) === entry) {
           requestCounts.delete(key);
         }
       }, windowMs);
+      if (timer && typeof timer.unref === "function") {
+        timer.unref();
+      }
     }
 
     entry.count++;
