@@ -73,6 +73,12 @@ const STAGES = {
 export const processProduction = async (gameState, studio) => {
   if (!gameState.activeMovies || gameState.activeMovies.length === 0) return;
 
+  // Lock production if crew union is striking (issue #285)
+  if (gameState.crewUnion && gameState.crewUnion.isStriking) {
+    addNotification(gameState, "Production is halted: film crew union is currently striking!");
+    return;
+  }
+
   const movies = await Movie.find({
     _id: { $in: gameState.activeMovies },
     status: { $in: Object.keys(STAGES) },
@@ -88,6 +94,10 @@ export const processProduction = async (gameState, studio) => {
     if ((movie.delayWeeks || 0) > 0) {
       movie.delayWeeks -= 1;
       addNotification(gameState, `Production on "${movie.title}" is delayed (${movie.delayWeeks} week(s) remaining).`);
+      if (gameState.crewUnion) {
+        gameState.crewUnion.satisfaction = Math.max(0, (gameState.crewUnion.satisfaction || 100) - 10);
+      }
+      gameState.productionDelayHappened = true;
       await movie.save();
       continue;
     }
@@ -114,6 +124,10 @@ export const processProduction = async (gameState, studio) => {
       delay = true;
       weeklyProgress = 0;
       addNotification(gameState, `Production on "${movie.title}" faced a delay due to reliability issues.`);
+      if (gameState.crewUnion) {
+        gameState.crewUnion.satisfaction = Math.max(0, (gameState.crewUnion.satisfaction || 100) - 15);
+      }
+      gameState.productionDelayHappened = true;
     } else if (avgReliability > 80 && roll > 80) {
       weeklyProgress = 2;
       addNotification(gameState, `Production on "${movie.title}" is ahead of schedule!`);

@@ -2,6 +2,7 @@ import { processDirectorAwards } from "../../director/directorAwardsService.js";
 import { processActorAwards } from "../../actor/actorAwardsService.js";
 import { processCrewProgression } from "../../crew/crewProgressionService.js";
 import { processDirectorAging } from "./directorEngine.js";
+import { processActorAging } from "./actorEngine.js";
 import { processDirectingProjects } from "./directingProjectEngine.js";
 import { processProduction } from "./productionEngine.js";
 import { processWriterPayroll } from "./payrollEngine.js";
@@ -15,6 +16,9 @@ import { processAnnualAwards } from "./awardsEngine.js";
 import { generateNewsFromTrend, generateNewsFromEvent } from "./newsEngine.js";
 import { processStreamingPlatformGrowth, processStreamingRevenue } from "./streamingEngine.js";
 import { processLoanRepayments } from "./loanRepaymentEngine.js";
+import { processFanClubTick } from "./fanClubEngine.js";
+import { processUnionSatisfaction } from "./unionEngine.js";
+import { processScandals } from "./prEngine.js";
 
 import { addNotification } from "../helpers/notificationHelper.js";
 import { processWriterAging } from "../helpers/agingHelper.js";
@@ -87,6 +91,9 @@ export const processWeeklyTick = async (gameState, studio) => {
 
   processWriterPayroll(gameState, studio);
 
+  // Process weekly fan club updates (issue #284)
+  processFanClubTick(gameState, studio);
+
   // Process weekly loan repayments and bankruptcy tracking (issue #195)
   processLoanRepayments(studio, gameState, addNotification);
 
@@ -96,12 +103,17 @@ export const processWeeklyTick = async (gameState, studio) => {
 
   await processProduction(gameState, studio);
 
+  // Process crew union satisfaction and strike states (issue #285)
+  processUnionSatisfaction(gameState, studio);
+
   // Tick rival studios — collect their releases for the weekly summary
   const rivalReleases = processRivalStudios(gameState);
 
   processWriterAging(gameState);
 
   await processDirectorAging(gameState);
+
+  await processActorAging(gameState);
 
   const awardYear = Math.floor((Number(gameState.currentWeek || 1) - 1) / 52) + 1;
   const isAwardWeek = gameState.currentWeek % 52 === 0;
@@ -214,6 +226,10 @@ export const processWeeklyTick = async (gameState, studio) => {
   // Recurring weekly streaming revenue for accepted deals (issue #41) — runs
   // after platform growth so royalties reflect this week's platform popularity.
   await processStreamingRevenue(gameState, studio);
+
+  // 12. PR & Scandal events — roll for studio scandals and apply
+  //     reputation decay (issue #281).
+  processScandals(gameState, studio);
 
   return { gameState, rivalReleases };
 };

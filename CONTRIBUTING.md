@@ -188,6 +188,8 @@ For **ECSOC 2026** contributions, the **`ECSoC26`** label will be added by a pro
 - Use functional components.
 - Prefer React Hooks.
 - Keep components modular and reusable.
+- Use Redux Toolkit `createSlice` for state management.
+- Place API calls in custom hooks or service modules, not in components.
 
 ## Naming Conventions
 
@@ -195,10 +197,25 @@ For **ECSOC 2026** contributions, the **`ECSoC26`** label will be added by a pro
 - Functions → `camelCase`
 - React Components → `PascalCase`
 - Constants → `UPPER_SNAKE_CASE`
+- File names match exported component names (e.g., `ActorCard.jsx` exports `ActorCard`).
+- Slice files are named with camelCase (`authSlice.js`, `movieSlice.js`).
+
+## Styling
+
+- Use TailwindCSS utility classes. Avoid inline styles for layout.
+- Use CSS variables (via `ThemeContext`) for theme-aware colors.
+- Follow existing spacing patterns (p-4, p-6, gap-4, rounded-2xl, etc.).
+- Responsive design: test on mobile (375px) and desktop (1440px).
+
+## Testing
+
+- Backend: Node.js built-in test runner, files in `backend/tests/`.
+- Run `npm test` in the `backend/` directory.
+- Frontend tests should be added in `frontend/src/__tests__/` using Vitest.
 
 ## Comments
 
-Write comments only where necessary to explain complex logic.
+Write comments only where necessary to explain complex logic. Avoid redundant comments that restate the code.
 
 ---
 

@@ -14,6 +14,14 @@
 import { VERDICTS, getVerdict } from "../../../constants/verdicts.js";
 
 /**
+ * Hard cap on any single gross figure. JavaScript Numbers are 64-bit doubles
+ * and remain precise up to 2^53, but the game economy never warrants values
+ * above ₹10 Billion — anything beyond that is clamped to avoid arithmetic
+ * anomalies (e.g., Infinity, -0, or precision drift near MAX_SAFE_INTEGER).
+ */
+export const MAX_GROSS = 10_000_000_000; // ₹10 Billion
+
+/**
  * Generates the full box-office result for a movie release.
  *
  * ## Calculation Flow
@@ -95,10 +103,12 @@ export const generateBoxOffice = (movie, leadActor, director, marketMultiplier =
   // Worldwide Gross influenced by Audience Score (legs) and Critic Score (prestige)
   // Legs factor: high audience score means movie stays in theaters longer
   const legs = (audienceFactor * 5) + (criticFactor * 2) + (Math.random() * 2);
-  const worldwideGross = Math.round(openingWeekend * (1.5 + legs) * (0.8 + Math.random() * 0.4));
+  // Clamp to MAX_GROSS to prevent integer-overflow / Infinity anomalies
+  const rawWorldwideGross = Math.round(openingWeekend * (1.5 + legs) * (0.8 + Math.random() * 0.4));
+  const worldwideGross = Math.min(rawWorldwideGross, MAX_GROSS);
 
-  const domesticGross = Math.round(worldwideGross * 0.45);
-  const internationalGross = worldwideGross - domesticGross;
+  const domesticGross = Math.min(Math.round(worldwideGross * 0.45), MAX_GROSS);
+  const internationalGross = Math.min(worldwideGross - domesticGross, MAX_GROSS);
 
   const totalBudget = (movie.budget || 0) + (movie.marketingBudget || 0);
   // Instruction: profit = worldwideGross - productionBudget - marketingBudget
@@ -107,7 +117,7 @@ export const generateBoxOffice = (movie, leadActor, director, marketMultiplier =
   const roi = totalBudget > 0 ? profit / totalBudget : worldwideGross / 1000000; // Fallback if budget 0
 
   return {
-    openingWeekend,
+    openingWeekend: Math.min(openingWeekend, MAX_GROSS),
     domesticGross,
     internationalGross,
     worldwideGross,

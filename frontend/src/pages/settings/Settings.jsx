@@ -79,7 +79,11 @@ const Settings = () => {
           </div>
 
           {loading ? (
-            <p className="text-slate-400 text-sm">Loading studio profile...</p>
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 w-24 bg-slate-800 rounded-lg" />
+              <div className="h-12 w-full bg-slate-800 rounded-xl" />
+              <div className="h-10 w-32 bg-slate-800 rounded-xl" />
+            </div>
           ) : (
             <form onSubmit={handleUpdateStudio} className="space-y-4">
               {error && (

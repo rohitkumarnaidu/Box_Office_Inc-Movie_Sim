@@ -167,21 +167,21 @@ const Dashboard = () => {
 
         {/* Studio Overview Redesigned */}
         <div className="bg-[#111827] rounded-2xl p-4 sm:p-6 border border-slate-800">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <Building className="text-violet-400" />
-            Studio Overview
+          <h2 className="text-lg sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+            <Building className="text-violet-400 shrink-0" size={22} />
+            <span>Studio Overview</span>
           </h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             {/* Studio Name Card */}
-            <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700 hover:border-violet-500 transition">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="bg-violet-600/20 p-2 rounded-lg">
-                  <Building className="text-violet-400" size={20} />
+            <div className="col-span-2 sm:col-span-1 bg-slate-900/50 rounded-xl p-3 sm:p-4 border border-slate-700 hover:border-violet-500 transition">
+              <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                <div className="bg-violet-600/20 p-1.5 sm:p-2 rounded-lg">
+                  <Building className="text-violet-400" size={16} />
                 </div>
-                <span className="text-slate-400 text-sm font-medium">Studio Name</span>
+                <span className="text-slate-400 text-xs sm:text-sm font-medium">Studio Name</span>
               </div>
-              <h3 className="text-xl font-bold text-white truncate">{user?.studio?.name || 'My Studio'}</h3>
+              <h3 className="text-base sm:text-xl font-bold text-white truncate">{user?.studio?.name || 'My Studio'}</h3>
             </div>
 
             {/* Money Card */}
