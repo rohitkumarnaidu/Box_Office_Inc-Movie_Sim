@@ -31,7 +31,11 @@ export const protect = async (req, res, next) => {
         reason: "ACCESS_TOKEN_MISSING",
       });
 
-      return authError(res, 401, "ACCESS_TOKEN_MISSING", "Authentication required. Please log in.", req);
+      return res.status(401).json({
+        success: false,
+        code: "ACCESS_TOKEN_MISSING",
+        message: "Authentication required. Please log in.",
+      });
     }
 
     const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET);

@@ -59,8 +59,11 @@ app.use(
 
 app.use(requestIdMiddleware);
 app.use(helmet());
+
 app.use(morgan(env.LOG_LEVEL));
+
 app.use(compression());
+
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
@@ -79,6 +82,16 @@ const limiter = rateLimit({
 if (process.env.NODE_ENV !== "test") {
   app.use("/api", limiter);
 }
+
+app.use((req, res, next) => {
+  res.setTimeout(env.REQUEST_TIMEOUT_MS, () => {
+    res.status(408).json({
+      success: false,
+      message: "Request timeout. Please try again.",
+    });
+  });
+  next();
+});
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
