@@ -28,3 +28,12 @@ export const createMovieSchema = z.object({
 export const releaseMovieParamsSchema = z.object({
   id: z.string().regex(objectIdRegex, "Invalid Movie ID format"),
 });
+
+// RESTORED: This was accidentally deleted and caused the test imports to fail
+export const addMarketingCampaignSchema = z.object({
+  id: z.string().regex(objectIdRegex, "Invalid Movie ID format"),
+  marketingCampaignIds: z.array(z.string()).min(1, "At least one campaign ID is required").refine(
+    (ids) => ids.every((id) => VALID_CAMPAIGN_IDS.includes(id)),
+    { message: `Each marketing campaign ID must be one of: ${VALID_CAMPAIGN_IDS.join(", ")}` }
+  )
+});
