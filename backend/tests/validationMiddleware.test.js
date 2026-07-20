@@ -92,8 +92,7 @@ test("errorHandler formats ZodError correctly", () => {
   };
 
   errorHandler(zodError, {}, res, () => {});
-
-  assert.equal(resStatus, 400);
+assert.equal(resStatus, 400);
   assert.deepEqual(resJson, {
     success: false,
     code: "VALIDATION_ERROR",
