@@ -195,7 +195,7 @@ const Actors = () => {
       await Promise.all([fetchMarketActors(), fetchOwnedActors()]);
     } catch (loadError) {
       console.error(loadError);
-      setError(loadError?.response?.data?.message || "Failed to load actors");
+      setError(loadError?.message || "Failed to load actors");
     } finally {
       setLoading(false);
     }
@@ -221,7 +221,7 @@ const Actors = () => {
       );
     } catch (hireError) {
       console.error(hireError);
-      setError(hireError?.response?.data?.message || "Failed to hire actor");
+      setError(hireError?.message || "Failed to hire actor");
     } finally {
       setActionLoading(false);
     }
@@ -243,7 +243,7 @@ const Actors = () => {
       );
     } catch (fireError) {
       console.error(fireError);
-      setError(fireError?.response?.data?.message || "Failed to release actor");
+      setError(fireError?.message || "Failed to release actor");
     } finally {
       setActionLoading(false);
     }

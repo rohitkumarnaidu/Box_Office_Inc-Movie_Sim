@@ -80,7 +80,7 @@ const Scripts = () => {
       setActiveTab("market");
     } catch (error) {
       console.error(error);
-      alert(error?.response?.data?.message || "Failed to generate scripts");
+      alert(error?.message || "Failed to generate scripts");
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ const Scripts = () => {
       alert("Script Purchased");
       setActiveTab("owned");
     } catch (error) {
-      alert(error?.response?.data?.message || "Purchase Failed");
+      alert(error?.message || "Purchase Failed");
     }
   };
 
@@ -104,7 +104,7 @@ const Scripts = () => {
       alert("Script Sold");
       setActiveTab("market");
     } catch (error) {
-      alert(error?.response?.data?.message || "Sell Failed");
+      alert(error?.message || "Sell Failed");
     }
   };
 
