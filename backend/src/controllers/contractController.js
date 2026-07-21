@@ -249,6 +249,46 @@ export const getPendingContracts = async (req, res) => {
   }
 };
 
+/**
+ * Buyout and terminate active contract.
+ * POST /api/contracts/buyout
+ */
+export const buyoutContract = async (req, res) => {
+  try {
+    const { contractId } = req.body;
+    const gameState = await findGameState(req.user._id);
+
+    if (!gameState) {
+      return res.status(404).json({ success: false, message: "Game state not found" });
+    }
+
+    const contractIndex = (gameState.pendingContracts || []).findIndex((c) => c._id.toString() === contractId || c.contractId === contractId);
+    if (contractIndex === -1) {
+      return res.status(404).json({ success: false, message: "Contract not found" });
+    }
+
+    const contract = gameState.pendingContracts[contractIndex];
+    const penalty = Math.round((contract.offer?.baseSalary || 100000) * 1.5);
+
+    if (gameState.money < penalty) {
+      return res.status(400).json({ success: false, message: "Insufficient funds for buyout penalty" });
+    }
+
+    gameState.money -= penalty;
+    gameState.pendingContracts[contractIndex].status = "TERMINATED";
+    await gameState.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Contract terminated successfully",
+      data: { penaltyPaid: penalty },
+    });
+  } catch (error) {
+    console.error("Error buying out contract:", error);
+    res.status(500).json({ success: false, message: "Failed to buyout contract" });
+  }
+};
+
 // --- Helpers ---
 
 function calculateAcceptChance(offer, round) {
