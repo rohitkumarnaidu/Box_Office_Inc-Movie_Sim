@@ -7,6 +7,7 @@ const VALID_CAMPAIGN_IDS = [
 // Define a reusable regex for MongoDB ObjectIds
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
+
 // Exporting the Zod object directly (Cleaner pattern)
 export const createMovieSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100, "Title must not exceed 100 characters"),
