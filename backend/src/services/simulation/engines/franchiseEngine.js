@@ -115,3 +115,17 @@ export const matchFranchiseTitle = (movieTitle, franchiseName) => {
   const regex = new RegExp(`^${escaped}`, "i");
   return regex.test(movieTitle);
 };
+
+/**
+ * Calculates crossover hype multiplier for shared universe releases.
+ * 
+ * @param {number} subFranchiseCount - Number of intersecting sub-franchises.
+ * @param {number} loreConsistency - Lore score (0-100).
+ * @returns {number} Multiplier factor.
+ */
+export const calculateCrossoverHype = (subFranchiseCount, loreConsistency = 100) => {
+  const baseBonus = (subFranchiseCount - 1) * 0.15;
+  const loreFactor = loreConsistency / 100;
+  return Number(Math.max(1.0, 1.0 + baseBonus * loreFactor).toFixed(2));
+};
+
