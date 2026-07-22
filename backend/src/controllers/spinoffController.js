@@ -174,3 +174,34 @@ export const createCrossover = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get universe synergy metrics for a franchise ecosystem.
+ * GET /api/franchises/universe-synergy/:franchiseId
+ */
+export const getUniverseSynergy = async (req, res) => {
+  try {
+    const { franchiseId } = req.params;
+    const franchise = await Franchise.findById(franchiseId);
+
+    if (!franchise) {
+      return res.status(404).json({ success: false, message: "Franchise not found" });
+    }
+
+    const synergy = {
+      franchiseId: franchise._id,
+      name: franchise.name,
+      fanbaseMultiplier: franchise.fanbaseMultiplier || 1.0,
+      prestigeBonus: franchise.prestigeBonus || 0,
+      crossoverBonusMultiplier: franchise.isCrossover ? 1.5 : 1.0,
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: synergy,
+    });
+  } catch (error) {
+    console.error("Error fetching universe synergy:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch universe synergy" });
+  }
+};
